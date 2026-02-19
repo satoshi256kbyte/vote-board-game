@@ -11,7 +11,7 @@
     "diff": "pnpm build && cdk diff",
     "destroy": "cdk destroy --all",
     "type-check": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "pnpm --filter @vote-board-game/api build && vitest run",
     "test:watch": "vitest",
     "clean": "rm -rf cdk.out dist *.tsbuildinfo"
   },
