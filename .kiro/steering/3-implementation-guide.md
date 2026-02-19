@@ -298,7 +298,7 @@ describe('voteSchema', () => {
 AWS リソース名は以下の形式で統一する:
 
 ```text
-<アプリ名>-<環境名>-<リソースタイプ>-<用途>
+<アプリ名>-<環境名>-<AWSサービス名>-<用途>
 ```
 
 #### 環境名
@@ -307,27 +307,29 @@ AWS リソース名は以下の形式で統一する:
 - `stg`: ステージング環境（staging）
 - `prod`: 本番環境（production）
 
-#### リソースタイプ
+#### AWSサービス名
 
-- `table`: DynamoDB テーブル
-- `bucket`: S3 バケット
-- `function`: Lambda 関数
-- `api`: API Gateway
-- `distribution`: CloudFront ディストリビューション
-- `userpool`: Cognito ユーザープール
-- `role`: IAM ロール
-- `policy`: IAM ポリシー
-- `log`: CloudWatch ロググループ
+- `dynamodb`: DynamoDB テーブル
+- `s3`: S3 バケット
+- `lambda`: Lambda 関数
+- `apigateway`: API Gateway
+- `cloudfront`: CloudFront ディストリビューション
+- `cognito`: Cognito ユーザープール
+- `iam`: IAM ロール・ポリシー
+- `cloudwatch`: CloudWatch ロググループ
+- `eventbridge`: EventBridge ルール・スケジューラー
 
 #### 命名例
 
 ```text
-vote-board-game-dev-table-main
-vote-board-game-prod-bucket-web
-vote-board-game-stg-function-api
-vote-board-game-dev-api-main
-vote-board-game-prod-userpool-main
-vote-board-game-dev-bucket-logs
+vote-board-game-dev-dynamodb-main
+vote-board-game-prod-s3-web
+vote-board-game-stg-lambda-api
+vote-board-game-dev-apigateway-main
+vote-board-game-prod-cognito-main
+vote-board-game-dev-s3-logs
+vote-board-game-prod-cloudfront-web
+vote-board-game-dev-eventbridge-batch
 ```
 
 #### 注意事項
@@ -335,7 +337,7 @@ vote-board-game-dev-bucket-logs
 - アプリ名は `vote-board-game` で統一
 - 全て小文字とハイフン（`-`）を使用
 - アンダースコア（`_`）は使用しない
-- 用途が明確な場合は省略可能（例: `vote-board-game-dev-table` のみでも可）
+- 用途が明確な場合は省略可能（例: `vote-board-game-dev-dynamodb` のみでも可）
 - リソース名の長さ制限に注意（S3 バケット名は 63 文字まで）
 
 ### AWS CDK
