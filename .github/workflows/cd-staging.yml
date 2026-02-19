@@ -1,0 +1,19 @@
+name: CD (Staging)
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types:
+      - completed
+    branches:
+      - develop
+
+jobs:
+  deploy-staging:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      environment: staging
+      ci-run-id: ${{ github.event.workflow_run.id }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN_STAGING }}

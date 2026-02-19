@@ -1,0 +1,115 @@
+name: Deploy (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: 'Environment name (staging or production)'
+      ci-run-id:
+        required: true
+        type: string
+        description: 'CI workflow run ID for artifact download'
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download API artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-dist
+          path: packages/api/dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.ci-run-id }}
+
+      - name: Download Web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: packages/web/out
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.ci-run-id }}
+
+      - name: Download Infra artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: infra-dist
+          path: packages/infra/dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.ci-run-id }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+
+      - name: Get AWS Account ID
+        id: aws-account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account-id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+
+      - name: Deploy Infrastructure and API
+        run: pnpm --filter @vote-board-game/infra cdk deploy --require-approval never --outputs-file cdk-outputs.json
+        env:
+          CDK_DEFAULT_ACCOUNT: ${{ steps.aws-account.outputs.account-id }}
+          CDK_DEFAULT_REGION: ap-northeast-1
+          ENVIRONMENT: ${{ inputs.environment }}
+
+      - name: Extract CDK Outputs
+        id: cdk-outputs
+        run: |
+          BUCKET_NAME=$(jq -r '.[] | .WebBucketName' cdk-outputs.json)
+          DISTRIBUTION_ID=$(jq -r '.[] | .DistributionId' cdk-outputs.json)
+          echo "bucket-name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+          echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+
+      - name: Deploy Web to S3
+        run: |
+          aws s3 sync packages/web/out s3://${{ steps.cdk-outputs.outputs.bucket-name }} --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html"
+          aws s3 sync packages/web/out s3://${{ steps.cdk-outputs.outputs.bucket-name }} --delete --cache-control "public, max-age=0, must-revalidate" --include "*.html"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ steps.cdk-outputs.outputs.distribution-id }} --paths "/*"
+
+      - name: Deployment summary
+        run: |
+          echo "### ${{ inputs.environment }} Deployment Successful :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Environment: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- AWS Account: ${{ steps.aws-account.outputs.account-id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- S3 Bucket: ${{ steps.cdk-outputs.outputs.bucket-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- CloudFront Distribution: ${{ steps.cdk-outputs.outputs.distribution-id }}" >> $GITHUB_STEP_SUMMARY
