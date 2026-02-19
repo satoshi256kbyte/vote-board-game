@@ -11,6 +11,11 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export interface VoteBoardGameStackProps extends cdk.StackProps {
   environment?: string;
@@ -142,7 +147,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       functionName: `vote-board-game-api-${environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'lambda.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../api/dist')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../../api/dist')),
       timeout: cdk.Duration.seconds(30),
       memorySize: 512,
       environment: {
@@ -160,6 +165,34 @@ export class VoteBoardGameStack extends cdk.Stack {
       logRetention: logs.RetentionDays.ONE_WEEK,
       tracing: lambda.Tracing.ACTIVE,
     });
+
+    // cdk-nag suppressions for LogRetention Lambda (auto-created by CDK)
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'LogRetention Lambda は CDK が自動生成。AWS マネージドポリシーを使用。',
+          appliesTo: [
+            'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+          ],
+        },
+      ]
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'LogRetention Lambda は CDK が自動生成。CloudWatch Logs へのアクセスに wildcard が必要。',
+          appliesTo: ['Resource::*'],
+        },
+      ]
+    );
 
     // Lambda に DynamoDB テーブルへのアクセス権限を付与
     table.grantReadWriteData(apiLambda);
@@ -236,12 +269,33 @@ export class VoteBoardGameStack extends cdk.Stack {
       apiLambda,
       [
         {
+          id: 'AwsSolutions-L1',
+          reason: 'Node.js 20.x は現時点で最新の LTS バージョン。',
+        },
+        {
           id: 'AwsSolutions-IAM4',
           reason: 'Lambda 実行ロールは AWS マネージドポリシー AWSLambdaBasicExecutionRole を使用。',
         },
         {
           id: 'AwsSolutions-IAM5',
           reason: 'DynamoDB テーブルへのアクセスには wildcard が必要。GSI へのアクセスを含む。',
+        },
+      ],
+      true
+    );
+
+    // cdk-nag suppressions for API Gateway
+    NagSuppressions.addResourceSuppressions(
+      httpApi,
+      [
+        {
+          id: 'AwsSolutions-APIG1',
+          reason: 'MVP ではアクセスログは不要。将来的にトラフィック増加時に実装。',
+        },
+        {
+          id: 'AwsSolutions-APIG4',
+          reason:
+            'MVP では認証なしのパブリック API として実装。将来的に Cognito JWT Authorizer を実装予定。',
         },
       ],
       true
