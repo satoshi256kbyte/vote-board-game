@@ -3,6 +3,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
 export interface VoteBoardGameStackProps extends cdk.StackProps {
@@ -103,6 +104,26 @@ export class VoteBoardGameStack extends cdk.Stack {
       logBucket: logBucket,
       logFilePrefix: 'cloudfront-logs/',
     });
+
+    // cdk-nag suppressions for MVP
+    NagSuppressions.addResourceSuppressions(
+      distribution,
+      [
+        {
+          id: 'AwsSolutions-CFR1',
+          reason: 'MVP では Geo restriction は不要。将来的に必要に応じて実装。',
+        },
+        {
+          id: 'AwsSolutions-CFR2',
+          reason: 'MVP では WAF は不要。将来的にトラフィック増加時に実装。',
+        },
+        {
+          id: 'AwsSolutions-CFR4',
+          reason: 'デフォルト CloudFront 証明書を使用。カスタムドメイン実装時に ACM 証明書で対応。',
+        },
+      ],
+      true
+    );
 
     // Outputs
     new cdk.CfnOutput(this, 'TableName', {
