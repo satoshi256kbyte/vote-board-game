@@ -1,5 +1,5 @@
 {
-  "app": "node --loader ts-node/esm bin/app.ts",
+  "app": "node dist/bin/app.js",
   "watch": {
     "include": ["**"],
     "exclude": [

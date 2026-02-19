@@ -1,0 +1,15 @@
+# CDK
+cdk.out/
+*.js
+*.d.ts
+!vitest.config.ts
+
+# Build
+dist/
+*.tsbuildinfo
+
+# Coverage
+coverage/
+
+# Snapshots
+**/__snapshots__/
