@@ -105,8 +105,12 @@ jobs:
         run: |
           BUCKET_NAME=$(jq -r '.[] | .WebBucketName' packages/infra/cdk-outputs.json)
           DISTRIBUTION_ID=$(jq -r '.[] | .DistributionId' packages/infra/cdk-outputs.json)
+          API_URL=$(jq -r '.[] | .ApiUrl' packages/infra/cdk-outputs.json)
+          API_LAMBDA_NAME=$(jq -r '.[] | .ApiLambdaFunctionName' packages/infra/cdk-outputs.json)
           echo "bucket-name=$BUCKET_NAME" >> $GITHUB_OUTPUT
           echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+          echo "api-url=$API_URL" >> $GITHUB_OUTPUT
+          echo "api-lambda-name=$API_LAMBDA_NAME" >> $GITHUB_OUTPUT
 
       - name: Deploy Web to S3
         run: |
@@ -117,6 +121,24 @@ jobs:
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ steps.cdk-outputs.outputs.distribution-id }} --paths "/*"
 
+      - name: Verify API health
+        run: |
+          echo "Checking API health..."
+          HEALTH_URL="${{ steps.cdk-outputs.outputs.api-url }}/health"
+          echo "Health check URL: $HEALTH_URL"
+
+          # Wait for API to be ready (max 30 seconds)
+          for i in {1..6}; do
+            if curl -f -s "$HEALTH_URL" > /dev/null; then
+              echo "✅ API is healthy"
+              curl -s "$HEALTH_URL" | jq .
+              break
+            else
+              echo "Waiting for API to be ready... (attempt $i/6)"
+              sleep 5
+            fi
+          done
+
       - name: Deployment summary
         run: |
           echo "### ${{ inputs.environment }} Deployment Successful :rocket:" >> $GITHUB_STEP_SUMMARY
@@ -124,6 +146,15 @@ jobs:
           echo "- Environment: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
           echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### AWS Resources" >> $GITHUB_STEP_SUMMARY
           echo "- AWS Account: ${{ steps.aws-account.outputs.account-id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Region: ap-northeast-1" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Frontend" >> $GITHUB_STEP_SUMMARY
           echo "- S3 Bucket: ${{ steps.cdk-outputs.outputs.bucket-name }}" >> $GITHUB_STEP_SUMMARY
           echo "- CloudFront Distribution: ${{ steps.cdk-outputs.outputs.distribution-id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### API" >> $GITHUB_STEP_SUMMARY
+          echo "- API URL: ${{ steps.cdk-outputs.outputs.api-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda Function: ${{ steps.cdk-outputs.outputs.api-lambda-name }}" >> $GITHUB_STEP_SUMMARY
