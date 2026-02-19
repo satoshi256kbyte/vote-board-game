@@ -138,7 +138,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build all packages
-        run: pnpm -r build --filter=!@vote-board-game/web
+        run: pnpm --filter=!@vote-board-game/web -r build
 
       - name: Upload API artifact
         uses: actions/upload-artifact@v4
