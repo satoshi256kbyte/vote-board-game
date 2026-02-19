@@ -64,14 +64,6 @@ jobs:
           name: api-dist
           path: packages/api/dist
 
-      - name: Download Web artifact
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          workflow: ci.yml
-          run_id: ${{ inputs.ci-run-id }}
-          name: web-dist
-          path: packages/web/out
-
       - name: Download Infra artifact
         uses: dawidd6/action-download-artifact@v3
         with:
@@ -124,6 +116,12 @@ jobs:
           echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
           echo "api-lambda-name=$API_LAMBDA_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build Web with API URL
+        working-directory: packages/web
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ steps.cdk-outputs.outputs.api-url }}
 
       - name: Deploy Web to S3
         run: |
