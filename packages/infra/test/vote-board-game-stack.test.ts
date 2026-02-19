@@ -264,7 +264,22 @@ describe('VoteBoardGameStack', () => {
           RefreshToken: 'minutes',
         },
         EnableTokenRevocation: true,
+        SupportedIdentityProviders: ['COGNITO'],
+        AllowedOAuthFlowsUserPoolClient: true,
+        AllowedOAuthFlows: ['implicit', 'code'],
+        AllowedOAuthScopes: Match.arrayWith(['openid', 'email', 'profile']),
       });
+    });
+
+    it('should create User Pool Domain for Hosted UI', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        appName: 'vbg',
+        environment: 'dev',
+      });
+      const template = Template.fromStack(stack);
+
+      template.resourceCountIs('AWS::Cognito::UserPoolDomain', 1);
     });
 
     it('should create Cognito outputs', () => {
@@ -290,6 +305,12 @@ describe('VoteBoardGameStack', () => {
       template.hasOutput('UserPoolClientId', {
         Export: {
           Name: 'VoteBoardGameUserPoolClientId-dev',
+        },
+      });
+
+      template.hasOutput('UserPoolDomain', {
+        Export: {
+          Name: 'VoteBoardGameUserPoolDomain-dev',
         },
       });
     });
