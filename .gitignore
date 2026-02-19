@@ -1,6 +1,31 @@
 # Dependencies
 node_modules/
 
+# Build outputs
+dist/
+.next/
+out/
+*.tsbuildinfo
+cdk.out/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
 # Kiro
 .kiro/agents/developer.json
 settings/mcp.json

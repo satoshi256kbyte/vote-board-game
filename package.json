@@ -2,13 +2,25 @@
   "name": "vote-board-game",
   "version": "1.0.0",
   "description": "投票形式のアブストラクト・ゲーム",
-  "main": "index.js",
+  "private": true,
   "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm -r build",
+    "build:web": "pnpm --filter web build",
+    "build:api": "pnpm --filter api build",
+    "build:infra": "pnpm --filter infra build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "type-check": "pnpm -r type-check",
+    "test": "pnpm -r test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
     "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "cdk": "pnpm --filter infra cdk",
+    "deploy": "pnpm --filter infra deploy",
+    "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "keywords": [],
   "author": "",
@@ -24,9 +36,13 @@
     ]
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "markdownlint-cli2": "^0.21.0",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
   }
 }

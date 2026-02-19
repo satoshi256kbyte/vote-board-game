@@ -1,0 +1,30 @@
+{
+  "name": "@vote-board-game/infra",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
+    "deploy": "cdk deploy --all",
+    "synth": "cdk synth",
+    "diff": "cdk diff",
+    "destroy": "cdk destroy --all",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf cdk.out *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@vote-board-game/shared": "workspace:*",
+    "aws-cdk-lib": "^2.174.2",
+    "cdk-nag": "^2.30.6",
+    "constructs": "^10.4.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.5",
+    "aws-cdk": "^2.174.2",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  }
+}
