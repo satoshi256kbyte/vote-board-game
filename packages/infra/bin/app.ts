@@ -20,7 +20,7 @@ new VoteBoardGameStack(app, 'VoteBoardGameStack', {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'ap-northeast-1',
   },
-  description: '投票ボードゲーム - メインスタック',
+  description: 'Vote Board Game - Main stack',
   tags: {
     Project: 'VoteBoardGame',
     AppName: appName,
