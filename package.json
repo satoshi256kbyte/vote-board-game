@@ -33,10 +33,6 @@
     ],
     "*.{js,ts,tsx,json}": [
       "prettier --write"
-    ],
-    "packages/infra/**/*.ts": [
-      "prettier --write",
-      "pnpm --filter @vote-board-game/infra test --run"
     ]
   },
   "devDependencies": {

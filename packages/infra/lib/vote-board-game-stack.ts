@@ -1,7 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
-import { NagSuppressions } from 'cdk-nag';
 
 export class VoteBoardGameStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
