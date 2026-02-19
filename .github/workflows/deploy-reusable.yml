@@ -39,29 +39,33 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Download API artifact
-        uses: actions/download-artifact@v4
+      - name: Download artifacts from CI workflow
+        uses: dawidd6/action-download-artifact@v3
         with:
-          name: api-dist
-          path: packages/api/dist
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ inputs.ci-run-id }}
+          workflow: ci.yml
+          run_id: ${{ inputs.ci-run-id }}
+          path: artifacts
 
-      - name: Download Web artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-dist
-          path: packages/web/out
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ inputs.ci-run-id }}
+      - name: Move API artifact
+        run: |
+          mkdir -p packages/api/dist
+          if [ -d "artifacts/api-dist" ]; then
+            cp -r artifacts/api-dist/* packages/api/dist/
+          fi
 
-      - name: Download Infra artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: infra-dist
-          path: packages/infra/dist
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ inputs.ci-run-id }}
+      - name: Move Web artifact
+        run: |
+          mkdir -p packages/web/out
+          if [ -d "artifacts/web-dist" ]; then
+            cp -r artifacts/web-dist/* packages/web/out/
+          fi
+
+      - name: Move Infra artifact
+        run: |
+          mkdir -p packages/infra/dist
+          if [ -d "artifacts/infra-dist" ]; then
+            cp -r artifacts/infra-dist/* packages/infra/dist/
+          fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
