@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
-import { Template } from 'aws-cdk-lib/assertions';
+import { Template, Match } from 'aws-cdk-lib/assertions';
 import { VoteBoardGameStack } from '../lib/vote-board-game-stack.js';
 
 describe('VoteBoardGameStack', () => {
@@ -328,7 +328,18 @@ describe('VoteBoardGameStack', () => {
         Name: 'vbg-dev-apigateway-main',
         ProtocolType: 'HTTP',
         CorsConfiguration: {
-          AllowOrigins: ['http://localhost:3000'],
+          AllowOrigins: Match.arrayWith([
+            Match.objectLike({
+              'Fn::Join': Match.arrayWith([
+                Match.arrayWith([
+                  'https://',
+                  Match.objectLike({
+                    'Fn::GetAtt': Match.arrayWith([Match.stringLikeRegexp('WebDistribution.*')]),
+                  }),
+                ]),
+              ]),
+            }),
+          ]),
           AllowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
           AllowHeaders: ['Content-Type', 'Authorization'],
           AllowCredentials: true,

@@ -29,6 +29,75 @@ export class VoteBoardGameStack extends cdk.Stack {
     const { appName, environment } = props;
     const isProduction = environment === 'prod';
 
+    // S3 バケット (アクセスログ用) - 最初に作成
+    const logBucket = new s3.Bucket(this, 'LogBucket', {
+      bucketName: `${appName}-${environment}-s3-logs-${this.account}`,
+      publicReadAccess: false,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: !isProduction,
+      enforceSSL: true,
+      objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+    });
+
+    // S3 バケット (フロントエンド用)
+    const webBucket = new s3.Bucket(this, 'WebBucket', {
+      bucketName: `${appName}-${environment}-s3-web-${this.account}`,
+      publicReadAccess: false,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: !isProduction,
+      serverAccessLogsBucket: logBucket,
+      serverAccessLogsPrefix: 'web-bucket-logs/',
+      enforceSSL: true,
+    });
+
+    // CloudFront Distribution
+    const distribution = new cloudfront.Distribution(this, 'WebDistribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(webBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/404.html',
+        },
+      ],
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+      enableLogging: true,
+      logBucket: logBucket,
+      logFilePrefix: 'cloudfront-logs/',
+    });
+
+    // cdk-nag suppressions for CloudFront
+    NagSuppressions.addResourceSuppressions(
+      distribution,
+      [
+        {
+          id: 'AwsSolutions-CFR1',
+          reason: 'MVP では Geo restriction は不要。将来的に必要に応じて実装。',
+        },
+        {
+          id: 'AwsSolutions-CFR2',
+          reason: 'MVP では WAF は不要。将来的にトラフィック増加時に実装。',
+        },
+        {
+          id: 'AwsSolutions-CFR4',
+          reason: 'デフォルト CloudFront 証明書を使用。カスタムドメイン実装時に ACM 証明書で対応。',
+        },
+      ],
+      true
+    );
+
+    // CloudFront のドメイン名を CORS 用に準備
+    const frontendOrigin = `https://${distribution.distributionDomainName}`;
+
     // DynamoDB テーブル (Single Table Design)
     const table = new dynamodb.Table(this, 'VoteBoardGameTable', {
       tableName: `${appName}-${environment}-dynamodb-main`,
@@ -173,12 +242,7 @@ export class VoteBoardGameStack extends cdk.Stack {
         TABLE_NAME: table.tableName,
         USER_POOL_ID: userPool.userPoolId,
         USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
-        ALLOWED_ORIGINS:
-          environment === 'production'
-            ? 'https://vote-board-game.example.com'
-            : environment === 'staging'
-              ? 'https://stg.vote-board-game.example.com'
-              : 'http://localhost:3000',
+        ALLOWED_ORIGINS: frontendOrigin,
       },
       logRetention: logs.RetentionDays.ONE_WEEK,
       tracing: lambda.Tracing.ACTIVE,
@@ -223,12 +287,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       apiName: `${appName}-${environment}-apigateway-main`,
       description: `Vote Board Game API - ${environment}`,
       corsPreflight: {
-        allowOrigins:
-          environment === 'production'
-            ? ['https://vote-board-game.example.com']
-            : environment === 'staging'
-              ? ['https://stg.vote-board-game.example.com']
-              : ['http://localhost:3000'],
+        allowOrigins: [frontendOrigin],
         allowMethods: [
           apigatewayv2.CorsHttpMethod.GET,
           apigatewayv2.CorsHttpMethod.POST,
@@ -314,72 +373,6 @@ export class VoteBoardGameStack extends cdk.Stack {
           id: 'AwsSolutions-APIG4',
           reason:
             'MVP では認証なしのパブリック API として実装。将来的に Cognito JWT Authorizer を実装予定。',
-        },
-      ],
-      true
-    );
-
-    // S3 バケット (アクセスログ用)
-    const logBucket = new s3.Bucket(this, 'LogBucket', {
-      bucketName: `${appName}-${environment}-s3-logs-${this.account}`,
-      publicReadAccess: false,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: !isProduction,
-      enforceSSL: true,
-      objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
-    });
-
-    // S3 バケット (フロントエンド用)
-    const webBucket = new s3.Bucket(this, 'WebBucket', {
-      bucketName: `${appName}-${environment}-s3-web-${this.account}`,
-      publicReadAccess: false,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: !isProduction,
-      serverAccessLogsBucket: logBucket,
-      serverAccessLogsPrefix: 'web-bucket-logs/',
-      enforceSSL: true,
-    });
-
-    // CloudFront Distribution
-    const distribution = new cloudfront.Distribution(this, 'WebDistribution', {
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(webBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-      },
-      defaultRootObject: 'index.html',
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/404.html',
-        },
-      ],
-      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-      enableLogging: true,
-      logBucket: logBucket,
-      logFilePrefix: 'cloudfront-logs/',
-    });
-
-    // cdk-nag suppressions for MVP
-    NagSuppressions.addResourceSuppressions(
-      distribution,
-      [
-        {
-          id: 'AwsSolutions-CFR1',
-          reason: 'MVP では Geo restriction は不要。将来的に必要に応じて実装。',
-        },
-        {
-          id: 'AwsSolutions-CFR2',
-          reason: 'MVP では WAF は不要。将来的にトラフィック増加時に実装。',
-        },
-        {
-          id: 'AwsSolutions-CFR4',
-          reason: 'デフォルト CloudFront 証明書を使用。カスタムドメイン実装時に ACM 証明書で対応。',
         },
       ],
       true

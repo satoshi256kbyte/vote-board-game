@@ -46,7 +46,7 @@ inclusion: manual
 | 2.3.1 DynamoDB テーブルの構築               | 完了       |      |
 | 2.3.2 Cognito ユーザープールの構築          | 完了       |      |
 | 2.3.3 Lambda + API Gateway の構築           | 完了       |      |
-| 2.3.4 S3 + CloudFront の構築                |            |      |
+| 2.3.4 S3 + CloudFront の構築                | 完了       |      |
 | 2.3.5 Route 53 ドメイン設定                 |            |      |
 | 2.3.6 EventBridge Scheduler の構築          |            |      |
 | 2.3.7 CloudWatch アラート・モニタリング設定 |            |      |
