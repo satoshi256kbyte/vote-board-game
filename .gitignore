@@ -29,3 +29,4 @@ Thumbs.db
 # Kiro
 .kiro/agents/developer.json
 settings/mcp.json
+.kiro/settings/mcp.json
