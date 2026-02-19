@@ -163,5 +163,99 @@ describe('VoteBoardGameStack', () => {
 
       template.resourceCountIs('AWS::CloudFront::Distribution', 1);
     });
+
+    it('should have exactly 1 Cognito User Pool', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.resourceCountIs('AWS::Cognito::UserPool', 1);
+    });
+
+    it('should have exactly 1 Cognito User Pool Client', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.resourceCountIs('AWS::Cognito::UserPoolClient', 1);
+    });
+  });
+
+  describe('Cognito configuration', () => {
+    it('should create User Pool with correct configuration', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.hasResourceProperties('AWS::Cognito::UserPool', {
+        UserPoolName: 'vote-board-game-development',
+        AutoVerifiedAttributes: ['email'],
+        MfaConfiguration: 'OPTIONAL',
+        Policies: {
+          PasswordPolicy: {
+            MinimumLength: 8,
+            RequireLowercase: true,
+            RequireNumbers: true,
+            RequireUppercase: true,
+            RequireSymbols: false,
+          },
+        },
+      });
+    });
+
+    it('should create User Pool Client with correct configuration', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.hasResourceProperties('AWS::Cognito::UserPoolClient', {
+        ClientName: 'vote-board-game-client-development',
+        GenerateSecret: false,
+        PreventUserExistenceErrors: 'ENABLED',
+        AccessTokenValidity: 60,
+        IdTokenValidity: 60,
+        RefreshTokenValidity: 43200, // 30 days in minutes
+        TokenValidityUnits: {
+          AccessToken: 'minutes',
+          IdToken: 'minutes',
+          RefreshToken: 'minutes',
+        },
+        EnableTokenRevocation: true,
+      });
+    });
+
+    it('should create Cognito outputs', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.hasOutput('UserPoolId', {
+        Export: {
+          Name: 'VoteBoardGameUserPoolId-development',
+        },
+      });
+
+      template.hasOutput('UserPoolArn', {
+        Export: {
+          Name: 'VoteBoardGameUserPoolArn-development',
+        },
+      });
+
+      template.hasOutput('UserPoolClientId', {
+        Export: {
+          Name: 'VoteBoardGameUserPoolClientId-development',
+        },
+      });
+    });
   });
 });

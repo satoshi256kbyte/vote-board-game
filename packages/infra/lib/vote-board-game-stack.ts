@@ -3,6 +3,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
@@ -58,6 +59,58 @@ export class VoteBoardGameStack extends cdk.Stack {
         name: 'GSI2SK',
         type: dynamodb.AttributeType.STRING,
       },
+    });
+
+    // Cognito ユーザープール
+    const userPool = new cognito.UserPool(this, 'UserPool', {
+      userPoolName: `vote-board-game-${environment}`,
+      selfSignUpEnabled: true,
+      signInAliases: {
+        email: true,
+        username: false,
+      },
+      autoVerify: {
+        email: true,
+      },
+      standardAttributes: {
+        email: {
+          required: true,
+          mutable: false,
+        },
+      },
+      customAttributes: {
+        username: new cognito.StringAttribute({ minLen: 3, maxLen: 20, mutable: true }),
+      },
+      passwordPolicy: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireDigits: true,
+        requireSymbols: false,
+      },
+      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      mfa: cognito.Mfa.OPTIONAL,
+      mfaSecondFactor: {
+        sms: false,
+        otp: true,
+      },
+    });
+
+    // Cognito ユーザープールクライアント
+    const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
+      userPool,
+      userPoolClientName: `vote-board-game-client-${environment}`,
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
+      },
+      generateSecret: false,
+      preventUserExistenceErrors: true,
+      accessTokenValidity: cdk.Duration.minutes(60),
+      idTokenValidity: cdk.Duration.minutes(60),
+      refreshTokenValidity: cdk.Duration.days(30),
+      enableTokenRevocation: true,
     });
 
     // S3 バケット (アクセスログ用)
@@ -160,6 +213,24 @@ export class VoteBoardGameStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'Environment', {
       value: environment,
       description: 'デプロイ環境',
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolId', {
+      value: userPool.userPoolId,
+      description: 'Cognito ユーザープール ID',
+      exportName: `VoteBoardGameUserPoolId-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolArn', {
+      value: userPool.userPoolArn,
+      description: 'Cognito ユーザープール ARN',
+      exportName: `VoteBoardGameUserPoolArn-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolClientId', {
+      value: userPoolClient.userPoolClientId,
+      description: 'Cognito ユーザープールクライアント ID',
+      exportName: `VoteBoardGameUserPoolClientId-${environment}`,
     });
   }
 }
