@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 全パッケージのテスト実行
+pnpm test
+
+# 型チェック
+pnpm type-check
+
+# Lint
+pnpm lint
