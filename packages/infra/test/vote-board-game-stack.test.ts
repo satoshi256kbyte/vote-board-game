@@ -183,6 +183,27 @@ describe('VoteBoardGameStack', () => {
 
       template.resourceCountIs('AWS::Cognito::UserPoolClient', 1);
     });
+
+    it('should have exactly 1 Lambda function', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      // API Lambda + ログ保持用の Lambda が作成される
+      template.resourceCountIs('AWS::Lambda::Function', 3);
+    });
+
+    it('should have exactly 1 API Gateway HTTP API', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.resourceCountIs('AWS::ApiGatewayV2::Api', 1);
+    });
   });
 
   describe('Cognito configuration', () => {
@@ -254,6 +275,73 @@ describe('VoteBoardGameStack', () => {
       template.hasOutput('UserPoolClientId', {
         Export: {
           Name: 'VoteBoardGameUserPoolClientId-development',
+        },
+      });
+    });
+  });
+
+  describe('Lambda and API Gateway configuration', () => {
+    it('should create Lambda function with correct configuration', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'vote-board-game-api-development',
+        Runtime: 'nodejs20.x',
+        Handler: 'lambda.handler',
+        Timeout: 30,
+        MemorySize: 512,
+        TracingConfig: {
+          Mode: 'Active',
+        },
+      });
+    });
+
+    it('should create API Gateway HTTP API with CORS', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.hasResourceProperties('AWS::ApiGatewayV2::Api', {
+        Name: 'vote-board-game-api-development',
+        ProtocolType: 'HTTP',
+        CorsConfiguration: {
+          AllowOrigins: ['http://localhost:3000'],
+          AllowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+          AllowHeaders: ['Content-Type', 'Authorization'],
+          AllowCredentials: true,
+          MaxAge: 3600,
+        },
+      });
+    });
+
+    it('should create API outputs', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        environment: 'development',
+      });
+      const template = Template.fromStack(stack);
+
+      template.hasOutput('ApiUrl', {
+        Export: {
+          Name: 'VoteBoardGameApiUrl-development',
+        },
+      });
+
+      template.hasOutput('ApiId', {
+        Export: {
+          Name: 'VoteBoardGameApiId-development',
+        },
+      });
+
+      template.hasOutput('ApiLambdaFunctionName', {
+        Export: {
+          Name: 'VoteBoardGameApiLambdaName-development',
         },
       });
     });

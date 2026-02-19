@@ -4,8 +4,13 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as apigatewayv2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+import * as path from 'path';
 
 export interface VoteBoardGameStackProps extends cdk.StackProps {
   environment?: string;
@@ -132,6 +137,116 @@ export class VoteBoardGameStack extends cdk.Stack {
       enableTokenRevocation: true,
     });
 
+    // Lambda 関数 (API)
+    const apiLambda = new lambda.Function(this, 'ApiFunction', {
+      functionName: `vote-board-game-api-${environment}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'lambda.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../api/dist')),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+      environment: {
+        NODE_ENV: environment,
+        TABLE_NAME: table.tableName,
+        USER_POOL_ID: userPool.userPoolId,
+        USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+        ALLOWED_ORIGINS:
+          environment === 'production'
+            ? 'https://vote-board-game.example.com'
+            : environment === 'staging'
+              ? 'https://stg.vote-board-game.example.com'
+              : 'http://localhost:3000',
+      },
+      logRetention: logs.RetentionDays.ONE_WEEK,
+      tracing: lambda.Tracing.ACTIVE,
+    });
+
+    // Lambda に DynamoDB テーブルへのアクセス権限を付与
+    table.grantReadWriteData(apiLambda);
+
+    // Lambda に Cognito へのアクセス権限を付与
+    userPool.grant(apiLambda, 'cognito-idp:AdminGetUser', 'cognito-idp:AdminUpdateUserAttributes');
+
+    // API Gateway HTTP API
+    const httpApi = new apigatewayv2.HttpApi(this, 'HttpApi', {
+      apiName: `vote-board-game-api-${environment}`,
+      description: `Vote Board Game API - ${environment}`,
+      corsPreflight: {
+        allowOrigins:
+          environment === 'production'
+            ? ['https://vote-board-game.example.com']
+            : environment === 'staging'
+              ? ['https://stg.vote-board-game.example.com']
+              : ['http://localhost:3000'],
+        allowMethods: [
+          apigatewayv2.CorsHttpMethod.GET,
+          apigatewayv2.CorsHttpMethod.POST,
+          apigatewayv2.CorsHttpMethod.PUT,
+          apigatewayv2.CorsHttpMethod.PATCH,
+          apigatewayv2.CorsHttpMethod.DELETE,
+          apigatewayv2.CorsHttpMethod.OPTIONS,
+        ],
+        allowHeaders: ['Content-Type', 'Authorization'],
+        allowCredentials: true,
+        maxAge: cdk.Duration.hours(1),
+      },
+    });
+
+    // Lambda 統合
+    const lambdaIntegration = new apigatewayv2Integrations.HttpLambdaIntegration(
+      'ApiLambdaIntegration',
+      apiLambda,
+      {
+        payloadFormatVersion: apigatewayv2.PayloadFormatVersion.VERSION_2_0,
+      }
+    );
+
+    // JWT Authorizer (Cognito) - 将来の認証が必要なエンドポイント用
+    // const jwtAuthorizer = new apigatewayv2Authorizers.HttpJwtAuthorizer(
+    //   'JwtAuthorizer',
+    //   userPool.userPoolProviderUrl,
+    //   {
+    //     jwtAudience: [userPoolClient.userPoolClientId],
+    //     identitySource: ['$request.header.Authorization'],
+    //   }
+    // );
+
+    // デフォルトルート (すべてのリクエストを Lambda に転送)
+    httpApi.addRoutes({
+      path: '/{proxy+}',
+      methods: [
+        apigatewayv2.HttpMethod.GET,
+        apigatewayv2.HttpMethod.POST,
+        apigatewayv2.HttpMethod.PUT,
+        apigatewayv2.HttpMethod.PATCH,
+        apigatewayv2.HttpMethod.DELETE,
+      ],
+      integration: lambdaIntegration,
+    });
+
+    // ヘルスチェックルート (認証不要)
+    httpApi.addRoutes({
+      path: '/health',
+      methods: [apigatewayv2.HttpMethod.GET],
+      integration: lambdaIntegration,
+    });
+
+    // cdk-nag suppressions for Lambda
+    NagSuppressions.addResourceSuppressions(
+      apiLambda,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'Lambda 実行ロールは AWS マネージドポリシー AWSLambdaBasicExecutionRole を使用。',
+        },
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'DynamoDB テーブルへのアクセスには wildcard が必要。GSI へのアクセスを含む。',
+        },
+      ],
+      true
+    );
+
     // S3 バケット (アクセスログ用)
     const logBucket = new s3.Bucket(this, 'LogBucket', {
       bucketName: `vote-board-game-logs-${environment}-${this.account}`,
@@ -250,6 +365,30 @@ export class VoteBoardGameStack extends cdk.Stack {
       value: userPoolClient.userPoolClientId,
       description: 'Cognito ユーザープールクライアント ID',
       exportName: `VoteBoardGameUserPoolClientId-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'ApiUrl', {
+      value: httpApi.apiEndpoint,
+      description: 'API Gateway エンドポイント URL',
+      exportName: `VoteBoardGameApiUrl-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'ApiId', {
+      value: httpApi.apiId,
+      description: 'API Gateway ID',
+      exportName: `VoteBoardGameApiId-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'ApiLambdaFunctionName', {
+      value: apiLambda.functionName,
+      description: 'API Lambda 関数名',
+      exportName: `VoteBoardGameApiLambdaName-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'ApiLambdaFunctionArn', {
+      value: apiLambda.functionArn,
+      description: 'API Lambda 関数 ARN',
+      exportName: `VoteBoardGameApiLambdaArn-${environment}`,
     });
   }
 }
