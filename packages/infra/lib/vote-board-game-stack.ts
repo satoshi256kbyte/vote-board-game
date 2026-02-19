@@ -432,12 +432,6 @@ export class VoteBoardGameStack extends cdk.Stack {
       exportName: `VoteBoardGameUserPoolClientId-${environment}`,
     });
 
-    new cdk.CfnOutput(this, 'UserPoolDomain', {
-      value: userPoolDomain.domainName,
-      description: 'Cognito ユーザープールドメイン',
-      exportName: `VoteBoardGameUserPoolDomain-${environment}`,
-    });
-
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: httpApi.apiEndpoint,
       description: 'API Gateway エンドポイント URL',
