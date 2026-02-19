@@ -203,7 +203,7 @@ describe('VoteBoardGameStack', () => {
             RequireLowercase: true,
             RequireNumbers: true,
             RequireUppercase: true,
-            RequireSymbols: false,
+            RequireSymbols: true,
           },
         },
       });
