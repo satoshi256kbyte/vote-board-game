@@ -293,6 +293,51 @@ describe('voteSchema', () => {
 - AWS CLI での直接操作も禁止
 - 例外: トラブルシューティング時の確認のみ許可（変更は不可）
 
+### AWS リソース命名規則
+
+AWS リソース名は以下の形式で統一する:
+
+```text
+<アプリ名>-<環境名>-<リソースタイプ>-<用途>
+```
+
+#### 環境名
+
+- `dev`: 開発環境（development）
+- `stg`: ステージング環境（staging）
+- `prod`: 本番環境（production）
+
+#### リソースタイプ
+
+- `table`: DynamoDB テーブル
+- `bucket`: S3 バケット
+- `function`: Lambda 関数
+- `api`: API Gateway
+- `distribution`: CloudFront ディストリビューション
+- `userpool`: Cognito ユーザープール
+- `role`: IAM ロール
+- `policy`: IAM ポリシー
+- `log`: CloudWatch ロググループ
+
+#### 命名例
+
+```text
+vote-board-game-dev-table-main
+vote-board-game-prod-bucket-web
+vote-board-game-stg-function-api
+vote-board-game-dev-api-main
+vote-board-game-prod-userpool-main
+vote-board-game-dev-bucket-logs
+```
+
+#### 注意事項
+
+- アプリ名は `vote-board-game` で統一
+- 全て小文字とハイフン（`-`）を使用
+- アンダースコア（`_`）は使用しない
+- 用途が明確な場合は省略可能（例: `vote-board-game-dev-table` のみでも可）
+- リソース名の長さ制限に注意（S3 バケット名は 63 文字まで）
+
 ### AWS CDK
 
 - Stack は機能単位で分割
