@@ -11,5 +11,6 @@ export default tseslint.config(js.configs.recommended, ...tseslint.configs.recom
     '**/*.config.js',
     '**/*.config.mjs',
     '**/*.config.ts',
+    '**/next-env.d.ts',
   ],
 });
