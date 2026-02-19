@@ -1,9 +1,47 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
+import { gamesRouter } from './routes/games.js';
+import { candidatesRouter } from './routes/candidates.js';
+import { votesRouter } from './routes/votes.js';
 
 const app = new Hono();
 
+// ミドルウェア
+app.use('*', logger());
+app.use(
+  '*',
+  cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    credentials: true,
+  })
+);
+
+// ヘルスチェック
 app.get('/health', (c) => {
-  return c.json({ status: 'ok' });
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ルーティング
+app.route('/api/games', gamesRouter);
+app.route('/api/candidates', candidatesRouter);
+app.route('/api/votes', votesRouter);
+
+// 404ハンドラー
+app.notFound((c) => {
+  return c.json({ error: 'Not Found' }, 404);
+});
+
+// エラーハンドラー
+app.onError((err, c) => {
+  console.error('Error:', err);
+  return c.json(
+    {
+      error: 'Internal Server Error',
+      message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    },
+    500
+  );
 });
 
 export default app;
