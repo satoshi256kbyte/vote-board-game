@@ -66,6 +66,70 @@ Conventional Commits に準拠
 
 参考: [shadcn/ui](https://ui.shadcn.com/docs)
 
+### フロントエンドテスト
+
+- Vitest でユニットテスト・統合テストを実装
+- React Testing Library でコンポーネントテスト
+- Server Components と Client Components で異なるテスト戦略
+
+#### テストの種類
+
+**ユーティリティ関数のテスト**
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { formatDate } from './date-utils';
+
+describe('formatDate', () => {
+  it('should format date correctly', () => {
+    const date = new Date('2024-01-01');
+    expect(formatDate(date)).toBe('2024年1月1日');
+  });
+});
+```
+
+**Client Component のテスト**
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { VoteButton } from './vote-button';
+
+describe('VoteButton', () => {
+  it('should call onClick when clicked', () => {
+    const handleClick = vi.fn();
+    render(<VoteButton onClick={handleClick}>投票</VoteButton>);
+
+    fireEvent.click(screen.getByText('投票'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+**カスタムフックのテスト**
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { useVote } from './use-vote';
+
+describe('useVote', () => {
+  it('should toggle vote state', () => {
+    const { result } = renderHook(() => useVote());
+
+    expect(result.current.isVoted).toBe(false);
+
+    act(() => {
+      result.current.vote('candidate-1');
+    });
+
+    expect(result.current.isVoted).toBe(true);
+  });
+});
+```
+
+参考: [Vitest](https://vitest.dev/), [React Testing Library](https://testing-library.com/react)
+
 ## バックエンド
 
 ### Hono
@@ -83,6 +147,121 @@ Conventional Commits に準拠
 - 環境変数で設定を管理
 
 参考: [AWS Lambda Node.js](https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html)
+
+### バックエンドテスト
+
+- Vitest でユニットテスト・統合テストを実装
+- Hono のテストヘルパーを活用
+- DynamoDB はモックまたはローカル環境を使用
+
+#### テストの種類
+
+**API エンドポイントのテスト**
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { app } from './index';
+
+describe('GET /api/games', () => {
+  it('should return games list', async () => {
+    const res = await app.request('/api/games');
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toHaveProperty('games');
+    expect(Array.isArray(data.games)).toBe(true);
+  });
+});
+
+describe('POST /api/votes', () => {
+  it('should create a vote', async () => {
+    const res = await app.request('/api/votes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gameId: 'game-1',
+        candidateId: 'candidate-1',
+      }),
+    });
+
+    expect(res.status).toBe(201);
+  });
+
+  it('should return 400 for invalid data', async () => {
+    const res = await app.request('/api/votes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(400);
+  });
+});
+```
+
+**ビジネスロジックのテスト**
+
+```typescript
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { GameService } from './game-service';
+import type { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+
+describe('GameService', () => {
+  let service: GameService;
+  let mockDb: DynamoDBClient;
+
+  beforeEach(() => {
+    mockDb = {
+      send: vi.fn(),
+    } as any;
+    service = new GameService(mockDb);
+  });
+
+  it('should get game by id', async () => {
+    vi.mocked(mockDb.send).mockResolvedValue({
+      Item: {
+        PK: { S: 'GAME#1' },
+        SK: { S: 'GAME#1' },
+        status: { S: 'active' },
+      },
+    });
+
+    const game = await service.getGame('1');
+    expect(game).toBeDefined();
+    expect(game?.status).toBe('active');
+  });
+});
+```
+
+**バリデーションのテスト**
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
+import { voteSchema } from './schemas';
+
+describe('voteSchema', () => {
+  it('should validate correct vote data', () => {
+    const data = {
+      gameId: 'game-1',
+      candidateId: 'candidate-1',
+    };
+
+    expect(() => voteSchema.parse(data)).not.toThrow();
+  });
+
+  it('should reject invalid vote data', () => {
+    const data = {
+      gameId: '',
+      candidateId: 'candidate-1',
+    };
+
+    expect(() => voteSchema.parse(data)).toThrow();
+  });
+});
+```
+
+参考: [Hono Testing](https://hono.dev/docs/guides/testing), [Vitest](https://vitest.dev/)
 
 ## IaC
 
@@ -107,6 +286,60 @@ Conventional Commits に準拠
 - 警告は無視せず対応
 
 参考: [cdk-nag](https://github.com/cdklabs/cdk-nag)
+
+### CDK テスト
+
+- スナップショットテストで CloudFormation テンプレートを検証
+- Fine-grained assertions でリソースの詳細をテスト
+- Validation tests でスタックの整合性を確認
+
+#### テストの種類
+
+**スナップショットテスト**
+
+```typescript
+import { Template } from 'aws-cdk-lib/assertions';
+import * as cdk from 'aws-cdk-lib';
+import { VoteBoardGameStack } from '../lib/vote-board-game-stack';
+
+test('Stack snapshot', () => {
+  const app = new cdk.App();
+  const stack = new VoteBoardGameStack(app, 'TestStack');
+  const template = Template.fromStack(stack);
+  expect(template.toJSON()).toMatchSnapshot();
+});
+```
+
+**Fine-grained assertions**
+
+```typescript
+test('DynamoDB table created', () => {
+  const app = new cdk.App();
+  const stack = new VoteBoardGameStack(app, 'TestStack');
+  const template = Template.fromStack(stack);
+
+  template.hasResourceProperties('AWS::DynamoDB::Table', {
+    BillingMode: 'PAY_PER_REQUEST',
+    PointInTimeRecoverySpecification: {
+      PointInTimeRecoveryEnabled: true,
+    },
+  });
+});
+```
+
+**リソース数の検証**
+
+```typescript
+test('Lambda function count', () => {
+  const app = new cdk.App();
+  const stack = new VoteBoardGameStack(app, 'TestStack');
+  const template = Template.fromStack(stack);
+
+  template.resourceCountIs('AWS::Lambda::Function', 3);
+});
+```
+
+参考: [CDK Testing](https://docs.aws.amazon.com/cdk/v2/guide/testing.html)
 
 ## セキュリティ
 
