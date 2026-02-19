@@ -8,6 +8,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigatewayv2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -159,6 +160,15 @@ export class VoteBoardGameStack extends cdk.Stack {
       code: lambda.Code.fromAsset(apiCodePath),
       timeout: cdk.Duration.seconds(30),
       memorySize: 512,
+      role: new cdk.aws_iam.Role(this, 'ApiLambdaRole', {
+        roleName: `${appName}-${environment}-iam-lambda-api-role`,
+        assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+        managedPolicies: [
+          cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
+            'service-role/AWSLambdaBasicExecutionRole'
+          ),
+        ],
+      }),
       environment: {
         NODE_ENV: environment,
         TABLE_NAME: table.tableName,
