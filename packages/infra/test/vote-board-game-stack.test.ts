@@ -17,7 +17,7 @@ describe('VoteBoardGameStack', () => {
         TableName: 'VoteBoardGame-development',
         BillingMode: 'PAY_PER_REQUEST',
         PointInTimeRecoverySpecification: {
-          PointInTimeRecoveryEnabled: false, // development は false
+          PointInTimeRecoveryEnabled: true, // セキュリティのため全環境で有効化
         },
         SSESpecification: {
           SSEEnabled: true,
@@ -32,8 +32,8 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      // S3 バケットが作成されていることを確認
-      template.resourceCountIs('AWS::S3::Bucket', 1);
+      // S3 バケットが作成されていることを確認（web + log の2つ）
+      template.resourceCountIs('AWS::S3::Bucket', 2);
 
       // CloudFront Distribution が作成されていることを確認
       template.resourceCountIs('AWS::CloudFront::Distribution', 1);
@@ -144,14 +144,14 @@ describe('VoteBoardGameStack', () => {
       template.resourceCountIs('AWS::DynamoDB::Table', 1);
     });
 
-    it('should have exactly 1 S3 bucket', () => {
+    it('should have exactly 2 S3 buckets', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
         environment: 'development',
       });
       const template = Template.fromStack(stack);
 
-      template.resourceCountIs('AWS::S3::Bucket', 1);
+      template.resourceCountIs('AWS::S3::Bucket', 2); // web + log
     });
 
     it('should have exactly 1 CloudFront distribution', () => {
