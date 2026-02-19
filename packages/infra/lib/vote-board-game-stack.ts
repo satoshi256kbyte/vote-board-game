@@ -69,6 +69,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: !isProduction,
       enforceSSL: true,
+      objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
     });
 
     // S3 バケット (フロントエンド用)
