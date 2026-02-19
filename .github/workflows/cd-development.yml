@@ -20,3 +20,5 @@ jobs:
     with:
       environment: development
       ci-run-id: ${{ github.event.workflow_run.id }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}

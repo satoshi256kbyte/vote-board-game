@@ -11,6 +11,10 @@ on:
         required: true
         type: string
         description: 'CI workflow run ID for artifact download'
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
+        description: 'AWS IAM Role ARN for OIDC authentication'
 
 permissions:
   id-token: write
