@@ -5,8 +5,29 @@
 GitHub Flow を採用
 
 - `main`: 本番環境
+- `develop`: 開発環境
 - `feature/*`: 機能開発
 - `fix/*`: バグ修正
+
+### Kiro（AI アシスタント）の Git 操作ルール
+
+**禁止事項:**
+
+- ブランチの切り替え（`git checkout`、`git switch`）は禁止
+- `main` ブランチへの直接プッシュは禁止
+- `main` ブランチへのマージは禁止
+
+**許可される操作:**
+
+- 現在のブランチへのコミット
+- 現在のブランチへのプッシュ
+- ファイルの作成・編集・削除
+
+**ワークフロー:**
+
+1. ユーザーが適切なブランチに切り替える
+2. Kiro がそのブランチで作業（コミット・プッシュ）
+3. `main` へのマージはユーザーが Pull Request 経由で実施
 
 参考: [GitHub Flow](https://docs.github.com/ja/get-started/using-github/github-flow)
 
