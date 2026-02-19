@@ -9,7 +9,13 @@ const app = new cdk.App();
 // cdk-nag によるセキュリティチェックを有効化
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
+// コンテキストパラメータの取得
+const appName = app.node.tryGetContext('appName') || 'vbg';
+const environment = app.node.tryGetContext('environment') || 'dev';
+
 new VoteBoardGameStack(app, 'VoteBoardGameStack', {
+  appName,
+  environment,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'ap-northeast-1',
@@ -17,7 +23,8 @@ new VoteBoardGameStack(app, 'VoteBoardGameStack', {
   description: '投票ボードゲーム - メインスタック',
   tags: {
     Project: 'VoteBoardGame',
-    Environment: process.env.ENVIRONMENT || 'dev',
+    AppName: appName,
+    Environment: environment,
   },
 });
 

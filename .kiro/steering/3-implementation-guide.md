@@ -322,19 +322,19 @@ AWS リソース名は以下の形式で統一する:
 #### 命名例
 
 ```text
-vote-board-game-dev-dynamodb-main
-vote-board-game-prod-s3-web
-vote-board-game-stg-lambda-api
-vote-board-game-dev-apigateway-main
-vote-board-game-prod-cognito-main
-vote-board-game-dev-s3-logs
-vote-board-game-prod-cloudfront-web
-vote-board-game-dev-eventbridge-batch
+vbg-dev-dynamodb-main
+vbg-prod-s3-web
+vbg-stg-lambda-api
+vbg-dev-apigateway-main
+vbg-prod-cognito-main
+vbg-dev-s3-logs
+vbg-prod-cloudfront-web
+vbg-dev-eventbridge-batch
 ```
 
 #### 注意事項
 
-- アプリ名は `vote-board-game` で統一
+- アプリ名は `vbg` で統一
 - 全て小文字とハイフン（`-`）を使用
 - アンダースコア（`_`）は使用しない
 - 用途が明確な場合は省略可能（例: `vote-board-game-dev-dynamodb` のみでも可）

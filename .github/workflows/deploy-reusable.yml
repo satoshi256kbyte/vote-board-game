@@ -94,11 +94,24 @@ jobs:
 
       - name: Deploy Infrastructure and API
         working-directory: packages/infra
-        run: pnpm cdk deploy --require-approval never --outputs-file cdk-outputs.json
+        run: |
+          # Map GitHub environment to short environment name
+          if [ "${{ inputs.environment }}" = "development" ]; then
+            ENV_NAME="dev"
+          elif [ "${{ inputs.environment }}" = "staging" ]; then
+            ENV_NAME="stg"
+          elif [ "${{ inputs.environment }}" = "production" ]; then
+            ENV_NAME="prod"
+          else
+            ENV_NAME="${{ inputs.environment }}"
+          fi
+
+          pnpm cdk deploy --require-approval never --outputs-file cdk-outputs.json \
+            --context appName=vbg \
+            --context environment=$ENV_NAME
         env:
           CDK_DEFAULT_ACCOUNT: ${{ steps.aws-account.outputs.account-id }}
           CDK_DEFAULT_REGION: ap-northeast-1
-          ENVIRONMENT: ${{ inputs.environment }}
 
       - name: Extract CDK Outputs
         id: cdk-outputs

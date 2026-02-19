@@ -8,13 +8,14 @@ describe('VoteBoardGameStack', () => {
     it('should create DynamoDB table with development configuration', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
       // DynamoDB テーブルが作成されていることを確認
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'VoteBoardGame-development',
+        TableName: 'vbg-dev-dynamodb-main',
         BillingMode: 'PAY_PER_REQUEST',
         PointInTimeRecoverySpecification: {
           PointInTimeRecoveryEnabled: true, // セキュリティのため全環境で有効化
@@ -28,7 +29,8 @@ describe('VoteBoardGameStack', () => {
     it('should create S3 bucket and CloudFront distribution', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -42,30 +44,31 @@ describe('VoteBoardGameStack', () => {
     it('should create CloudFormation outputs', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
       template.hasOutput('TableName', {
         Export: {
-          Name: 'VoteBoardGameTableName-development',
+          Name: 'VoteBoardGameTableName-dev',
         },
       });
 
       template.hasOutput('WebBucketName', {
         Export: {
-          Name: 'VoteBoardGameWebBucketName-development',
+          Name: 'VoteBoardGameWebBucketName-dev',
         },
       });
 
       template.hasOutput('DistributionId', {
         Export: {
-          Name: 'VoteBoardGameDistributionId-development',
+          Name: 'VoteBoardGameDistributionId-dev',
         },
       });
 
       template.hasOutput('Environment', {
-        Value: 'development',
+        Value: 'dev',
       });
     });
   });
@@ -74,13 +77,14 @@ describe('VoteBoardGameStack', () => {
     it('should create DynamoDB table with production configuration', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'production',
+        appName: 'vbg',
+        environment: 'prod',
       });
       const template = Template.fromStack(stack);
 
       // DynamoDB テーブルが作成されていることを確認
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'VoteBoardGame-production',
+        TableName: 'vbg-prod-dynamodb-main',
         BillingMode: 'PAY_PER_REQUEST',
         PointInTimeRecoverySpecification: {
           PointInTimeRecoveryEnabled: true, // production は true
@@ -96,7 +100,8 @@ describe('VoteBoardGameStack', () => {
     it('should create GSI1 and GSI2', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -137,7 +142,8 @@ describe('VoteBoardGameStack', () => {
     it('should have exactly 1 DynamoDB table', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -147,7 +153,8 @@ describe('VoteBoardGameStack', () => {
     it('should have exactly 2 S3 buckets', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -157,7 +164,8 @@ describe('VoteBoardGameStack', () => {
     it('should have exactly 1 CloudFront distribution', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -167,7 +175,8 @@ describe('VoteBoardGameStack', () => {
     it('should have exactly 1 Cognito User Pool', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -177,7 +186,8 @@ describe('VoteBoardGameStack', () => {
     it('should have exactly 1 Cognito User Pool Client', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -187,7 +197,8 @@ describe('VoteBoardGameStack', () => {
     it('should have exactly 1 Lambda function', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -198,7 +209,8 @@ describe('VoteBoardGameStack', () => {
     it('should have exactly 1 API Gateway HTTP API', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
@@ -210,12 +222,13 @@ describe('VoteBoardGameStack', () => {
     it('should create User Pool with correct configuration', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
       template.hasResourceProperties('AWS::Cognito::UserPool', {
-        UserPoolName: 'vote-board-game-development',
+        UserPoolName: 'vbg-dev-cognito-main',
         AutoVerifiedAttributes: ['email'],
         MfaConfiguration: 'OPTIONAL',
         Policies: {
@@ -233,12 +246,13 @@ describe('VoteBoardGameStack', () => {
     it('should create User Pool Client with correct configuration', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
       template.hasResourceProperties('AWS::Cognito::UserPoolClient', {
-        ClientName: 'vote-board-game-client-development',
+        ClientName: 'vbg-dev-cognito-client',
         GenerateSecret: false,
         PreventUserExistenceErrors: 'ENABLED',
         AccessTokenValidity: 60,
@@ -256,25 +270,26 @@ describe('VoteBoardGameStack', () => {
     it('should create Cognito outputs', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
       template.hasOutput('UserPoolId', {
         Export: {
-          Name: 'VoteBoardGameUserPoolId-development',
+          Name: 'VoteBoardGameUserPoolId-dev',
         },
       });
 
       template.hasOutput('UserPoolArn', {
         Export: {
-          Name: 'VoteBoardGameUserPoolArn-development',
+          Name: 'VoteBoardGameUserPoolArn-dev',
         },
       });
 
       template.hasOutput('UserPoolClientId', {
         Export: {
-          Name: 'VoteBoardGameUserPoolClientId-development',
+          Name: 'VoteBoardGameUserPoolClientId-dev',
         },
       });
     });
@@ -284,12 +299,13 @@ describe('VoteBoardGameStack', () => {
     it('should create Lambda function with correct configuration', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
       template.hasResourceProperties('AWS::Lambda::Function', {
-        FunctionName: 'vote-board-game-api-development',
+        FunctionName: 'vbg-dev-lambda-api',
         Runtime: 'nodejs20.x',
         Handler: 'lambda.handler',
         Timeout: 30,
@@ -303,12 +319,13 @@ describe('VoteBoardGameStack', () => {
     it('should create API Gateway HTTP API with CORS', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
       template.hasResourceProperties('AWS::ApiGatewayV2::Api', {
-        Name: 'vote-board-game-api-development',
+        Name: 'vbg-dev-apigateway-main',
         ProtocolType: 'HTTP',
         CorsConfiguration: {
           AllowOrigins: ['http://localhost:3000'],
@@ -323,25 +340,26 @@ describe('VoteBoardGameStack', () => {
     it('should create API outputs', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
-        environment: 'development',
+        appName: 'vbg',
+        environment: 'dev',
       });
       const template = Template.fromStack(stack);
 
       template.hasOutput('ApiUrl', {
         Export: {
-          Name: 'VoteBoardGameApiUrl-development',
+          Name: 'VoteBoardGameApiUrl-dev',
         },
       });
 
       template.hasOutput('ApiId', {
         Export: {
-          Name: 'VoteBoardGameApiId-development',
+          Name: 'VoteBoardGameApiId-dev',
         },
       });
 
       template.hasOutput('ApiLambdaFunctionName', {
         Export: {
-          Name: 'VoteBoardGameApiLambdaName-development',
+          Name: 'VoteBoardGameApiLambdaName-dev',
         },
       });
     });

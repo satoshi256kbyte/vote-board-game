@@ -18,19 +18,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export interface VoteBoardGameStackProps extends cdk.StackProps {
-  environment?: string;
+  appName: string;
+  environment: string;
 }
 
 export class VoteBoardGameStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: VoteBoardGameStackProps) {
+  constructor(scope: Construct, id: string, props: VoteBoardGameStackProps) {
     super(scope, id, props);
 
-    const environment = props?.environment || process.env.ENVIRONMENT || 'development';
-    const isProduction = environment === 'production';
+    const { appName, environment } = props;
+    const isProduction = environment === 'prod';
 
     // DynamoDB テーブル (Single Table Design)
     const table = new dynamodb.Table(this, 'VoteBoardGameTable', {
-      tableName: `VoteBoardGame-${environment}`,
+      tableName: `${appName}-${environment}-dynamodb-main`,
       partitionKey: {
         name: 'PK',
         type: dynamodb.AttributeType.STRING,
@@ -73,7 +74,7 @@ export class VoteBoardGameStack extends cdk.Stack {
 
     // Cognito ユーザープール
     const userPool = new cognito.UserPool(this, 'UserPool', {
-      userPoolName: `vote-board-game-${environment}`,
+      userPoolName: `${appName}-${environment}-cognito-main`,
       selfSignUpEnabled: true,
       signInAliases: {
         email: true,
@@ -129,7 +130,7 @@ export class VoteBoardGameStack extends cdk.Stack {
     // Cognito ユーザープールクライアント
     const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
       userPool,
-      userPoolClientName: `vote-board-game-client-${environment}`,
+      userPoolClientName: `${appName}-${environment}-cognito-client`,
       authFlows: {
         userPassword: true,
         userSrp: true,
@@ -152,7 +153,7 @@ export class VoteBoardGameStack extends cdk.Stack {
         : path.join(__dirname, '../../../api/dist');
 
     const apiLambda = new lambda.Function(this, 'ApiFunction', {
-      functionName: `vote-board-game-api-${environment}`,
+      functionName: `${appName}-${environment}-lambda-api`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'lambda.handler',
       code: lambda.Code.fromAsset(apiCodePath),
@@ -210,7 +211,7 @@ export class VoteBoardGameStack extends cdk.Stack {
 
     // API Gateway HTTP API
     const httpApi = new apigatewayv2.HttpApi(this, 'HttpApi', {
-      apiName: `vote-board-game-api-${environment}`,
+      apiName: `${appName}-${environment}-apigateway-main`,
       description: `Vote Board Game API - ${environment}`,
       corsPreflight: {
         allowOrigins:
@@ -311,7 +312,7 @@ export class VoteBoardGameStack extends cdk.Stack {
 
     // S3 バケット (アクセスログ用)
     const logBucket = new s3.Bucket(this, 'LogBucket', {
-      bucketName: `vote-board-game-logs-${environment}-${this.account}`,
+      bucketName: `${appName}-${environment}-s3-logs-${this.account}`,
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
@@ -323,7 +324,7 @@ export class VoteBoardGameStack extends cdk.Stack {
 
     // S3 バケット (フロントエンド用)
     const webBucket = new s3.Bucket(this, 'WebBucket', {
-      bucketName: `vote-board-game-web-${environment}-${this.account}`,
+      bucketName: `${appName}-${environment}-s3-web-${this.account}`,
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
