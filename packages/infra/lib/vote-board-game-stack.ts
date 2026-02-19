@@ -28,9 +28,7 @@ export class VoteBoardGameStack extends cdk.Stack {
         type: dynamodb.AttributeType.STRING,
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      pointInTimeRecoverySpecification: {
-        pointInTimeRecoveryEnabled: isProduction,
-      },
+      pointInTimeRecovery: true,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
@@ -61,6 +59,17 @@ export class VoteBoardGameStack extends cdk.Stack {
       },
     });
 
+    // S3 バケット (アクセスログ用)
+    const logBucket = new s3.Bucket(this, 'LogBucket', {
+      bucketName: `vote-board-game-logs-${environment}-${this.account}`,
+      publicReadAccess: false,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: !isProduction,
+      enforceSSL: true,
+    });
+
     // S3 バケット (フロントエンド用)
     const webBucket = new s3.Bucket(this, 'WebBucket', {
       bucketName: `vote-board-game-web-${environment}-${this.account}`,
@@ -69,6 +78,9 @@ export class VoteBoardGameStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
       removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: !isProduction,
+      serverAccessLogsBucket: logBucket,
+      serverAccessLogsPrefix: 'web-bucket-logs/',
+      enforceSSL: true,
     });
 
     // CloudFront Distribution
@@ -86,6 +98,10 @@ export class VoteBoardGameStack extends cdk.Stack {
           responsePagePath: '/404.html',
         },
       ],
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+      enableLogging: true,
+      logBucket: logBucket,
+      logFilePrefix: 'cloudfront-logs/',
     });
 
     // Outputs
