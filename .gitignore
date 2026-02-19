@@ -1,2 +1,6 @@
+# Dependencies
+node_modules/
+
+# Kiro
 .kiro/agents/developer.json
 settings/mcp.json

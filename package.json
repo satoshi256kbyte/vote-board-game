@@ -1,0 +1,32 @@
+{
+  "name": "vote-board-game",
+  "version": "1.0.0",
+  "description": "投票形式のアブストラクト・ゲーム",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\"",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.0",
+  "lint-staged": {
+    "*.md": [
+      "prettier --write",
+      "markdownlint-cli2 --fix"
+    ],
+    "*.{js,ts,tsx,json}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "markdownlint-cli2": "^0.21.0",
+    "prettier": "^3.8.1"
+  }
+}
