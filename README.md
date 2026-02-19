@@ -189,24 +189,27 @@ ISC
 
 CD パイプラインは OIDC を使用した IAM ロール認証を使用します。
 
-#### 必要な GitHub Secrets
+#### GitHub Environments の設定
 
-環境ごとに1つのSecretのみ必要です：
+各環境に対して GitHub Environments を作成し、環境ごとに`AWS_ROLE_ARN`を設定します。
 
-**Development環境**
+**手順:**
 
-- `AWS_ROLE_ARN_DEVELOPMENT`: Development用 IAM ロールの ARN
-  - 例: `arn:aws:iam::123456789012:role/GitHubActionsDeployRole-Development`
+1. GitHubリポジトリ > Settings > Environments
+2. 以下の3つの環境を作成：
+   - `development`
+   - `staging`
+   - `production`
+3. 各環境に`AWS_ROLE_ARN` Secretを追加：
+   - Development: `arn:aws:iam::123456789012:role/GitHubActionsDeployRole-Development`
+   - Staging: `arn:aws:iam::123456789012:role/GitHubActionsDeployRole-Staging`
+   - Production: `arn:aws:iam::123456789012:role/GitHubActionsDeployRole-Production`
 
-**Staging環境**
+**メリット:**
 
-- `AWS_ROLE_ARN_STAGING`: Staging用 IAM ロールの ARN
-  - 例: `arn:aws:iam::123456789012:role/GitHubActionsDeployRole-Staging`
-
-**Production環境**
-
-- `AWS_ROLE_ARN_PRODUCTION`: Production用 IAM ロールの ARN
-  - 例: `arn:aws:iam::123456789012:role/GitHubActionsDeployRole-Production`
+- 環境ごとに同じ変数名`AWS_ROLE_ARN`を使用
+- 環境ごとに異なる保護ルールを設定可能
+- Secretsの管理が簡潔
 
 その他の情報（AWS Account ID、S3バケット名、CloudFront Distribution ID）は、デプロイ時に自動的に取得されます：
 
