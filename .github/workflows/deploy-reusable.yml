@@ -102,8 +102,8 @@ jobs:
       - name: Extract CDK Outputs
         id: cdk-outputs
         run: |
-          BUCKET_NAME=$(jq -r '.[] | .WebBucketName' cdk-outputs.json)
-          DISTRIBUTION_ID=$(jq -r '.[] | .DistributionId' cdk-outputs.json)
+          BUCKET_NAME=$(jq -r '.[] | .WebBucketName' packages/infra/cdk-outputs.json)
+          DISTRIBUTION_ID=$(jq -r '.[] | .DistributionId' packages/infra/cdk-outputs.json)
           echo "bucket-name=$BUCKET_NAME" >> $GITHUB_OUTPUT
           echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
 
