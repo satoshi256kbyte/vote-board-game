@@ -143,11 +143,19 @@ export class VoteBoardGameStack extends cdk.Stack {
     });
 
     // Lambda 関数 (API)
+    // パスは実行環境によって異なる:
+    // - テスト時 (vitest): packages/infra/lib から ../../api/dist
+    // - 本番時 (cdk synth): packages/infra/dist/lib から ../../../api/dist
+    const apiCodePath =
+      process.env.NODE_ENV === 'test' || process.env.VITEST
+        ? path.join(__dirname, '../../api/dist')
+        : path.join(__dirname, '../../../api/dist');
+
     const apiLambda = new lambda.Function(this, 'ApiFunction', {
       functionName: `vote-board-game-api-${environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'lambda.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../../api/dist')),
+      code: lambda.Code.fromAsset(apiCodePath),
       timeout: cdk.Duration.seconds(30),
       memorySize: 512,
       environment: {
