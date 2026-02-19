@@ -86,7 +86,7 @@ export class VoteBoardGameStack extends cdk.Stack {
         requireLowercase: true,
         requireUppercase: true,
         requireDigits: true,
-        requireSymbols: false,
+        requireSymbols: true, // 特殊文字を必須に
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
@@ -95,7 +95,26 @@ export class VoteBoardGameStack extends cdk.Stack {
         sms: false,
         otp: true,
       },
+      userVerification: {
+        emailStyle: cognito.VerificationEmailStyle.CODE,
+      },
     });
+
+    // cdk-nag suppressions for Cognito
+    NagSuppressions.addResourceSuppressions(
+      userPool,
+      [
+        {
+          id: 'AwsSolutions-COG2',
+          reason: 'MVP では MFA はオプショナル。ユーザー体験を優先し、将来的に必須化を検討。',
+        },
+        {
+          id: 'AwsSolutions-COG3',
+          reason: 'MVP では Advanced Security Mode は不要。将来的にトラフィック増加時に実装。',
+        },
+      ],
+      true
+    );
 
     // Cognito ユーザープールクライアント
     const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
