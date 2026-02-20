@@ -221,6 +221,32 @@ export class VoteBoardGameStack extends cdk.Stack {
         ? path.join(__dirname, '../../api/dist')
         : path.join(__dirname, '../../../api/dist');
 
+    // API Lambda用のIAMロールを作成
+    const apiLambdaRole = new cdk.aws_iam.Role(this, 'ApiLambdaRole', {
+      roleName: `${appName}-${environment}-iam-lambda-api-role`,
+      assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'service-role/AWSLambdaBasicExecutionRole'
+        ),
+      ],
+    });
+
+    // cdk-nag suppression for ApiLambdaRole using AWS managed policy
+    NagSuppressions.addResourceSuppressions(
+      apiLambdaRole,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWSLambdaBasicExecutionRole is AWS managed policy for Lambda logging',
+          appliesTo: [
+            'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+          ],
+        },
+      ],
+      true
+    );
+
     const apiLambda = new lambda.Function(this, 'ApiFunction', {
       functionName: `${appName}-${environment}-lambda-api`,
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -228,15 +254,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       code: lambda.Code.fromAsset(apiCodePath),
       timeout: cdk.Duration.seconds(30),
       memorySize: 512,
-      role: new cdk.aws_iam.Role(this, 'ApiLambdaRole', {
-        roleName: `${appName}-${environment}-iam-lambda-api-role`,
-        assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
-        managedPolicies: [
-          cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
-            'service-role/AWSLambdaBasicExecutionRole'
-          ),
-        ],
-      }),
+      role: apiLambdaRole,
       environment: {
         NODE_ENV: environment,
         TABLE_NAME: table.tableName,
@@ -281,6 +299,24 @@ export class VoteBoardGameStack extends cdk.Stack {
 
     // Lambda に Cognito へのアクセス権限を付与
     userPool.grant(apiLambda, 'cognito-idp:AdminGetUser', 'cognito-idp:AdminUpdateUserAttributes');
+
+    // cdk-nag suppression for ApiLambdaRole/DefaultPolicy wildcard permissions
+    NagSuppressions.addResourceSuppressions(
+      apiLambdaRole,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations',
+          appliesTo: [
+            'Action::cognito-idp:*',
+            'Resource::<VoteBoardGameTable*.Arn>/index/*',
+            'Resource::*',
+          ],
+        },
+      ],
+      true
+    );
 
     // API Gateway HTTP API
     const httpApi = new apigatewayv2.HttpApi(this, 'HttpApi', {
