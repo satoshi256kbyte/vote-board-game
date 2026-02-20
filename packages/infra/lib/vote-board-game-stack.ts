@@ -8,6 +8,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigatewayv2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as scheduler from 'aws-cdk-lib/aws-scheduler';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -416,6 +418,91 @@ export class VoteBoardGameStack extends cdk.Stack {
       true
     );
 
+    // Batch Lambda 用の IAM ロール
+    const batchLambdaRole = new iam.Role(this, 'BatchLambdaRole', {
+      roleName: `${appName}-${environment}-iam-lambda-batch-role`,
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+      ],
+    });
+
+    // cdk-nag suppression for BatchLambdaRole
+    NagSuppressions.addResourceSuppressions(
+      batchLambdaRole,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWSLambdaBasicExecutionRole is AWS managed policy for Lambda logging',
+          appliesTo: [
+            'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+          ],
+        },
+      ],
+      true
+    );
+
+    // Batch Lambda 関数
+    const batchLambda = new lambda.Function(this, 'BatchFunction', {
+      functionName: `${appName}-${environment}-lambda-batch`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'batch.handler',
+      code: lambda.Code.fromAsset(apiCodePath),
+      timeout: cdk.Duration.minutes(5),
+      memorySize: 512,
+      role: batchLambdaRole,
+      environment: {
+        NODE_ENV: environment,
+        TABLE_NAME: table.tableName,
+      },
+      logRetention: logs.RetentionDays.ONE_WEEK,
+      tracing: lambda.Tracing.ACTIVE,
+    });
+
+    // Batch Lambda に DynamoDB テーブルへのアクセス権限を付与
+    table.grantReadWriteData(batchLambda);
+
+    // cdk-nag suppression for BatchLambdaRole/DefaultPolicy
+    NagSuppressions.addResourceSuppressions(
+      batchLambdaRole,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'DynamoDB GSI access requires wildcard for index ARNs',
+          appliesTo: [
+            {
+              regex: '/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
+    );
+
+    // EventBridge Scheduler 用の IAM ロール
+    const schedulerRole = new iam.Role(this, 'SchedulerRole', {
+      roleName: `${appName}-${environment}-iam-scheduler-role`,
+      assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com'),
+    });
+
+    // Scheduler に Lambda 実行権限を付与
+    batchLambda.grantInvoke(schedulerRole);
+
+    // EventBridge Scheduler (JST 0:00 = UTC 15:00)
+    const schedule = new scheduler.CfnSchedule(this, 'DailyBatchSchedule', {
+      name: `${appName}-${environment}-schedule-daily-batch`,
+      description: '日次バッチ処理（投票集計・次の一手決定・AI候補生成）',
+      scheduleExpression: 'cron(0 15 * * ? *)', // UTC 15:00 = JST 0:00
+      scheduleExpressionTimezone: 'UTC',
+      flexibleTimeWindow: {
+        mode: 'OFF',
+      },
+      target: {
+        arn: batchLambda.functionArn,
+        roleArn: schedulerRole.roleArn,
+      },
+    });
+
     // Outputs
     new cdk.CfnOutput(this, 'TableName', {
       value: table.tableName,
@@ -492,6 +579,24 @@ export class VoteBoardGameStack extends cdk.Stack {
       value: apiLambda.functionArn,
       description: 'API Lambda 関数 ARN',
       exportName: `VoteBoardGameApiLambdaArn-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'BatchLambdaFunctionName', {
+      value: batchLambda.functionName,
+      description: 'Batch Lambda 関数名',
+      exportName: `VoteBoardGameBatchLambdaName-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'BatchLambdaFunctionArn', {
+      value: batchLambda.functionArn,
+      description: 'Batch Lambda 関数 ARN',
+      exportName: `VoteBoardGameBatchLambdaArn-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'ScheduleName', {
+      value: schedule.name!,
+      description: 'EventBridge Scheduler 名',
+      exportName: `VoteBoardGameScheduleName-${environment}`,
     });
   }
 }

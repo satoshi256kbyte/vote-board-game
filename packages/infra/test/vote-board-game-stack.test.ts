@@ -202,8 +202,8 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      // API Lambda + ログ保持用の Lambda が作成される
-      template.resourceCountIs('AWS::Lambda::Function', 3);
+      // API Lambda + Batch Lambda + ログ保持用の Lambda (2つ) が作成される
+      template.resourceCountIs('AWS::Lambda::Function', 4);
     });
 
     it('should have exactly 1 API Gateway HTTP API', () => {
