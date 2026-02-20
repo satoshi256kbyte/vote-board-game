@@ -310,7 +310,9 @@ export class VoteBoardGameStack extends cdk.Stack {
             'DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations',
           appliesTo: [
             'Action::cognito-idp:*',
-            'Resource::<VoteBoardGameTable*.Arn>/index/*',
+            {
+              regex: '/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g',
+            },
             'Resource::*',
           ],
         },
