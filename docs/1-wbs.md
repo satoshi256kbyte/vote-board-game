@@ -50,7 +50,7 @@ inclusion: manual
 | 2.3.5 Route 53 ドメイン設定                 |            |      |
 | 2.3.6 EventBridge Scheduler の構築          | 完了       |      |
 | 2.3.7 CloudWatch アラート・モニタリング設定 | 完了       |      |
-| 2.3.8 cdk-nag によるセキュリティチェック    |            |      |
+| 2.3.8 cdk-nag によるセキュリティチェック    | 完了       |      |
 
 ### 🚀 マイルストーン: 開発環境デプロイ完了・CI/CD稼働開始
 
