@@ -272,6 +272,7 @@ export class VoteBoardGameStack extends cdk.Stack {
     });
 
     // cdk-nag suppressions for LogRetention Lambda (auto-created by CDK)
+    // Note: CDK creates a single LogRetention Lambda that handles log retention for all Lambda functions
     NagSuppressions.addResourceSuppressionsByPath(
       this,
       `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource`,
@@ -494,34 +495,6 @@ export class VoteBoardGameStack extends cdk.Stack {
         },
       ],
       true
-    );
-
-    // cdk-nag suppressions for Batch Lambda LogRetention (auto-created by CDK)
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'LogRetention Lambda は CDK が自動生成。AWS マネージドポリシーを使用。',
-          appliesTo: [
-            'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-          ],
-        },
-      ]
-    );
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason:
-            'LogRetention Lambda は CDK が自動生成。CloudWatch Logs へのアクセスに wildcard が必要。',
-          appliesTo: ['Resource::*'],
-        },
-      ]
     );
 
     // EventBridge Scheduler 用の IAM ロール
