@@ -27,5 +27,18 @@ fi
 
 echo "✅ Lint passed"
 echo ""
+
+echo "🛡️  Running CDK security check (cdk-nag)..."
+if ! pnpm --filter @vote-board-game/infra synth > /dev/null 2>&1; then
+  echo "❌ CDK security check failed"
+  echo ""
+  echo "Running synth again to show errors:"
+  pnpm --filter @vote-board-game/infra synth
+  exit 1
+fi
+
+echo "✅ CDK security check passed"
+echo ""
 echo "✨ All checks passed! Pushing to remote..."
+
 
