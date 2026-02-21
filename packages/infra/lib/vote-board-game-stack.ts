@@ -10,6 +10,9 @@ import * as apigatewayv2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrat
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as scheduler from 'aws-cdk-lib/aws-scheduler';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -502,6 +505,277 @@ export class VoteBoardGameStack extends cdk.Stack {
         roleArn: schedulerRole.roleArn,
       },
     });
+
+    // CloudWatch Alarms and Monitoring (Production only)
+    if (isProduction) {
+      // SNS Topics for alerts
+      const criticalAlertTopic = new sns.Topic(this, 'CriticalAlertTopic', {
+        topicName: `${appName}-${environment}-critical-alerts`,
+        displayName: 'Vote Board Game Critical Alerts',
+      });
+
+      const warningAlertTopic = new sns.Topic(this, 'WarningAlertTopic', {
+        topicName: `${appName}-${environment}-warning-alerts`,
+        displayName: 'Vote Board Game Warning Alerts',
+      });
+
+      // Email subscriptions (replace with actual email addresses in production)
+      // Example:
+      // import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+      // criticalAlertTopic.addSubscription(new snsSubscriptions.EmailSubscription('[email]'));
+      // warningAlertTopic.addSubscription(new snsSubscriptions.EmailSubscription('[email]'));
+
+      // 1. API Lambda Alarms
+      // Critical: API Lambda エラー率上昇
+      const apiLambdaErrorRateAlarm = new cloudwatch.Alarm(this, 'ApiLambdaErrorRateAlarm', {
+        alarmName: `${appName}-${environment}-api-lambda-error-rate`,
+        alarmDescription: 'API Lambda のエラー率が 5% を超えています',
+        metric: new cloudwatch.MathExpression({
+          expression: '(errors / invocations) * 100',
+          usingMetrics: {
+            errors: apiLambda.metricErrors({
+              statistic: 'Sum',
+              period: cdk.Duration.minutes(5),
+            }),
+            invocations: apiLambda.metricInvocations({
+              statistic: 'Sum',
+              period: cdk.Duration.minutes(5),
+            }),
+          },
+        }),
+        threshold: 5,
+        evaluationPeriods: 2,
+        datapointsToAlarm: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      apiLambdaErrorRateAlarm.addAlarmAction(new cloudwatchActions.SnsAction(criticalAlertTopic));
+
+      // Warning: API Lambda 実行時間超過
+      const apiLambdaDurationAlarm = new cloudwatch.Alarm(this, 'ApiLambdaDurationAlarm', {
+        alarmName: `${appName}-${environment}-api-lambda-duration`,
+        alarmDescription: 'API Lambda の実行時間（p99）が 25秒 を超えています',
+        metric: apiLambda.metricDuration({
+          statistic: 'p99',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 25000, // 25 seconds in milliseconds
+        evaluationPeriods: 3,
+        datapointsToAlarm: 3,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      apiLambdaDurationAlarm.addAlarmAction(new cloudwatchActions.SnsAction(warningAlertTopic));
+
+      // Warning: API Lambda スロットリング発生
+      const apiLambdaThrottlesAlarm = new cloudwatch.Alarm(this, 'ApiLambdaThrottlesAlarm', {
+        alarmName: `${appName}-${environment}-api-lambda-throttles`,
+        alarmDescription: 'API Lambda でスロットリングが発生しています',
+        metric: apiLambda.metricThrottles({
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 5,
+        evaluationPeriods: 2,
+        datapointsToAlarm: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      apiLambdaThrottlesAlarm.addAlarmAction(new cloudwatchActions.SnsAction(warningAlertTopic));
+
+      // 2. Batch Lambda Alarms
+      // Critical: Batch Lambda 実行失敗
+      const batchLambdaErrorAlarm = new cloudwatch.Alarm(this, 'BatchLambdaErrorAlarm', {
+        alarmName: `${appName}-${environment}-batch-lambda-error`,
+        alarmDescription: 'Batch Lambda の実行が失敗しました',
+        metric: batchLambda.metricErrors({
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      batchLambdaErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(criticalAlertTopic));
+
+      // Warning: Batch Lambda 実行時間超過
+      const batchLambdaDurationAlarm = new cloudwatch.Alarm(this, 'BatchLambdaDurationAlarm', {
+        alarmName: `${appName}-${environment}-batch-lambda-duration`,
+        alarmDescription: 'Batch Lambda の実行時間が 4分 を超えています',
+        metric: batchLambda.metricDuration({
+          statistic: 'Maximum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 240000, // 4 minutes in milliseconds
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      batchLambdaDurationAlarm.addAlarmAction(new cloudwatchActions.SnsAction(warningAlertTopic));
+
+      // 3. API Gateway Alarms
+      // Critical: API Gateway 5XX エラー多発
+      const apiGateway5xxAlarm = new cloudwatch.Alarm(this, 'ApiGateway5xxAlarm', {
+        alarmName: `${appName}-${environment}-apigateway-5xx`,
+        alarmDescription: 'API Gateway で 5XX エラーが多発しています',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: '5XXError',
+          dimensionsMap: {
+            ApiId: httpApi.apiId,
+          },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 10,
+        evaluationPeriods: 2,
+        datapointsToAlarm: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      apiGateway5xxAlarm.addAlarmAction(new cloudwatchActions.SnsAction(criticalAlertTopic));
+
+      // Warning: API Gateway 4XX エラー多発
+      const apiGateway4xxAlarm = new cloudwatch.Alarm(this, 'ApiGateway4xxAlarm', {
+        alarmName: `${appName}-${environment}-apigateway-4xx`,
+        alarmDescription: 'API Gateway で 4XX エラーが多発しています',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: '4XXError',
+          dimensionsMap: {
+            ApiId: httpApi.apiId,
+          },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 100,
+        evaluationPeriods: 3,
+        datapointsToAlarm: 3,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      apiGateway4xxAlarm.addAlarmAction(new cloudwatchActions.SnsAction(warningAlertTopic));
+
+      // Warning: API Gateway レイテンシ上昇
+      const apiGatewayLatencyAlarm = new cloudwatch.Alarm(this, 'ApiGatewayLatencyAlarm', {
+        alarmName: `${appName}-${environment}-apigateway-latency`,
+        alarmDescription: 'API Gateway のレイテンシ（p99）が 3秒 を超えています',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: 'Latency',
+          dimensionsMap: {
+            ApiId: httpApi.apiId,
+          },
+          statistic: 'p99',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 3000, // 3 seconds in milliseconds
+        evaluationPeriods: 3,
+        datapointsToAlarm: 3,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      apiGatewayLatencyAlarm.addAlarmAction(new cloudwatchActions.SnsAction(warningAlertTopic));
+
+      // 4. DynamoDB Alarms
+      // Critical: DynamoDB システムエラー発生
+      const dynamodbSystemErrorAlarm = new cloudwatch.Alarm(this, 'DynamoDBSystemErrorAlarm', {
+        alarmName: `${appName}-${environment}-dynamodb-system-error`,
+        alarmDescription: 'DynamoDB でシステムエラーが発生しています',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/DynamoDB',
+          metricName: 'SystemErrors',
+          dimensionsMap: {
+            TableName: table.tableName,
+          },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      dynamodbSystemErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(criticalAlertTopic));
+
+      // Warning: DynamoDB ユーザーエラー多発
+      const dynamodbUserErrorAlarm = new cloudwatch.Alarm(this, 'DynamoDBUserErrorAlarm', {
+        alarmName: `${appName}-${environment}-dynamodb-user-error`,
+        alarmDescription: 'DynamoDB でユーザーエラーが多発しています',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/DynamoDB',
+          metricName: 'UserErrors',
+          dimensionsMap: {
+            TableName: table.tableName,
+          },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 10,
+        evaluationPeriods: 2,
+        datapointsToAlarm: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      dynamodbUserErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(warningAlertTopic));
+
+      // Warning: DynamoDB レイテンシ上昇
+      const dynamodbLatencyAlarm = new cloudwatch.Alarm(this, 'DynamoDBLatencyAlarm', {
+        alarmName: `${appName}-${environment}-dynamodb-latency`,
+        alarmDescription: 'DynamoDB のレイテンシ（p99）が 100ms を超えています',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/DynamoDB',
+          metricName: 'SuccessfulRequestLatency',
+          dimensionsMap: {
+            TableName: table.tableName,
+            Operation: 'GetItem',
+          },
+          statistic: 'p99',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 100, // 100 milliseconds
+        evaluationPeriods: 3,
+        datapointsToAlarm: 3,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      dynamodbLatencyAlarm.addAlarmAction(new cloudwatchActions.SnsAction(warningAlertTopic));
+
+      // 5. EventBridge Scheduler Alarm
+      // Critical: EventBridge Scheduler 実行失敗
+      const schedulerErrorAlarm = new cloudwatch.Alarm(this, 'SchedulerErrorAlarm', {
+        alarmName: `${appName}-${environment}-scheduler-error`,
+        alarmDescription: 'EventBridge Scheduler の実行が失敗しました',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/Scheduler',
+          metricName: 'TargetErrorCount',
+          dimensionsMap: {
+            ScheduleName: schedule.name!,
+          },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      schedulerErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(criticalAlertTopic));
+
+      // Outputs for SNS Topics
+      new cdk.CfnOutput(this, 'CriticalAlertTopicArn', {
+        value: criticalAlertTopic.topicArn,
+        description: 'Critical Alert SNS Topic ARN',
+        exportName: `VoteBoardGameCriticalAlertTopicArn-${environment}`,
+      });
+
+      new cdk.CfnOutput(this, 'WarningAlertTopicArn', {
+        value: warningAlertTopic.topicArn,
+        description: 'Warning Alert SNS Topic ARN',
+        exportName: `VoteBoardGameWarningAlertTopicArn-${environment}`,
+      });
+    }
 
     // Outputs
     new cdk.CfnOutput(this, 'TableName', {
