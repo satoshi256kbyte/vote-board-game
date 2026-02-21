@@ -1,0 +1,82 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="トップページ（対局一覧）" id="top-page">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- ヘッダー -->
+        <mxCell id="header" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="logo" value="[ロゴ] 投票ボドゲ" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="55" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="create-btn" value="対局作成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=none;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="960" y="55" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="profile-btn" value="プロフィール" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2563eb;fontColor=#2563eb;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="55" width="90" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- メインコンテンツ -->
+        <mxCell id="main-title" value="投票ボードゲーム" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=32;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="140" width="400" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="main-subtitle" value="みんなで投票して次の一手を決めよう" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="400" y="190" width="400" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- タブ -->
+        <mxCell id="tab-active" value="進行中" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=none;fontColor=#ffffff;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="250" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tab-inactive" value="終了" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9fafb;strokeColor=#e5e7eb;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="160" y="250" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- 対局カード1 -->
+        <mxCell id="card1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e5e7eb;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="320" width="520" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="board1" value="[盤面サムネイル]&#xa;8x8グリッド" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#10b981;strokeColor=#000000;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="80" y="340" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="game-title1" value="オセロ対局 #1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="340" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="game-type1" value="AI vs 集合知" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="375" width="260" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="game-turn1" value="ターン: 15 / 60" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="405" width="260" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="game-players1" value="参加者: 42人" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="435" width="260" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="game-deadline1" value="投票締切: 2026-02-20 00:00" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="465" width="260" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="detail-btn1" value="詳細を見る" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=none;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="300" y="510" width="120" height="35" as="geometry" />
+        </mxCell>
+        
+        <!-- 対局カード2 -->
+        <mxCell id="card2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e5e7eb;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="320" width="520" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="board2" value="[盤面サムネイル]&#xa;8x8グリッド" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#10b981;strokeColor=#000000;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="640" y="340" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="game-title2" value="オセロ対局 #2" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="860" y="340" width="260" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- フッター -->
+        <mxCell id="footer" value="© 2026 投票ボドゲ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9fafb;strokeColor=#e5e7eb;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1520" width="1120" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

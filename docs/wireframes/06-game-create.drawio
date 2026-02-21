@@ -1,0 +1,109 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="対局作成画面" id="game-create-page">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1100">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="header" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="logo" value="[ロゴ] 投票ボドゲ" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="55" width="200" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="page-title" value="新規対局作成" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=28;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="140" width="400" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- 作成フォーム -->
+        <mxCell id="form-container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e5e7eb;shadow=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="300" y="220" width="600" height="700" as="geometry" />
+        </mxCell>
+        
+        <!-- ゲーム種類 -->
+        <mxCell id="game-type-label" value="ゲーム種類" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="340" y="250" width="520" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="radio1-container" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="340" y="300" width="520" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="radio1" value="●" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="340" y="300" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="radio1-label" value="オセロ" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="380" y="300" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="radio2" value="○" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontColor=#9ca3af;" vertex="1" parent="1">
+          <mxGeometry x="340" y="340" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="radio2-label" value="チェス (準備中)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontColor=#9ca3af;" vertex="1" parent="1">
+          <mxGeometry x="380" y="340" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="radio3" value="○" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontColor=#9ca3af;" vertex="1" parent="1">
+          <mxGeometry x="340" y="380" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="radio3-label" value="囲碁 (準備中)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontColor=#9ca3af;" vertex="1" parent="1">
+          <mxGeometry x="380" y="380" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="radio4" value="○" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontColor=#9ca3af;" vertex="1" parent="1">
+          <mxGeometry x="340" y="420" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="radio4-label" value="将棋 (準備中)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontColor=#9ca3af;" vertex="1" parent="1">
+          <mxGeometry x="380" y="420" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- 対局タイプ -->
+        <mxCell id="match-type-label" value="対局タイプ" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="340" y="490" width="520" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="type-radio1" value="●" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="340" y="540" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="type-radio1-label" value="AI vs 集合知" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="380" y="540" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="type-radio2" value="○" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontColor=#9ca3af;" vertex="1" parent="1">
+          <mxGeometry x="340" y="580" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="type-radio2-label" value="集合知 vs 集合知 (準備中)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontColor=#9ca3af;" vertex="1" parent="1">
+          <mxGeometry x="380" y="580" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- 先手 -->
+        <mxCell id="first-player-label" value="先手" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="340" y="650" width="520" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="first-radio1" value="●" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="340" y="700" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="first-radio1-label" value="AI" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="380" y="700" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="first-radio2" value="○" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="340" y="740" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="first-radio2-label" value="集合知" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="380" y="740" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- 作成ボタン -->
+        <mxCell id="create-btn" value="作成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=none;fontColor=#ffffff;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="340" y="820" width="520" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="footer" value="© 2026 投票ボドゲ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9fafb;strokeColor=#e5e7eb;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1020" width="1120" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

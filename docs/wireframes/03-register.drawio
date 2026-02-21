@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ユーザー登録画面" id="register-page">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1000">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- ヘッダー -->
+        <mxCell id="header" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="logo" value="[ロゴ] 投票ボドゲ" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="55" width="200" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- 登録フォーム -->
+        <mxCell id="form-container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e5e7eb;shadow=1;align=center;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="400" y="180" width="400" height="600" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="form-title" value="ユーザー登録" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="450" y="210" width="300" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="username-label" value="ユーザー名" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="450" y="280" width="300" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="username-input" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e5e7eb;" vertex="1" parent="1">
+          <mxGeometry x="450" y="310" width="300" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="email-label" value="メールアドレス" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="450" y="370" width="300" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="email-input" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e5e7eb;" vertex="1" parent="1">
+          <mxGeometry x="450" y="400" width="300" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="password-label" value="パスワード" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="450" y="460" width="300" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="password-input" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e5e7eb;" vertex="1" parent="1">
+          <mxGeometry x="450" y="490" width="300" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="password-hint" value="8文字以上" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#6b7280;" vertex="1" parent="1">
+          <mxGeometry x="450" y="535" width="300" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="register-btn" value="登録" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2563eb;strokeColor=none;fontColor=#ffffff;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="450" y="580" width="300" height="45" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="login-link" value="すでにアカウントをお持ちの方は ログイン" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="450" y="645" width="300" height="25" as="geometry" />
+        </mxCell>
+        
+        <!-- フッター -->
+        <mxCell id="footer" value="© 2026 投票ボドゲ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9fafb;strokeColor=#e5e7eb;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="920" width="1120" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
