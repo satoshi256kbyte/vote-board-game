@@ -471,15 +471,57 @@ export class VoteBoardGameStack extends cdk.Stack {
       [
         {
           id: 'AwsSolutions-IAM5',
-          reason: 'DynamoDB GSI access requires wildcard for index ARNs',
+          reason:
+            'DynamoDB GSI access requires wildcard for index ARNs, X-Ray tracing requires Resource::*',
           appliesTo: [
             {
               regex: '/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g',
             },
+            'Resource::*',
           ],
         },
       ],
       true
+    );
+
+    // cdk-nag suppression for Batch Lambda
+    NagSuppressions.addResourceSuppressions(
+      batchLambda,
+      [
+        {
+          id: 'AwsSolutions-L1',
+          reason: 'Node.js 20.x は現時点で最新の LTS バージョン。',
+        },
+      ],
+      true
+    );
+
+    // cdk-nag suppressions for Batch Lambda LogRetention (auto-created by CDK)
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'LogRetention Lambda は CDK が自動生成。AWS マネージドポリシーを使用。',
+          appliesTo: [
+            'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+          ],
+        },
+      ]
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'LogRetention Lambda は CDK が自動生成。CloudWatch Logs へのアクセスに wildcard が必要。',
+          appliesTo: ['Resource::*'],
+        },
+      ]
     );
 
     // EventBridge Scheduler 用の IAM ロール
@@ -490,6 +532,23 @@ export class VoteBoardGameStack extends cdk.Stack {
 
     // Scheduler に Lambda 実行権限を付与
     batchLambda.grantInvoke(schedulerRole);
+
+    // cdk-nag suppression for SchedulerRole/DefaultPolicy
+    NagSuppressions.addResourceSuppressions(
+      schedulerRole,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Lambda invoke permission requires wildcard for function versions and aliases',
+          appliesTo: [
+            {
+              regex: '/^Resource::<BatchFunction.*\\.Arn>:\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
+    );
 
     // EventBridge Scheduler (JST 0:00 = UTC 15:00)
     const schedule = new scheduler.CfnSchedule(this, 'DailyBatchSchedule', {
