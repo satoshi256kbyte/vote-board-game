@@ -1,7 +1,10 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
+import type { Context } from 'hono';
 import {
   registerSchema,
+  loginSchema,
+  refreshSchema,
   passwordResetRequestSchema,
   passwordResetConfirmSchema,
 } from '../lib/validation/auth-schemas.js';
@@ -12,30 +15,35 @@ import { maskEmail } from '../lib/utils/mask.js';
 
 const authRouter = new Hono();
 
+// バリデーションエラーハンドラー（共通）
+const validationErrorHandler = (
+  result: {
+    success: boolean;
+    error?: { issues: Array<{ path: (string | number)[]; message: string }> };
+  },
+  c: Context
+) => {
+  if (!result.success) {
+    const fields: Record<string, string> = {};
+    result.error!.issues.forEach((issue) => {
+      const fieldName = issue.path.join('.');
+      fields[fieldName] = issue.message;
+    });
+    return c.json(
+      {
+        error: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: { fields },
+      },
+      400
+    );
+  }
+};
+
 // POST /auth/register
 authRouter.post(
   '/register',
-  zValidator('json', registerSchema, (result, c) => {
-    if (!result.success) {
-      // Zodバリデーションエラーを要件に準拠した形式に変換
-      const fields: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const fieldName = issue.path.join('.');
-        fields[fieldName] = issue.message;
-      });
-
-      return c.json(
-        {
-          error: 'VALIDATION_ERROR',
-          message: 'Validation failed',
-          details: {
-            fields,
-          },
-        },
-        400
-      );
-    }
-  }),
+  zValidator('json', registerSchema, validationErrorHandler),
   async (c) => {
     const { email, password, username } = c.req.valid('json');
     const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
@@ -178,23 +186,7 @@ function isInvalidCodeError(error: unknown): boolean {
 // POST /auth/password-reset
 authRouter.post(
   '/password-reset',
-  zValidator('json', passwordResetRequestSchema, (result, c) => {
-    if (!result.success) {
-      const fields: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const fieldName = issue.path.join('.');
-        fields[fieldName] = issue.message;
-      });
-      return c.json(
-        {
-          error: 'VALIDATION_ERROR',
-          message: 'Validation failed',
-          details: { fields },
-        },
-        400
-      );
-    }
-  }),
+  zValidator('json', passwordResetRequestSchema, validationErrorHandler),
   async (c) => {
     const { email } = c.req.valid('json');
     const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
@@ -246,23 +238,7 @@ authRouter.post(
 // POST /auth/password-reset/confirm
 authRouter.post(
   '/password-reset/confirm',
-  zValidator('json', passwordResetConfirmSchema, (result, c) => {
-    if (!result.success) {
-      const fields: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const fieldName = issue.path.join('.');
-        fields[fieldName] = issue.message;
-      });
-      return c.json(
-        {
-          error: 'VALIDATION_ERROR',
-          message: 'Validation failed',
-          details: { fields },
-        },
-        400
-      );
-    }
-  }),
+  zValidator('json', passwordResetConfirmSchema, validationErrorHandler),
   async (c) => {
     const { email, confirmationCode, newPassword } = c.req.valid('json');
     const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
@@ -317,6 +293,133 @@ authRouter.post(
       }
 
       return c.json({ error: 'INTERNAL_ERROR', message: 'Password reset failed' }, 500);
+    }
+  }
+);
+
+// 認証エラー判定ヘルパー関数
+function isAuthenticationError(error: unknown): boolean {
+  if (error && typeof error === 'object' && 'name' in error) {
+    const name = (error as { name: string }).name;
+    return name === 'NotAuthorizedException' || name === 'UserNotFoundException';
+  }
+  return false;
+}
+
+function isTokenExpiredError(error: unknown): boolean {
+  if (error && typeof error === 'object' && 'name' in error) {
+    return (error as { name: string }).name === 'NotAuthorizedException';
+  }
+  return false;
+}
+
+// POST /auth/login
+authRouter.post('/login', zValidator('json', loginSchema, validationErrorHandler), async (c) => {
+  const { email, password } = c.req.valid('json');
+  const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
+
+  // レート制限チェック（1分あたり10リクエスト）
+  const rateLimiter = new RateLimiter();
+  const isAllowed = await rateLimiter.checkLimit(ipAddress, 'login');
+  if (!isAllowed) {
+    const retryAfter = await rateLimiter.getRetryAfter(ipAddress, 'login');
+    return c.json(
+      { error: 'RATE_LIMIT_EXCEEDED', message: 'Too many login attempts', retryAfter },
+      429
+    );
+  }
+
+  // リクエストログ（マスク済みメール、IPアドレス、タイムスタンプ）
+  console.log('Login attempt', {
+    email: maskEmail(email),
+    ipAddress,
+    timestamp: new Date().toISOString(),
+  });
+
+  try {
+    // Cognito認証（USER_PASSWORD_AUTH）
+    const cognitoService = new CognitoService();
+    const tokens = await cognitoService.authenticate(email, password);
+
+    // IDトークンからuserIdを抽出
+    const userId = cognitoService.extractUserIdFromIdToken(tokens.idToken);
+
+    // DynamoDBからユーザー情報を取得
+    const userRepo = new UserRepository();
+    const user = await userRepo.getById(userId);
+
+    if (!user) {
+      return c.json({ error: 'USER_NOT_FOUND', message: 'User not found' }, 404);
+    }
+
+    // 成功ログ
+    console.log('Login successful', {
+      userId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return c.json(
+      {
+        userId: user.userId,
+        email: user.email,
+        username: user.username,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: 900,
+      },
+      200
+    );
+  } catch (error) {
+    // エラーログ（マスク済みメール、パスワード非出力、トークン非出力）
+    console.error('Login failed', {
+      email: maskEmail(email),
+      timestamp: new Date().toISOString(),
+    });
+
+    // 認証失敗（統一メッセージ：メール存在有無を明らかにしない）
+    if (isAuthenticationError(error)) {
+      return c.json({ error: 'AUTHENTICATION_FAILED', message: 'Invalid email or password' }, 401);
+    }
+
+    return c.json({ error: 'INTERNAL_ERROR', message: 'Login failed' }, 500);
+  }
+});
+
+// POST /auth/refresh
+authRouter.post(
+  '/refresh',
+  zValidator('json', refreshSchema, validationErrorHandler),
+  async (c) => {
+    const { refreshToken } = c.req.valid('json');
+    const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
+
+    // レート制限チェック（1分あたり20リクエスト）
+    const rateLimiter = new RateLimiter();
+    const isAllowed = await rateLimiter.checkLimit(ipAddress, 'refresh');
+    if (!isAllowed) {
+      const retryAfter = await rateLimiter.getRetryAfter(ipAddress, 'refresh');
+      return c.json(
+        { error: 'RATE_LIMIT_EXCEEDED', message: 'Too many refresh attempts', retryAfter },
+        429
+      );
+    }
+
+    try {
+      // Cognitoリフレッシュ（REFRESH_TOKEN_AUTH）
+      const cognitoService = new CognitoService();
+      const result = await cognitoService.refreshTokens(refreshToken);
+
+      return c.json({ accessToken: result.accessToken, expiresIn: 900 }, 200);
+    } catch (error) {
+      // トークン期限切れ/無効
+      if (isTokenExpiredError(error)) {
+        return c.json(
+          { error: 'TOKEN_EXPIRED', message: 'Refresh token is invalid or expired' },
+          401
+        );
+      }
+
+      return c.json({ error: 'INTERNAL_ERROR', message: 'Token refresh failed' }, 500);
     }
   }
 );

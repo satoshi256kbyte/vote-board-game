@@ -79,7 +79,7 @@
   - すべてのテストが通過することを確認し、質問があればユーザーに確認してください。
 
 - [ ] 5. Auth Routerへのエンドポイント追加
-  - [~] 5.1 ログインエンドポイントを実装
+  - [x] 5.1 ログインエンドポイントを実装
     - `packages/api/src/routes/auth.ts`に`POST /login`を追加
     - Zodバリデーター統合（loginSchema）
     - レート制限チェック（login: 10リクエスト/分）
@@ -89,14 +89,14 @@
     - 成功レスポンス（200、userId、email、username、tokens、expiresIn: 900）
     - リクエストログ（マスク済みメール、IPアドレス、タイムスタンプ）
     - _要件: 1.1, 1.2-1.4, 2.1-2.4, 3.1-3.3, 4.1-4.4, 8.1-8.4, 9.1-9.3_
-  - [~] 5.2 リフレッシュエンドポイントを実装
+  - [x] 5.2 リフレッシュエンドポイントを実装
     - `packages/api/src/routes/auth.ts`に`POST /refresh`を追加
     - Zodバリデーター統合（refreshSchema）
     - レート制限チェック（refresh: 20リクエスト/分）
     - Cognitoリフレッシュ（REFRESH_TOKEN_AUTH）
     - 成功レスポンス（200、accessToken、expiresIn: 900）
     - _要件: 5.1, 5.2-5.5, 6.2_
-  - [~] 5.3 エラーハンドリングヘルパー関数を実装
+  - [x] 5.3 エラーハンドリングヘルパー関数を実装
     - `isAuthenticationError`関数: NotAuthorizedException、UserNotFoundExceptionを判定
     - `isTokenExpiredError`関数: NotAuthorizedException（リフレッシュフロー）を判定
     - バリデーションエラーハンドラーの共通化（register/login/refreshで共有）
