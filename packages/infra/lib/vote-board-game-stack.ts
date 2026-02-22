@@ -118,6 +118,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       pointInTimeRecovery: true,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      timeToLiveAttribute: 'expiresAt', // レート制限レコードの自動削除用
     });
 
     // GSI1: ゲーム一覧取得用
@@ -171,7 +172,7 @@ export class VoteBoardGameStack extends cdk.Stack {
         requireLowercase: true,
         requireUppercase: true,
         requireDigits: true,
-        requireSymbols: true, // 特殊文字を必須に
+        requireSymbols: false, // 要件3.1-3.4: 特殊文字は不要
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
@@ -189,6 +190,11 @@ export class VoteBoardGameStack extends cdk.Stack {
     NagSuppressions.addResourceSuppressions(
       userPool,
       [
+        {
+          id: 'AwsSolutions-COG1',
+          reason:
+            '要件3.1-3.4: パスワードポリシーは8文字以上、大文字・小文字・数字を必須とするが、特殊文字は不要。ユーザー体験を優先。',
+        },
         {
           id: 'AwsSolutions-COG2',
           reason: 'MVP では MFA はオプショナル。ユーザー体験を優先し、将来的に必須化を検討。',
@@ -252,6 +258,20 @@ export class VoteBoardGameStack extends cdk.Stack {
       true
     );
 
+    // ALLOWED_ORIGINS を環境ごとに設定
+    const allowedOrigins = (() => {
+      switch (environment) {
+        case 'dev':
+          return 'http://localhost:3000';
+        case 'stg':
+          return 'https://stg.vote-board-game.example.com';
+        case 'prod':
+          return 'https://vote-board-game.example.com';
+        default:
+          return frontendOrigin;
+      }
+    })();
+
     const apiLambda = new lambda.Function(this, 'ApiFunction', {
       functionName: `${appName}-${environment}-lambda-api`,
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -265,7 +285,9 @@ export class VoteBoardGameStack extends cdk.Stack {
         TABLE_NAME: table.tableName,
         USER_POOL_ID: userPool.userPoolId,
         USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
-        ALLOWED_ORIGINS: frontendOrigin,
+        COGNITO_USER_POOL_ID: userPool.userPoolId,
+        COGNITO_CLIENT_ID: userPoolClient.userPoolClientId,
+        ALLOWED_ORIGINS: allowedOrigins,
       },
       logRetention: logs.RetentionDays.ONE_WEEK,
       tracing: lambda.Tracing.ACTIVE,
@@ -304,7 +326,12 @@ export class VoteBoardGameStack extends cdk.Stack {
     table.grantReadWriteData(apiLambda);
 
     // Lambda に Cognito へのアクセス権限を付与
-    userPool.grant(apiLambda, 'cognito-idp:AdminGetUser', 'cognito-idp:AdminUpdateUserAttributes');
+    userPool.grant(
+      apiLambda,
+      'cognito-idp:AdminGetUser',
+      'cognito-idp:AdminUpdateUserAttributes',
+      'cognito-idp:AdminDeleteUser'
+    );
 
     // cdk-nag suppression for ApiLambdaRole/DefaultPolicy wildcard permissions
     NagSuppressions.addResourceSuppressions(
