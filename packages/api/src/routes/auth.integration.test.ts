@@ -1,3 +1,6 @@
+// COGNITO_USER_POOL_IDが必要なため、モジュールインポート前に設定
+process.env.COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || 'ap-northeast-1_TestPool';
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
 

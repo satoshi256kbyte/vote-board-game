@@ -5,8 +5,21 @@ import { gamesRouter } from './routes/games.js';
 import { candidatesRouter } from './routes/candidates.js';
 import { votesRouter } from './routes/votes.js';
 import { authRouter } from './routes/auth.js';
+import { createAuthMiddleware } from './lib/auth/auth-middleware.js';
+import type { AuthVariables } from './lib/auth/types.js';
 
-const app = new Hono();
+// 環境変数チェック（起動時にフェイルファスト）
+const userPoolId = process.env.COGNITO_USER_POOL_ID;
+const region = process.env.AWS_REGION || 'ap-northeast-1';
+
+if (!userPoolId) {
+  console.error('COGNITO_USER_POOL_ID environment variable is not set');
+  throw new Error('COGNITO_USER_POOL_ID is required');
+}
+
+const authMiddleware = createAuthMiddleware({ userPoolId, region });
+
+const app = new Hono<{ Variables: AuthVariables }>();
 
 // ミドルウェア
 app.use('*', logger());
@@ -17,6 +30,16 @@ app.use(
     credentials: true,
   })
 );
+
+// 保護対象ルートにミドルウェアを適用（ルート登録前に適用）
+app.use('/api/votes/*', authMiddleware);
+app.use('/api/candidates', async (c, next) => {
+  // POSTのみ認証必須、GETは公開
+  if (c.req.method === 'POST') {
+    return authMiddleware(c, next);
+  }
+  await next();
+});
 
 // ヘルスチェック
 app.get('/health', (c) => {
