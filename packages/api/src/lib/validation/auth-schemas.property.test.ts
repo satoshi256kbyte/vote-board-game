@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { registerSchema } from './auth-schemas.js';
+import { registerSchema, loginSchema } from './auth-schemas.js';
 
 /**
  * Feature: user-registration-api
@@ -1126,6 +1126,158 @@ describe('Property 5: Username requirements validation', () => {
           if (!result.success) {
             const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
             expect(usernameError).toBeUndefined();
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+});
+
+/**
+ * Feature: 3-login-api, Property 1: ログイン必須フィールド検証
+ *
+ * **Validates: Requirements 1.2, 1.3, 1.4**
+ *
+ * 任意のログインリクエストに対して、emailまたはpasswordフィールドが欠落または空の場合、
+ * APIは400ステータスコードとエラーコード`VALIDATION_ERROR`を返すべきです。
+ */
+describe('Property 1 (Login): ログイン必須フィールド検証', () => {
+  it('should reject login requests with missing or empty required fields', () => {
+    fc.assert(
+      fc.property(
+        // 各フィールドを欠落または空文字列にする可能性のあるジェネレーター
+        fc.record({
+          email: fc.option(fc.oneof(fc.constant(''), fc.string({ maxLength: 50 })), {
+            nil: undefined,
+          }),
+          password: fc.option(fc.oneof(fc.constant(''), fc.string({ maxLength: 50 })), {
+            nil: undefined,
+          }),
+        }),
+        (data) => {
+          // 少なくとも1つのフィールドが欠落または空であることを確認
+          const hasEmptyOrMissingField =
+            data.email === undefined ||
+            data.email === '' ||
+            data.password === undefined ||
+            data.password === '';
+
+          // 少なくとも1つのフィールドが欠落または空の場合のみテスト
+          if (!hasEmptyOrMissingField) {
+            return true; // このケースはスキップ
+          }
+
+          const result = loginSchema.safeParse(data);
+
+          // バリデーションは失敗すべき
+          expect(result.success).toBe(false);
+
+          if (!result.success) {
+            const errorMessages = result.error.issues.map((issue) => issue.message);
+            const hasRequiredError = errorMessages.some(
+              (msg) =>
+                msg === 'Email is required' ||
+                msg === 'Password is required' ||
+                msg.includes('required')
+            );
+            expect(hasRequiredError).toBe(true);
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('should reject login requests with missing email field', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          password: fc.string({ minLength: 1, maxLength: 50 }),
+        }),
+        (data) => {
+          const result = loginSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const emailError = result.error.issues.find((issue) => issue.path[0] === 'email');
+            expect(emailError).toBeDefined();
+            expect(emailError?.message).toBe('Email is required');
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should reject login requests with empty email field', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.constant(''),
+          password: fc.string({ minLength: 1, maxLength: 50 }),
+        }),
+        (data) => {
+          const result = loginSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const emailError = result.error.issues.find((issue) => issue.path[0] === 'email');
+            expect(emailError).toBeDefined();
+            expect(emailError?.message).toBe('Email is required');
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should reject login requests with missing password field', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.string({ minLength: 1, maxLength: 50 }),
+        }),
+        (data) => {
+          const result = loginSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const passwordError = result.error.issues.find((issue) => issue.path[0] === 'password');
+            expect(passwordError).toBeDefined();
+            expect(passwordError?.message).toBe('Password is required');
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should reject login requests with empty password field', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.string({ minLength: 1, maxLength: 50 }),
+          password: fc.constant(''),
+        }),
+        (data) => {
+          const result = loginSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const passwordError = result.error.issues.find((issue) => issue.path[0] === 'password');
+            expect(passwordError).toBeDefined();
+            expect(passwordError?.message).toBe('Password is required');
           }
 
           return true;
