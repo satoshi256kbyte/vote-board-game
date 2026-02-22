@@ -14,7 +14,7 @@
   - _要件: 1.1, 1.2, 1.3_
 
 - [ ] 2. Storage Serviceの実装
-  - [~] 2.1 Storage Serviceの実装
+  - [x] 2.1 Storage Serviceの実装
     - `packages/web/src/lib/services/storage-service.ts`を作成
     - アクセストークンとリフレッシュトークンの保存・取得・削除機能を実装
     - ローカルストレージキー: `vbg_access_token`, `vbg_refresh_token`
