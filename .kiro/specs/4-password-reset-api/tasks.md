@@ -153,7 +153,7 @@
     - **検証: 要件 8.2, 8.3, 8.4**
 
 - [ ] 6. CORS設定の確認
-  - [-] 6.1 CORS設定のユニットテストを作成
+  - [x] 6.1 CORS設定のユニットテストを作成
     - `packages/api/src/routes/auth.test.ts`に追加
     - パスワードリセットエンドポイントがCORSヘッダーを返すことを確認
     - 許可オリジン: localhost:3000、stg.vote-board-game.example.com、vote-board-game.example.com
