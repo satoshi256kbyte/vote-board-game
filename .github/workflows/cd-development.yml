@@ -111,6 +111,8 @@ jobs:
         run: pnpm --filter @vote-board-game/web test:e2e
         env:
           BASE_URL: ${{ steps.cloudfront-url.outputs.url }}
+        # Note: This step will fail the job and workflow if tests fail (requirement 3.5)
+        # No continue-on-error is set, ensuring test failures are properly reported
 
       - name: Upload test results
         if: always()

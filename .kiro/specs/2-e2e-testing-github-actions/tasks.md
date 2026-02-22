@@ -100,7 +100,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
     - Run summary step always (success or failure)
     - _Requirements: 6.5_
 
-  - [~] 4.7 Ensure E2E job fails workflow on test failure
+  - [x] 4.7 Ensure E2E job fails workflow on test failure
     - Verify E2E test failures cause job failure
     - Confirm workflow status reflects E2E test results
     - _Requirements: 3.5_
