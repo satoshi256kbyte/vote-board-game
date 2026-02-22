@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { UserRepository, UserEntity } from './user.js';
+import { UserRepository } from './user.js';
+import type { UserEntity } from '../types.js';
 import { PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 
 // DynamoDBクライアントをモック

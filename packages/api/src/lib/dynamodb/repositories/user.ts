@@ -1,21 +1,7 @@
 import { PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { BaseRepository } from './base.js';
 import { docClient, TABLE_NAME } from '../index.js';
-
-/**
- * ユーザーエンティティ
- */
-export interface UserEntity {
-  PK: string; // "USER#<userId>"
-  SK: string; // "USER#<userId>"
-  userId: string; // UUID from Cognito
-  email: string; // ユーザーのメールアドレス
-  username: string; // 表示名（3-20文字）
-  iconUrl?: string; // プロフィール画像URL（オプション）
-  createdAt: string; // ISO 8601形式
-  updatedAt: string; // ISO 8601形式
-  entityType: 'USER'; // エンティティタイプ識別子
-}
+import type { UserEntity } from '../types.js';
 
 /**
  * ユーザーリポジトリ
