@@ -131,6 +131,96 @@ describe('RateLimiter', () => {
     });
   });
 
+  describe('password-reset action (limit: 3)', () => {
+    it('3リクエスト目まではtrueを返す', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      const windowStart = now - (now % 60);
+
+      // 既存のレコードを返す（カウント: 2）
+      mockSend.mockResolvedValueOnce({
+        Item: {
+          PK: 'RATELIMIT#password-reset#10.0.0.1',
+          SK: 'RATELIMIT#password-reset#10.0.0.1',
+          count: 2,
+          windowStart,
+          expiresAt: now + 120,
+        },
+      });
+      mockSend.mockResolvedValueOnce({});
+
+      const result = await rateLimiter.checkLimit('10.0.0.1', 'password-reset');
+
+      expect(result).toBe(true);
+      expect(mockSend).toHaveBeenNthCalledWith(2, expect.any(UpdateCommand));
+    });
+
+    it('3リクエストに達した場合はfalseを返す', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      const windowStart = now - (now % 60);
+
+      // 既存のレコードを返す（カウント: 3、制限に達している）
+      mockSend.mockResolvedValueOnce({
+        Item: {
+          PK: 'RATELIMIT#password-reset#10.0.0.1',
+          SK: 'RATELIMIT#password-reset#10.0.0.1',
+          count: 3,
+          windowStart,
+          expiresAt: now + 120,
+        },
+      });
+
+      const result = await rateLimiter.checkLimit('10.0.0.1', 'password-reset');
+
+      expect(result).toBe(false);
+      expect(mockSend).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('password-reset-confirm action (limit: 5)', () => {
+    it('5リクエスト目まではtrueを返す', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      const windowStart = now - (now % 60);
+
+      // 既存のレコードを返す（カウント: 4）
+      mockSend.mockResolvedValueOnce({
+        Item: {
+          PK: 'RATELIMIT#password-reset-confirm#10.0.0.1',
+          SK: 'RATELIMIT#password-reset-confirm#10.0.0.1',
+          count: 4,
+          windowStart,
+          expiresAt: now + 120,
+        },
+      });
+      mockSend.mockResolvedValueOnce({});
+
+      const result = await rateLimiter.checkLimit('10.0.0.1', 'password-reset-confirm');
+
+      expect(result).toBe(true);
+      expect(mockSend).toHaveBeenNthCalledWith(2, expect.any(UpdateCommand));
+    });
+
+    it('5リクエストに達した場合はfalseを返す', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      const windowStart = now - (now % 60);
+
+      // 既存のレコードを返す（カウント: 5、制限に達している）
+      mockSend.mockResolvedValueOnce({
+        Item: {
+          PK: 'RATELIMIT#password-reset-confirm#10.0.0.1',
+          SK: 'RATELIMIT#password-reset-confirm#10.0.0.1',
+          count: 5,
+          windowStart,
+          expiresAt: now + 120,
+        },
+      });
+
+      const result = await rateLimiter.checkLimit('10.0.0.1', 'password-reset-confirm');
+
+      expect(result).toBe(false);
+      expect(mockSend).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('getRetryAfter', () => {
     it('次のリクエストまでの待機時間を返す', async () => {
       const now = Math.floor(Date.now() / 1000);
