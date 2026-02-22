@@ -466,3 +466,8 @@ SK: MOVE#789
 - トランザクションは最小限
 
 参考: [DynamoDB Single Table Design](https://www.alexdebrie.com/posts/dynamodb-single-table/)
+
+## Spec駆動開発
+
+- Specのフォルダには連番をつけてください
+  - {連番}-Spec名
