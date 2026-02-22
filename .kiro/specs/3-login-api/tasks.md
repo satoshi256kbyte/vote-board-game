@@ -43,7 +43,7 @@
     - `REFRESH_TOKEN_AUTH`フローを使用
     - `RefreshResult`インターフェースを定義（accessToken、idToken、expiresIn）
     - _要件: 5.3_
-  - [~] 2.2 extractUserIdFromIdTokenメソッドを追加
+  - [x] 2.2 extractUserIdFromIdTokenメソッドを追加
     - `packages/api/src/lib/cognito/cognito-service.ts`に追加
     - IDトークンのペイロードからsubクレームを抽出
     - Base64デコードでJWTペイロードを解析
