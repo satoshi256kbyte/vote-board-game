@@ -71,15 +71,17 @@ authRouter.post('/register', zValidator('json', registerSchema), async (c) => {
     );
   } catch (error) {
     // エラーログ
+    const errorCode =
+      error && typeof error === 'object' && 'code' in error ? error.code : undefined;
     console.error('Registration failed', {
       email: maskEmail(email),
       error: error instanceof Error ? error.message : 'Unknown error',
-      errorCode: (error as any).code,
+      errorCode,
       timestamp: new Date().toISOString(),
     });
 
     // エラーハンドリング
-    if ((error as any).code === 'UsernameExistsException') {
+    if (errorCode === 'UsernameExistsException') {
       return c.json(
         {
           error: 'CONFLICT',
@@ -89,7 +91,7 @@ authRouter.post('/register', zValidator('json', registerSchema), async (c) => {
       );
     }
 
-    if ((error as any).code === 'InvalidPasswordException') {
+    if (errorCode === 'InvalidPasswordException') {
       return c.json(
         {
           error: 'VALIDATION_ERROR',
