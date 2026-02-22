@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { registerSchema, loginSchema, refreshSchema } from './auth-schemas.js';
+import {
+  registerSchema,
+  loginSchema,
+  refreshSchema,
+  passwordResetRequestSchema,
+  passwordResetConfirmSchema,
+} from './auth-schemas.js';
 
 describe('registerSchema', () => {
   describe('有効なデータの受け入れテスト', () => {
@@ -457,6 +463,210 @@ describe('refreshSchema', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].message).toBe('Refresh token is required');
+      }
+    });
+  });
+});
+
+describe('passwordResetRequestSchema', () => {
+  describe('有効なデータの受け入れテスト', () => {
+    it('有効なメールアドレスを受け入れる', () => {
+      const validData = { email: 'user@example.com' };
+      const result = passwordResetRequestSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('email欠落/空/無効形式の拒否テスト', () => {
+    it('emailが欠落している場合にエラーを返す', () => {
+      const result = passwordResetRequestSchema.safeParse({});
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Email is required');
+      }
+    });
+
+    it('空のemailを拒否する', () => {
+      const result = passwordResetRequestSchema.safeParse({ email: '' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Email is required');
+      }
+    });
+
+    it('無効なメール形式を拒否する', () => {
+      const result = passwordResetRequestSchema.safeParse({ email: 'invalid-email' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Invalid email format');
+      }
+    });
+
+    it('@記号のみのメールアドレスを拒否する', () => {
+      const result = passwordResetRequestSchema.safeParse({ email: 'user@' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Invalid email format');
+      }
+    });
+  });
+});
+
+describe('passwordResetConfirmSchema', () => {
+  const validData = {
+    email: 'user@example.com',
+    confirmationCode: '123456',
+    newPassword: 'Password123',
+  };
+
+  describe('有効なデータの受け入れテスト', () => {
+    it('有効なデータを受け入れる', () => {
+      const result = passwordResetConfirmSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('email欠落/空/無効形式の拒否テスト', () => {
+    it('emailが欠落している場合にエラーを返す', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        confirmationCode: validData.confirmationCode,
+        newPassword: validData.newPassword,
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Email is required');
+      }
+    });
+
+    it('空のemailを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({ ...validData, email: '' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Email is required');
+      }
+    });
+
+    it('無効なメール形式を拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({ ...validData, email: 'bad-email' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Invalid email format');
+      }
+    });
+  });
+
+  describe('confirmationCode欠落/空/無効形式の拒否テスト', () => {
+    it('confirmationCodeが欠落している場合にエラーを返す', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        email: validData.email,
+        newPassword: validData.newPassword,
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Confirmation code is required');
+      }
+    });
+
+    it('空のconfirmationCodeを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({ ...validData, confirmationCode: '' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Confirmation code is required');
+      }
+    });
+
+    it('6桁数字でないconfirmationCodeを拒否する（文字列）', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        ...validData,
+        confirmationCode: 'abcdef',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Confirmation code must be 6 digits');
+      }
+    });
+
+    it('5桁のconfirmationCodeを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        ...validData,
+        confirmationCode: '12345',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Confirmation code must be 6 digits');
+      }
+    });
+
+    it('7桁のconfirmationCodeを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        ...validData,
+        confirmationCode: '1234567',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Confirmation code must be 6 digits');
+      }
+    });
+  });
+
+  describe('newPassword欠落/空/ポリシー不適合の拒否テスト', () => {
+    it('newPasswordが欠落している場合にエラーを返す', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        email: validData.email,
+        confirmationCode: validData.confirmationCode,
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('New password is required');
+      }
+    });
+
+    it('空のnewPasswordを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({ ...validData, newPassword: '' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('New password is required');
+      }
+    });
+
+    it('8文字未満のnewPasswordを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({ ...validData, newPassword: 'Pass1' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('at least 8 characters');
+      }
+    });
+
+    it('大文字を含まないnewPasswordを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        ...validData,
+        newPassword: 'password123',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('uppercase');
+      }
+    });
+
+    it('小文字を含まないnewPasswordを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        ...validData,
+        newPassword: 'PASSWORD123',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('lowercase');
+      }
+    });
+
+    it('数字を含まないnewPasswordを拒否する', () => {
+      const result = passwordResetConfirmSchema.safeParse({
+        ...validData,
+        newPassword: 'PasswordABC',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain('number');
       }
     });
   });
