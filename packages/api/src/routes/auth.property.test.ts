@@ -844,3 +844,474 @@ describe('Property 9: Transaction integrity (rollback)', () => {
     );
   });
 });
+
+/**
+ * Feature: user-registration-api
+ * Property 11: 成功レスポンス形式
+ *
+ * **Validates: Requirements 8.1, 8.2, 8.3, 8.4**
+ *
+ * 任意の有効な登録リクエストに対して、登録が成功した場合、APIは201ステータスコード、
+ * Content-Type `application/json`、および以下のフィールドを含むレスポンスボディを返すべきです:
+ * - userId
+ * - email
+ * - username
+ * - accessToken
+ * - refreshToken
+ * - expiresIn（値: 900）
+ */
+describe('Property 11: Success response format', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // RateLimiterのモック - 常に許可
+    vi.mocked(RateLimiter).mockImplementation(
+      () =>
+        ({
+          checkLimit: vi.fn().mockResolvedValue(true),
+          getRetryAfter: vi.fn().mockResolvedValue(0),
+        }) as unknown as RateLimiter
+    );
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return 201 status code with correct response format for valid registration', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 有効な登録データを生成
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc
+            .string({ minLength: 8, maxLength: 50 })
+            .filter((p) => /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p)),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+          const mockAccessToken = `access-${Math.random().toString(36).substring(7)}`;
+          const mockRefreshToken = `refresh-${Math.random().toString(36).substring(7)}`;
+          const mockIdToken = `id-${Math.random().toString(36).substring(7)}`;
+
+          // 成功ケースのモック
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn().mockResolvedValue({
+                  accessToken: mockAccessToken,
+                  refreshToken: mockRefreshToken,
+                  idToken: mockIdToken,
+                  expiresIn: 900,
+                }),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockResolvedValue({
+                  PK: `USER#${mockUserId}`,
+                  SK: `USER#${mockUserId}`,
+                  userId: mockUserId,
+                  email: data.email,
+                  username: data.username,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  entityType: 'USER',
+                }),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 201ステータスコードを返すべき
+          expect(res.status).toBe(201);
+
+          // Content-Typeがapplication/jsonであることを確認
+          const contentType = res.headers.get('content-type');
+          expect(contentType).toContain('application/json');
+
+          const json = await res.json();
+
+          // 必須フィールドが存在することを確認
+          expect(json).toHaveProperty('userId');
+          expect(json).toHaveProperty('email');
+          expect(json).toHaveProperty('username');
+          expect(json).toHaveProperty('accessToken');
+          expect(json).toHaveProperty('refreshToken');
+          expect(json).toHaveProperty('expiresIn');
+
+          // フィールドの値を検証
+          expect(json.userId).toBe(mockUserId);
+          expect(json.email).toBe(data.email);
+          expect(json.username).toBe(data.username);
+          expect(json.accessToken).toBe(mockAccessToken);
+          expect(json.refreshToken).toBe(mockRefreshToken);
+          expect(json.expiresIn).toBe(900);
+
+          // フィールドの型を検証
+          expect(typeof json.userId).toBe('string');
+          expect(typeof json.email).toBe('string');
+          expect(typeof json.username).toBe('string');
+          expect(typeof json.accessToken).toBe('string');
+          expect(typeof json.refreshToken).toBe('string');
+          expect(typeof json.expiresIn).toBe('number');
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should return expiresIn value of exactly 900 seconds', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // 成功ケースのモック
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn().mockResolvedValue({
+                  accessToken: 'mock-access-token',
+                  refreshToken: 'mock-refresh-token',
+                  idToken: 'mock-id-token',
+                  expiresIn: 900,
+                }),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockResolvedValue({
+                  PK: `USER#${mockUserId}`,
+                  SK: `USER#${mockUserId}`,
+                  userId: mockUserId,
+                  email: data.email,
+                  username: data.username,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  entityType: 'USER',
+                }),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          const json = await res.json();
+
+          // expiresInは正確に900であるべき（15分 = 900秒）
+          expect(json.expiresIn).toBe(900);
+          expect(json.expiresIn).not.toBe(899);
+          expect(json.expiresIn).not.toBe(901);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should include all required fields and no unexpected fields', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // 成功ケースのモック
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn().mockResolvedValue({
+                  accessToken: 'mock-access-token',
+                  refreshToken: 'mock-refresh-token',
+                  idToken: 'mock-id-token',
+                  expiresIn: 900,
+                }),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockResolvedValue({
+                  PK: `USER#${mockUserId}`,
+                  SK: `USER#${mockUserId}`,
+                  userId: mockUserId,
+                  email: data.email,
+                  username: data.username,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  entityType: 'USER',
+                }),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          const json = await res.json();
+
+          // 必須フィールドのみが存在することを確認
+          const expectedFields = [
+            'userId',
+            'email',
+            'username',
+            'accessToken',
+            'refreshToken',
+            'expiresIn',
+          ];
+          const actualFields = Object.keys(json);
+
+          // すべての必須フィールドが存在する
+          expectedFields.forEach((field) => {
+            expect(actualFields).toContain(field);
+          });
+
+          // 余分なフィールドが存在しない
+          expect(actualFields.length).toBe(expectedFields.length);
+
+          // 機密情報（パスワード、内部フィールド）が含まれていないことを確認
+          expect(json).not.toHaveProperty('password');
+          expect(json).not.toHaveProperty('PK');
+          expect(json).not.toHaveProperty('SK');
+          expect(json).not.toHaveProperty('entityType');
+          expect(json).not.toHaveProperty('createdAt');
+          expect(json).not.toHaveProperty('updatedAt');
+          expect(json).not.toHaveProperty('idToken');
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return non-empty string values for all token fields', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // 成功ケースのモック
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn().mockResolvedValue({
+                  accessToken: 'mock-access-token',
+                  refreshToken: 'mock-refresh-token',
+                  idToken: 'mock-id-token',
+                  expiresIn: 900,
+                }),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockResolvedValue({
+                  PK: `USER#${mockUserId}`,
+                  SK: `USER#${mockUserId}`,
+                  userId: mockUserId,
+                  email: data.email,
+                  username: data.username,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  entityType: 'USER',
+                }),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          const json = await res.json();
+
+          // すべての文字列フィールドが非空であることを確認
+          expect(json.userId).toBeTruthy();
+          expect(json.userId.length).toBeGreaterThan(0);
+
+          expect(json.email).toBeTruthy();
+          expect(json.email.length).toBeGreaterThan(0);
+
+          expect(json.username).toBeTruthy();
+          expect(json.username.length).toBeGreaterThan(0);
+
+          expect(json.accessToken).toBeTruthy();
+          expect(json.accessToken.length).toBeGreaterThan(0);
+
+          expect(json.refreshToken).toBeTruthy();
+          expect(json.refreshToken.length).toBeGreaterThan(0);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should maintain response format consistency across various valid inputs', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // より広範な有効な入力を生成
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc
+            .string({ minLength: 8, maxLength: 50 })
+            .filter((p) => /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p)),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // 成功ケースのモック
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn().mockResolvedValue({
+                  accessToken: 'mock-access-token',
+                  refreshToken: 'mock-refresh-token',
+                  idToken: 'mock-id-token',
+                  expiresIn: 900,
+                }),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockResolvedValue({
+                  PK: `USER#${mockUserId}`,
+                  SK: `USER#${mockUserId}`,
+                  userId: mockUserId,
+                  email: data.email,
+                  username: data.username,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  entityType: 'USER',
+                }),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 常に同じ形式のレスポンスを返すべき
+          expect(res.status).toBe(201);
+
+          const contentType = res.headers.get('content-type');
+          expect(contentType).toContain('application/json');
+
+          const json = await res.json();
+
+          // レスポンス構造の一貫性を検証
+          const responseStructure = {
+            userId: typeof json.userId,
+            email: typeof json.email,
+            username: typeof json.username,
+            accessToken: typeof json.accessToken,
+            refreshToken: typeof json.refreshToken,
+            expiresIn: typeof json.expiresIn,
+          };
+
+          expect(responseStructure).toEqual({
+            userId: 'string',
+            email: 'string',
+            username: 'string',
+            accessToken: 'string',
+            refreshToken: 'string',
+            expiresIn: 'number',
+          });
+
+          // expiresInは常に900
+          expect(json.expiresIn).toBe(900);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
