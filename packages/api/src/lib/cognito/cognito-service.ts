@@ -3,6 +3,7 @@ import {
   SignUpCommand,
   InitiateAuthCommand,
   AdminDeleteUserCommand,
+  ForgotPasswordCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 export interface SignUpResult {
@@ -146,6 +147,17 @@ export class CognitoService {
       console.error('Cognito token refresh error:', error);
       throw error;
     }
+  }
+
+  /**
+   * パスワードリセット用の確認コードを送信
+   */
+  async forgotPassword(email: string): Promise<void> {
+    const command = new ForgotPasswordCommand({
+      ClientId: this.clientId,
+      Username: email,
+    });
+    await this.client.send(command);
   }
 
   /**
