@@ -85,7 +85,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
     - Set BASE_URL to CloudFront URL
     - _Requirements: 3.2, 3.3, 4.4_
 
-  - [~] 4.5 Add test results artifact upload
+  - [x] 4.5 Add test results artifact upload
     - Upload playwright-report as artifact (always run)
     - Upload test-results as artifact on failure only
     - Set artifact retention to 7 days
