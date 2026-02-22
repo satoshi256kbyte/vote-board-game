@@ -48,7 +48,7 @@
     - IDトークンのペイロードからsubクレームを抽出
     - Base64デコードでJWTペイロードを解析
     - _要件: 3.1_
-  - [~] 2.3 refreshTokensとextractUserIdFromIdTokenのユニットテストを作成
+  - [x] 2.3 refreshTokensとextractUserIdFromIdTokenのユニットテストを作成
     - `packages/api/src/lib/cognito/cognito-service.test.ts`に追加
     - refreshTokens成功ケース
     - refreshTokens失敗ケース（NotAuthorizedException）

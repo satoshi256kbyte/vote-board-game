@@ -422,4 +422,133 @@ describe('CognitoService', () => {
       });
     });
   });
+
+  describe('refreshTokens', () => {
+    describe('成功ケース', () => {
+      it('有効なリフレッシュトークンで新しいトークンを取得する', async () => {
+        // Arrange
+        const refreshToken = 'valid-refresh-token';
+
+        const mockResponse = {
+          AuthenticationResult: {
+            AccessToken: 'new-access-token',
+            IdToken: 'new-id-token',
+            ExpiresIn: 900,
+          },
+        };
+
+        mockSend.mockResolvedValueOnce(mockResponse);
+
+        // Act
+        const result = await service.refreshTokens(refreshToken);
+
+        // Assert
+        expect(result).toEqual({
+          accessToken: 'new-access-token',
+          idToken: 'new-id-token',
+          expiresIn: 900,
+        });
+
+        // Cognitoクライアントが正しく呼ばれたことを確認
+        expect(mockSend).toHaveBeenCalledTimes(1);
+        const initiateAuthCommand = mockSend.mock.calls[0][0];
+        expect(initiateAuthCommand).toBeInstanceOf(InitiateAuthCommand);
+        expect(initiateAuthCommand.input).toEqual({
+          ClientId: 'test-client-id',
+          AuthFlow: 'REFRESH_TOKEN_AUTH',
+          AuthParameters: {
+            REFRESH_TOKEN: refreshToken,
+          },
+        });
+      });
+
+      it('ExpiresInが未定義の場合はデフォルト値900を使用する', async () => {
+        // Arrange
+        const refreshToken = 'valid-refresh-token-2';
+
+        const mockResponse = {
+          AuthenticationResult: {
+            AccessToken: 'new-access-token-2',
+            IdToken: 'new-id-token-2',
+            ExpiresIn: undefined,
+          },
+        };
+
+        mockSend.mockResolvedValueOnce(mockResponse);
+
+        // Act
+        const result = await service.refreshTokens(refreshToken);
+
+        // Assert
+        expect(result.expiresIn).toBe(900);
+      });
+    });
+
+    describe('失敗ケース', () => {
+      it('NotAuthorizedExceptionの場合はエラーをスローする', async () => {
+        // Arrange
+        const refreshToken = 'expired-refresh-token';
+
+        const notAuthorizedError = new Error('Refresh token is invalid or expired');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (notAuthorizedError as any).name = 'NotAuthorizedException';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (notAuthorizedError as any).code = 'NotAuthorizedException';
+
+        mockSend.mockRejectedValueOnce(notAuthorizedError);
+
+        // Act & Assert
+        await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
+          'Refresh token is invalid or expired'
+        );
+        expect(mockSend).toHaveBeenCalledTimes(1);
+      });
+
+      it('AuthenticationResultが存在しない場合はエラーをスローする', async () => {
+        // Arrange
+        const refreshToken = 'bad-refresh-token';
+
+        const mockResponse = {
+          AuthenticationResult: undefined,
+        };
+
+        mockSend.mockResolvedValueOnce(mockResponse);
+
+        // Act & Assert
+        await expect(service.refreshTokens(refreshToken)).rejects.toThrow('Token refresh failed');
+      });
+    });
+  });
+
+  describe('extractUserIdFromIdToken', () => {
+    it('IDトークンからsubクレームを正しく抽出する', () => {
+      // Arrange
+      const payload = { sub: 'test-user-id-123', email: 'test@example.com' };
+      const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
+      const testIdToken = `header.${encodedPayload}.signature`;
+
+      // Act
+      const userId = service.extractUserIdFromIdToken(testIdToken);
+
+      // Assert
+      expect(userId).toBe('test-user-id-123');
+    });
+
+    it('UUID形式のsubクレームを正しく抽出する', () => {
+      // Arrange
+      const payload = {
+        sub: '550e8400-e29b-41d4-a716-446655440000',
+        email: 'user@example.com',
+        iss: 'https://cognito-idp.ap-northeast-1.amazonaws.com/test-pool',
+      };
+      const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
+      const testIdToken = `eyJhbGciOiJSUzI1NiJ9.${encodedPayload}.mock-signature`;
+
+      // Act
+      const userId = service.extractUserIdFromIdToken(testIdToken);
+
+      // Assert
+      expect(userId).toBe('550e8400-e29b-41d4-a716-446655440000');
+    });
+  });
 });

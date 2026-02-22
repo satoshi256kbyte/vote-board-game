@@ -147,4 +147,12 @@ export class CognitoService {
       throw error;
     }
   }
+
+  /**
+   * IDトークンからsubクレーム（userId）を抽出
+   */
+  extractUserIdFromIdToken(idToken: string): string {
+    const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString());
+    return payload.sub;
+  }
 }
