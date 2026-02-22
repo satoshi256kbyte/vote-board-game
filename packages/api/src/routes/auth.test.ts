@@ -18,9 +18,12 @@ describe('Auth Router', () => {
     deleteUser: ReturnType<typeof vi.fn>;
     forgotPassword: ReturnType<typeof vi.fn>;
     confirmForgotPassword: ReturnType<typeof vi.fn>;
+    refreshTokens: ReturnType<typeof vi.fn>;
+    extractUserIdFromIdToken: ReturnType<typeof vi.fn>;
   };
   let mockUserRepository: {
     create: ReturnType<typeof vi.fn>;
+    getById: ReturnType<typeof vi.fn>;
   };
   let mockRateLimiter: {
     checkLimit: ReturnType<typeof vi.fn>;
@@ -41,6 +44,8 @@ describe('Auth Router', () => {
       deleteUser: vi.fn(),
       forgotPassword: vi.fn(),
       confirmForgotPassword: vi.fn(),
+      refreshTokens: vi.fn(),
+      extractUserIdFromIdToken: vi.fn(),
     };
     vi.mocked(CognitoService).mockImplementation(
       () => mockCognitoService as unknown as CognitoService
@@ -49,6 +54,7 @@ describe('Auth Router', () => {
     // UserRepositoryのモック
     mockUserRepository = {
       create: vi.fn(),
+      getById: vi.fn(),
     };
     vi.mocked(UserRepository).mockImplementation(
       () => mockUserRepository as unknown as UserRepository
@@ -1081,6 +1087,464 @@ describe('Auth Router', () => {
 
         consoleSpy.mockRestore();
         consoleErrorSpy.mockRestore();
+      });
+    });
+  });
+
+  describe('POST /auth/login', () => {
+    const validRequest = {
+      email: 'test@example.com',
+      password: 'Password123',
+    };
+
+    const mockTokens = {
+      accessToken: 'test-access-token',
+      refreshToken: 'test-refresh-token',
+      idToken: 'test-id-token',
+      expiresIn: 900,
+    };
+
+    const mockUser = {
+      PK: 'USER#test-user-id',
+      SK: 'USER#test-user-id',
+      userId: 'test-user-id',
+      email: 'test@example.com',
+      username: 'testuser',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      entityType: 'USER',
+    };
+
+    describe('有効なリクエストの成功テスト', () => {
+      it('有効なリクエストで200ステータスとユーザー情報・トークンを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(mockUser);
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json).toEqual({
+          userId: 'test-user-id',
+          email: 'test@example.com',
+          username: 'testuser',
+          accessToken: 'test-access-token',
+          refreshToken: 'test-refresh-token',
+          expiresIn: 900,
+        });
+
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('unknown', 'login');
+        expect(mockCognitoService.authenticate).toHaveBeenCalledWith(
+          'test@example.com',
+          'Password123'
+        );
+        expect(mockCognitoService.extractUserIdFromIdToken).toHaveBeenCalledWith('test-id-token');
+        expect(mockUserRepository.getById).toHaveBeenCalledWith('test-user-id');
+      });
+    });
+
+    describe('バリデーションエラーのテスト', () => {
+      it('emailが欠落している場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: 'Password123' }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+        expect(json.message).toBe('Validation failed');
+        expect(json.details.fields).toBeDefined();
+      });
+
+      it('emailが空文字列の場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: '', password: 'Password123' }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+      });
+
+      it('passwordが欠落している場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'test@example.com' }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+        expect(json.details.fields).toBeDefined();
+      });
+
+      it('passwordが空文字列の場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'test@example.com', password: '' }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+      });
+    });
+
+    describe('認証失敗のテスト', () => {
+      it('NotAuthorizedException時に401 AUTHENTICATION_FAILEDを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Incorrect username or password') as Error & {
+          name: string;
+        };
+        error.name = 'NotAuthorizedException';
+        mockCognitoService.authenticate.mockRejectedValue(error);
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(401);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'AUTHENTICATION_FAILED',
+          message: 'Invalid email or password',
+        });
+      });
+
+      it('UserNotFoundException時に401 AUTHENTICATION_FAILEDを返す（統一メッセージ）', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('User does not exist') as Error & { name: string };
+        error.name = 'UserNotFoundException';
+        mockCognitoService.authenticate.mockRejectedValue(error);
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(401);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'AUTHENTICATION_FAILED',
+          message: 'Invalid email or password',
+        });
+      });
+    });
+
+    describe('ユーザー未存在のテスト', () => {
+      it('Cognito認証成功だがDynamoDBにユーザーが存在しない場合は404 USER_NOT_FOUNDを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(null);
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(404);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'USER_NOT_FOUND',
+          message: 'User not found',
+        });
+      });
+    });
+
+    describe('Cognito予期しないエラーのテスト', () => {
+      it('予期しないCognitoエラーで500 INTERNAL_ERRORを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Service unavailable') as Error & { name: string };
+        error.name = 'InternalErrorException';
+        mockCognitoService.authenticate.mockRejectedValue(error);
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(500);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'INTERNAL_ERROR',
+          message: 'Login failed',
+        });
+      });
+    });
+
+    describe('レート制限のテスト', () => {
+      it('レート制限を超えた場合は429 RATE_LIMIT_EXCEEDEDを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(false);
+        mockRateLimiter.getRetryAfter.mockResolvedValue(30);
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(429);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many login attempts',
+          retryAfter: 30,
+        });
+
+        expect(mockCognitoService.authenticate).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('ログ記録の検証', () => {
+      it('リクエスト時にマスク済みメールとタイムスタンプをログに記録する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(mockUser);
+        const consoleSpy = vi.spyOn(console, 'log');
+
+        await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        // リクエストログの検証
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Login attempt',
+          expect.objectContaining({
+            email: 't***@example.com',
+            ipAddress: 'unknown',
+            timestamp: expect.any(String),
+          })
+        );
+
+        // 成功ログの検証
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Login successful',
+          expect.objectContaining({
+            userId: 'test-user-id',
+            timestamp: expect.any(String),
+          })
+        );
+
+        consoleSpy.mockRestore();
+      });
+
+      it('ログにパスワードが含まれていないことを検証する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(mockUser);
+        const consoleSpy = vi.spyOn(console, 'log');
+
+        await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        consoleSpy.mock.calls.forEach((call) => {
+          const logStr = JSON.stringify(call);
+          expect(logStr).not.toContain('Password123');
+        });
+
+        consoleSpy.mockRestore();
+      });
+
+      it('ログにトークンが含まれていないことを検証する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(mockUser);
+        const consoleSpy = vi.spyOn(console, 'log');
+
+        await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        consoleSpy.mock.calls.forEach((call) => {
+          const logStr = JSON.stringify(call);
+          expect(logStr).not.toContain('test-access-token');
+          expect(logStr).not.toContain('test-refresh-token');
+          expect(logStr).not.toContain('test-id-token');
+        });
+
+        consoleSpy.mockRestore();
+      });
+
+      it('認証失敗時にエラーログを記録する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Incorrect username or password') as Error & {
+          name: string;
+        };
+        error.name = 'NotAuthorizedException';
+        mockCognitoService.authenticate.mockRejectedValue(error);
+        const consoleErrorSpy = vi.spyOn(console, 'error');
+
+        await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Login failed',
+          expect.objectContaining({
+            email: 't***@example.com',
+            timestamp: expect.any(String),
+          })
+        );
+
+        consoleErrorSpy.mockRestore();
+      });
+    });
+  });
+
+  describe('POST /auth/refresh', () => {
+    const validRequest = {
+      refreshToken: 'valid-refresh-token',
+    };
+
+    describe('有効なリクエストの成功テスト', () => {
+      it('有効なリフレッシュトークンで200ステータスと新しいアクセストークンを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.refreshTokens.mockResolvedValue({
+          accessToken: 'new-access-token',
+          idToken: 'new-id-token',
+          expiresIn: 900,
+        });
+
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json).toEqual({
+          accessToken: 'new-access-token',
+          expiresIn: 900,
+        });
+
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('unknown', 'refresh');
+        expect(mockCognitoService.refreshTokens).toHaveBeenCalledWith('valid-refresh-token');
+      });
+    });
+
+    describe('バリデーションエラーのテスト', () => {
+      it('refreshTokenが欠落している場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+        expect(json.message).toBe('Validation failed');
+        expect(json.details.fields).toBeDefined();
+      });
+
+      it('refreshTokenが空文字列の場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: '' }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+      });
+    });
+
+    describe('トークン期限切れのテスト', () => {
+      it('NotAuthorizedException時に401 TOKEN_EXPIREDを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Token is expired') as Error & { name: string };
+        error.name = 'NotAuthorizedException';
+        mockCognitoService.refreshTokens.mockRejectedValue(error);
+
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(401);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'TOKEN_EXPIRED',
+          message: 'Refresh token is invalid or expired',
+        });
+      });
+    });
+
+    describe('Cognito予期しないエラーのテスト', () => {
+      it('予期しないCognitoエラーで500 INTERNAL_ERRORを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Service unavailable') as Error & { name: string };
+        error.name = 'InternalErrorException';
+        mockCognitoService.refreshTokens.mockRejectedValue(error);
+
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(500);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'INTERNAL_ERROR',
+          message: 'Token refresh failed',
+        });
+      });
+    });
+
+    describe('レート制限のテスト', () => {
+      it('レート制限を超えた場合は429 RATE_LIMIT_EXCEEDEDを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(false);
+        mockRateLimiter.getRetryAfter.mockResolvedValue(15);
+
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(429);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many refresh attempts',
+          retryAfter: 15,
+        });
+
+        expect(mockCognitoService.refreshTokens).not.toHaveBeenCalled();
       });
     });
   });
