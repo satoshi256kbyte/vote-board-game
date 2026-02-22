@@ -112,7 +112,7 @@
     - `authenticate`メソッドを実装（InitiateAuthCommand）
     - `deleteUser`メソッドを実装（AdminDeleteUserCommand、ロールバック用）
     - _要件: 5.1-5.4, 7.1-7.4_
-  - [~] 5.2 CognitoServiceのユニットテストを作成
+  - [x] 5.2 CognitoServiceのユニットテストを作成
     - `signUp`メソッドのテスト（成功ケース）
     - `signUp`メソッドのテスト（UsernameExistsException）
     - `authenticate`メソッドのテスト（成功ケース）
