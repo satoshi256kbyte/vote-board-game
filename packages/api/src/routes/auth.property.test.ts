@@ -499,3 +499,348 @@ describe('Property 3: Email duplication validation (idempotency)', () => {
     );
   });
 });
+
+/**
+ * Feature: user-registration-api
+ * Property 9: トランザクション整合性(ロールバック)
+ *
+ * **Validates: Requirements 6.5**
+ *
+ * 任意の登録リクエストに対して、Cognitoユーザーの作成が成功したが
+ * DynamoDB書き込みが失敗した場合、APIはCognitoユーザーの削除を試み、
+ * 500ステータスコードとエラーコード`INTERNAL_ERROR`を返すべきです。
+ */
+describe('Property 9: Transaction integrity (rollback)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // RateLimiterのモック - 常に許可
+    vi.mocked(RateLimiter).mockImplementation(
+      () =>
+        ({
+          checkLimit: vi.fn().mockResolvedValue(true),
+          getRetryAfter: vi.fn().mockResolvedValue(0),
+        }) as unknown as RateLimiter
+    );
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should delete Cognito user and return 500 when DynamoDB write fails', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 有効な登録データを生成
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc
+            .tuple(
+              fc.integer({ min: 0, max: 25 }),
+              fc.integer({ min: 0, max: 25 }),
+              fc.integer({ min: 0, max: 9 })
+            )
+            .map(([upperIdx, lowerIdx, num]) => {
+              const upper = String.fromCharCode(65 + upperIdx); // A-Z
+              const lower = String.fromCharCode(97 + lowerIdx); // a-z
+              return `${upper}${lower}${num}Pass123`;
+            }),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+          const deleteUserMock = vi.fn().mockResolvedValue(undefined);
+
+          // Cognito signUpは成功
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn(),
+                deleteUser: deleteUserMock,
+              }) as unknown as CognitoService
+          );
+
+          // DynamoDB createは失敗
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 500 INTERNAL_ERRORを返すべき
+          expect(res.status).toBe(500);
+
+          const json = await res.json();
+          expect(json).toEqual({
+            error: 'INTERNAL_ERROR',
+            message: 'Registration failed',
+          });
+
+          // Cognitoユーザーの削除が試みられたことを確認
+          expect(deleteUserMock).toHaveBeenCalledWith(mockUserId);
+          expect(deleteUserMock).toHaveBeenCalledTimes(1);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should attempt rollback even when DynamoDB throws different error types', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        // DynamoDBエラーの種類を生成
+        fc.oneof(
+          fc.constant(new Error('Network timeout')),
+          fc.constant(new Error('ConditionalCheckFailedException')),
+          fc.constant(new Error('ProvisionedThroughputExceededException')),
+          fc.constant(new Error('ResourceNotFoundException')),
+          fc.constant({ name: 'ServiceUnavailable', message: 'Service unavailable' })
+        ),
+        async (data, dbError) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+          const deleteUserMock = vi.fn().mockResolvedValue(undefined);
+
+          // Cognito signUpは成功
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn(),
+                deleteUser: deleteUserMock,
+              }) as unknown as CognitoService
+          );
+
+          // DynamoDB createは様々なエラーで失敗
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockRejectedValue(dbError),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 500 INTERNAL_ERRORを返すべき
+          expect(res.status).toBe(500);
+
+          const json = await res.json();
+          expect(json.error).toBe('INTERNAL_ERROR');
+          expect(json.message).toBe('Registration failed');
+
+          // どのエラーでもロールバックが試みられるべき
+          expect(deleteUserMock).toHaveBeenCalledWith(mockUserId);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should still return 500 even if rollback (deleteUser) fails', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // Cognito signUpは成功
+          // deleteUserは失敗（ロールバック失敗をシミュレート）
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn().mockRejectedValue(new Error('Failed to delete user')),
+              }) as unknown as CognitoService
+          );
+
+          // DynamoDB createは失敗
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // ロールバックが失敗しても500を返すべき
+          expect(res.status).toBe(500);
+
+          const json = await res.json();
+          expect(json).toEqual({
+            error: 'INTERNAL_ERROR',
+            message: 'Registration failed',
+          });
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should not call deleteUser when Cognito signUp fails', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const deleteUserMock = vi.fn().mockResolvedValue(undefined);
+
+          // Cognito signUpが失敗（ユーザーが作成されない）
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockRejectedValue({
+                  code: 'InvalidPasswordException',
+                  message: 'Password does not meet requirements',
+                }),
+                authenticate: vi.fn(),
+                deleteUser: deleteUserMock,
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn(),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // エラーレスポンスを返すべき
+          expect(res.status).toBe(400);
+
+          // Cognitoユーザーが作成されていないので、deleteUserは呼ばれないべき
+          expect(deleteUserMock).not.toHaveBeenCalled();
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should maintain transaction integrity across various valid registration inputs', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // より広範な有効な入力を生成
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc
+            .string({ minLength: 8, maxLength: 50 })
+            .filter((p) => /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p)),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+          const deleteUserMock = vi.fn().mockResolvedValue(undefined);
+
+          // Cognito signUpは成功
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn(),
+                deleteUser: deleteUserMock,
+              }) as unknown as CognitoService
+          );
+
+          // DynamoDB createは失敗
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 常に500を返し、ロールバックを試みるべき
+          expect(res.status).toBe(500);
+          expect(deleteUserMock).toHaveBeenCalledWith(mockUserId);
+
+          const json = await res.json();
+          expect(json.error).toBe('INTERNAL_ERROR');
+          expect(json.message).toBe('Registration failed');
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
