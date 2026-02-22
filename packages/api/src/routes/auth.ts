@@ -41,34 +41,49 @@ authRouter.post('/register', zValidator('json', registerSchema), async (c) => {
     const cognitoService = new CognitoService();
     const cognitoResult = await cognitoService.signUp(email, password, username);
 
-    // DynamoDBにユーザーレコード作成
-    const userRepo = new UserRepository();
-    const user = await userRepo.create({
-      userId: cognitoResult.userId,
-      email,
-      username,
-    });
+    try {
+      // DynamoDBにユーザーレコード作成
+      const userRepo = new UserRepository();
+      const user = await userRepo.create({
+        userId: cognitoResult.userId,
+        email,
+        username,
+      });
 
-    // 認証トークン取得
-    const tokens = await cognitoService.authenticate(email, password);
+      // 認証トークン取得
+      const tokens = await cognitoService.authenticate(email, password);
 
-    // 成功ログ
-    console.log('Registration successful', {
-      userId: user.userId,
-      timestamp: new Date().toISOString(),
-    });
-
-    return c.json(
-      {
+      // 成功ログ
+      console.log('Registration successful', {
         userId: user.userId,
-        email: user.email,
-        username: user.username,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        expiresIn: 900,
-      },
-      201
-    );
+        timestamp: new Date().toISOString(),
+      });
+
+      return c.json(
+        {
+          userId: user.userId,
+          email: user.email,
+          username: user.username,
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresIn: 900,
+        },
+        201
+      );
+    } catch (dbError) {
+      // DynamoDB書き込み失敗時のロールバック
+      console.error('DynamoDB write failed, rolling back Cognito user', {
+        userId: cognitoResult.userId,
+        email: maskEmail(email),
+        error: dbError instanceof Error ? dbError.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
+
+      // Cognitoユーザーを削除
+      await cognitoService.deleteUser(cognitoResult.userId);
+
+      throw dbError;
+    }
   } catch (error) {
     // エラーログ
     const errorCode =

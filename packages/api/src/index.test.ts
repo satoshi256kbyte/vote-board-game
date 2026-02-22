@@ -15,4 +15,30 @@ describe('API', () => {
     const res = await app.request('/unknown');
     expect(res.status).toBe(404);
   });
+
+  it('should include CORS headers in responses', async () => {
+    const res = await app.request('/health', {
+      headers: {
+        Origin: 'http://localhost:3000',
+      },
+    });
+
+    expect(res.headers.get('access-control-allow-origin')).toBe('http://localhost:3000');
+    expect(res.headers.get('access-control-allow-credentials')).toBe('true');
+  });
+
+  it('should handle CORS preflight requests', async () => {
+    const res = await app.request('/auth/register', {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'http://localhost:3000',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'Content-Type',
+      },
+    });
+
+    expect(res.status).toBe(204);
+    expect(res.headers.get('access-control-allow-origin')).toBe('http://localhost:3000');
+    expect(res.headers.get('access-control-allow-methods')).toContain('POST');
+  });
 });

@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import { gamesRouter } from './routes/games.js';
 import { candidatesRouter } from './routes/candidates.js';
 import { votesRouter } from './routes/votes.js';
+import { authRouter } from './routes/auth.js';
 
 const app = new Hono();
 
@@ -26,6 +27,7 @@ app.get('/health', (c) => {
 app.route('/api/games', gamesRouter);
 app.route('/api/candidates', candidatesRouter);
 app.route('/api/votes', votesRouter);
+app.route('/auth', authRouter);
 
 // 404ハンドラー
 app.notFound((c) => {
