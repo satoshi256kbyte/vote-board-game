@@ -40,12 +40,14 @@ app.onError((err, c) => {
 
   // Zodバリデーションエラーの処理
   if (err.name === 'ZodError') {
-    const zodError = err as any;
+    const zodError = err as unknown as {
+      issues: Array<{ path: string[]; message: string }>;
+    };
     const fields: Record<string, string> = {};
 
     // Zodのissuesをfieldsオブジェクトに変換
     if (zodError.issues && Array.isArray(zodError.issues)) {
-      zodError.issues.forEach((issue: any) => {
+      zodError.issues.forEach((issue) => {
         const fieldName = issue.path.join('.');
         fields[fieldName] = issue.message;
       });
