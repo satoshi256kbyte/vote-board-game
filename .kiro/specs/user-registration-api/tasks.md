@@ -163,7 +163,7 @@
     - 認証トークン取得を呼び出し
     - 成功レスポンスを返す（201、userId、email、username、tokens）
     - _要件: 5.1-5.4, 6.1-6.4, 7.1-7.4, 8.1-8.4_
-  - [~] 7.3 エラーハンドリングを実装
+  - [x] 7.3 エラーハンドリングを実装
     - UsernameExistsException → 409 CONFLICT
     - InvalidPasswordException → 400 VALIDATION_ERROR
     - DynamoDB書き込みエラー → Cognitoユーザー削除（ロールバック）→ 500 INTERNAL_ERROR
