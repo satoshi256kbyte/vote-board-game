@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { registerSchema } from './auth-schemas.js';
+import { registerSchema, loginSchema, refreshSchema } from './auth-schemas.js';
 
 describe('registerSchema', () => {
   describe('有効なデータの受け入れテスト', () => {
@@ -352,6 +352,111 @@ describe('registerSchema', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues.length).toBeGreaterThan(1);
+      }
+    });
+  });
+});
+
+describe('loginSchema', () => {
+  describe('有効なデータの受け入れテスト', () => {
+    it('有効なログインデータを受け入れる', () => {
+      const validData = {
+        email: 'user@example.com',
+        password: 'Password123',
+      };
+
+      const result = loginSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('email欠落/空のテスト', () => {
+    it('emailが欠落している場合にエラーを返す', () => {
+      const invalidData = {
+        password: 'Password123',
+      };
+
+      const result = loginSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Email is required');
+      }
+    });
+
+    it('空のemailを拒否する', () => {
+      const invalidData = {
+        email: '',
+        password: 'Password123',
+      };
+
+      const result = loginSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Email is required');
+      }
+    });
+  });
+
+  describe('password欠落/空のテスト', () => {
+    it('passwordが欠落している場合にエラーを返す', () => {
+      const invalidData = {
+        email: 'user@example.com',
+      };
+
+      const result = loginSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Password is required');
+      }
+    });
+
+    it('空のpasswordを拒否する', () => {
+      const invalidData = {
+        email: 'user@example.com',
+        password: '',
+      };
+
+      const result = loginSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Password is required');
+      }
+    });
+  });
+});
+
+describe('refreshSchema', () => {
+  describe('有効なデータの受け入れテスト', () => {
+    it('有効なリフレッシュトークンデータを受け入れる', () => {
+      const validData = {
+        refreshToken: 'some-valid-refresh-token',
+      };
+
+      const result = refreshSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('refreshToken欠落/空のテスト', () => {
+    it('refreshTokenが欠落している場合にエラーを返す', () => {
+      const invalidData = {};
+
+      const result = refreshSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Refresh token is required');
+      }
+    });
+
+    it('空のrefreshTokenを拒否する', () => {
+      const invalidData = {
+        refreshToken: '',
+      };
+
+      const result = refreshSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Refresh token is required');
       }
     });
   });

@@ -14,62 +14,62 @@
 
 ## タスク
 
-- [ ] 1. バリデーションスキーマの追加
-  - [ ] 1.1 loginSchemaとrefreshSchemaを作成
+- [-] 1. バリデーションスキーマの追加
+  - [x] 1.1 loginSchemaとrefreshSchemaを作成
     - `packages/api/src/lib/validation/auth-schemas.ts`に追加
     - `loginSchema`: email（必須、非空）、password（必須、非空）
     - `refreshSchema`: refreshToken（必須、非空）
     - 型エクスポート: `LoginInput`、`RefreshInput`
     - _要件: 1.2, 1.3, 1.4, 5.2_
-  - [ ] 1.2 loginSchemaとrefreshSchemaのユニットテストを作成
+  - [x] 1.2 loginSchemaとrefreshSchemaのユニットテストを作成
     - `packages/api/src/lib/validation/auth-schemas.test.ts`に追加
     - 有効なデータの受け入れテスト
     - email欠落/空のテスト
     - password欠落/空のテスト
     - refreshToken欠落/空のテスト
     - _要件: 1.2, 1.3, 1.4, 5.2_
-  - [ ] 1.3 プロパティテスト: ログイン必須フィールド検証
+  - [~] 1.3 プロパティテスト: ログイン必須フィールド検証
     - `packages/api/src/lib/validation/auth-schemas.property.test.ts`に追加
     - **プロパティ1: ログイン必須フィールド検証**
     - **検証: 要件 1.2, 1.3, 1.4**
-  - [ ] 1.4 プロパティテスト: リフレッシュトークンバリデーション
+  - [~] 1.4 プロパティテスト: リフレッシュトークンバリデーション
     - `packages/api/src/lib/validation/auth-schemas.property.test.ts`に追加
     - **プロパティ4: リフレッシュトークンバリデーション**
     - **検証: 要件 5.2**
 
 - [ ] 2. CognitoServiceの拡張
-  - [ ] 2.1 refreshTokensメソッドを追加
+  - [~] 2.1 refreshTokensメソッドを追加
     - `packages/api/src/lib/cognito/cognito-service.ts`に追加
     - `REFRESH_TOKEN_AUTH`フローを使用
     - `RefreshResult`インターフェースを定義（accessToken、idToken、expiresIn）
     - _要件: 5.3_
-  - [ ] 2.2 extractUserIdFromIdTokenメソッドを追加
+  - [~] 2.2 extractUserIdFromIdTokenメソッドを追加
     - `packages/api/src/lib/cognito/cognito-service.ts`に追加
     - IDトークンのペイロードからsubクレームを抽出
     - Base64デコードでJWTペイロードを解析
     - _要件: 3.1_
-  - [ ] 2.3 refreshTokensとextractUserIdFromIdTokenのユニットテストを作成
+  - [~] 2.3 refreshTokensとextractUserIdFromIdTokenのユニットテストを作成
     - `packages/api/src/lib/cognito/cognito-service.test.ts`に追加
     - refreshTokens成功ケース
     - refreshTokens失敗ケース（NotAuthorizedException）
     - extractUserIdFromIdToken正常ケース
     - Cognitoクライアントをモック
     - _要件: 3.1, 5.3, 5.5_
-  - [ ] 2.4 プロパティテスト: トークンリフレッシュ成功レスポンス形式
+  - [~] 2.4 プロパティテスト: トークンリフレッシュ成功レスポンス形式
     - `packages/api/src/lib/cognito/cognito-service.property.test.ts`に追加
     - **プロパティ5: トークンリフレッシュ成功レスポンス形式**
     - **検証: 要件 5.3, 5.4**
-  - [ ] 2.5 プロパティテスト: 無効なリフレッシュトークンのエラーハンドリング
+  - [~] 2.5 プロパティテスト: 無効なリフレッシュトークンのエラーハンドリング
     - `packages/api/src/lib/cognito/cognito-service.property.test.ts`に追加
     - **プロパティ6: 無効なリフレッシュトークンのエラーハンドリング**
     - **検証: 要件 5.5**
 
 - [ ] 3. RateLimiterのアクション別設定対応
-  - [ ] 3.1 アクション別のレート制限設定を追加
+  - [~] 3.1 アクション別のレート制限設定を追加
     - `packages/api/src/lib/rate-limiter.ts`を修正
     - アクション別のmaxRequests設定: register=5、login=10、refresh=20
     - _要件: 6.1, 6.2_
-  - [ ] 3.2 アクション別レート制限のユニットテストを作成
+  - [~] 3.2 アクション別レート制限のユニットテストを作成
     - `packages/api/src/lib/rate-limiter.test.ts`に追加
     - loginアクションで10リクエスト制限のテスト
     - refreshアクションで20リクエスト制限のテスト
@@ -79,7 +79,7 @@
   - すべてのテストが通過することを確認し、質問があればユーザーに確認してください。
 
 - [ ] 5. Auth Routerへのエンドポイント追加
-  - [ ] 5.1 ログインエンドポイントを実装
+  - [~] 5.1 ログインエンドポイントを実装
     - `packages/api/src/routes/auth.ts`に`POST /login`を追加
     - Zodバリデーター統合（loginSchema）
     - レート制限チェック（login: 10リクエスト/分）
@@ -89,19 +89,19 @@
     - 成功レスポンス（200、userId、email、username、tokens、expiresIn: 900）
     - リクエストログ（マスク済みメール、IPアドレス、タイムスタンプ）
     - _要件: 1.1, 1.2-1.4, 2.1-2.4, 3.1-3.3, 4.1-4.4, 8.1-8.4, 9.1-9.3_
-  - [ ] 5.2 リフレッシュエンドポイントを実装
+  - [~] 5.2 リフレッシュエンドポイントを実装
     - `packages/api/src/routes/auth.ts`に`POST /refresh`を追加
     - Zodバリデーター統合（refreshSchema）
     - レート制限チェック（refresh: 20リクエスト/分）
     - Cognitoリフレッシュ（REFRESH_TOKEN_AUTH）
     - 成功レスポンス（200、accessToken、expiresIn: 900）
     - _要件: 5.1, 5.2-5.5, 6.2_
-  - [ ] 5.3 エラーハンドリングヘルパー関数を実装
+  - [~] 5.3 エラーハンドリングヘルパー関数を実装
     - `isAuthenticationError`関数: NotAuthorizedException、UserNotFoundExceptionを判定
     - `isTokenExpiredError`関数: NotAuthorizedException（リフレッシュフロー）を判定
     - バリデーションエラーハンドラーの共通化（register/login/refreshで共有）
     - _要件: 2.3, 2.4, 5.5, 7.1-7.4, 8.1_
-  - [ ] 5.4 ログインエンドポイントのユニットテストを作成
+  - [~] 5.4 ログインエンドポイントのユニットテストを作成
     - `packages/api/src/routes/auth.test.ts`に追加
     - 有効なリクエストの成功テスト（200）
     - バリデーションエラーのテスト（400）
@@ -112,7 +112,7 @@
     - ログ記録の検証（マスク済みメール、パスワード非出力、トークン非出力）
     - サービスをモック
     - _要件: 1.1-1.4, 2.1-2.4, 3.1-3.3, 4.1-4.4, 6.1, 6.3, 6.4, 7.1-7.4, 8.1-8.4, 9.1-9.3_
-  - [ ] 5.5 リフレッシュエンドポイントのユニットテストを作成
+  - [~] 5.5 リフレッシュエンドポイントのユニットテストを作成
     - `packages/api/src/routes/auth.test.ts`に追加
     - 有効なリクエストの成功テスト（200）
     - バリデーションエラーのテスト（400）
@@ -121,31 +121,31 @@
     - レート制限のテスト（429）
     - サービスをモック
     - _要件: 5.1-5.5, 6.2-6.4_
-  - [ ] 5.6 プロパティテスト: ログイン成功レスポンス形式
+  - [~] 5.6 プロパティテスト: ログイン成功レスポンス形式
     - `packages/api/src/routes/auth.property.test.ts`に追加
     - **プロパティ2: ログイン成功レスポンス形式**
     - **検証: 要件 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 4.3, 4.4**
-  - [ ] 5.7 プロパティテスト: 認証失敗時の統一エラーメッセージ
+  - [~] 5.7 プロパティテスト: 認証失敗時の統一エラーメッセージ
     - `packages/api/src/routes/auth.property.test.ts`に追加
     - **プロパティ3: 認証失敗時の統一エラーメッセージ**
     - **検証: 要件 2.3, 8.1**
-  - [ ] 5.8 プロパティテスト: レート制限
+  - [~] 5.8 プロパティテスト: レート制限
     - `packages/api/src/routes/auth.property.test.ts`に追加
     - **プロパティ7: レート制限**
     - **検証: 要件 6.1, 6.2, 6.3, 6.4**
-  - [ ] 5.9 プロパティテスト: エラーレスポンス形式の一貫性
+  - [~] 5.9 プロパティテスト: エラーレスポンス形式の一貫性
     - `packages/api/src/routes/auth.property.test.ts`に追加
     - **プロパティ8: エラーレスポンス形式の一貫性**
     - **検証: 要件 7.1, 7.2, 7.3, 7.4**
 
 - [ ] 6. 統合テスト
-  - [ ] 6.1 ログインフローの統合テストを作成
+  - [~] 6.1 ログインフローの統合テストを作成
     - `packages/api/src/routes/auth.integration.test.ts`に追加
     - ログイン成功フロー（バリデーション→レート制限→認証→ユーザー取得→レスポンス）
     - ログイン失敗フロー（認証失敗、ユーザー未存在）
     - サービスをモック（Cognito、DynamoDB）
     - _要件: 1.1-1.4, 2.1-2.4, 3.1-3.3, 4.1-4.4_
-  - [ ] 6.2 リフレッシュフローの統合テストを作成
+  - [~] 6.2 リフレッシュフローの統合テストを作成
     - `packages/api/src/routes/auth.integration.test.ts`に追加
     - リフレッシュ成功フロー
     - リフレッシュ失敗フロー（トークン期限切れ）
