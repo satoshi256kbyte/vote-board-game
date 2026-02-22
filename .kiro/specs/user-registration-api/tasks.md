@@ -83,7 +83,7 @@
   - すべてのテストが通過することを確認し、質問があればユーザーに確認してください。
 
 - [ ] 4. データアクセス層の実装
-  - [~] 4.1 BaseRepositoryを作成
+  - [x] 4.1 BaseRepositoryを作成
     - `packages/api/src/lib/dynamodb/repositories/base.ts`を作成
     - DynamoDBDocumentClientの初期化
     - 共通メソッド（`now()`など）を実装
