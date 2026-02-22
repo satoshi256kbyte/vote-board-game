@@ -1,15 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🧪 Running tests..."
-if ! pnpm test; then
-  echo "❌ Tests failed"
-  exit 1
-fi
-
-echo "✅ Tests passed"
-echo ""
-
 echo "🔍 Running type check..."
 if ! pnpm type-check; then
   echo "❌ Type check failed"
@@ -39,6 +30,16 @@ fi
 
 echo "✅ CDK security check passed"
 echo ""
+
+echo "🧪 Running tests..."
+if ! pnpm test; then
+  echo "❌ Tests failed"
+  exit 1
+fi
+
+echo "✅ Tests passed"
+echo ""
+
 echo "✨ All checks passed! Pushing to remote..."
 
 

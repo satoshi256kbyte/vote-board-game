@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  SignUpCommand,
-  InitiateAuthCommand,
-  AdminDeleteUserCommand,
-} from '@aws-sdk/client-cognito-identity-provider';
-import { PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand } from '@aws-sdk/lib-dynamodb';
 
 /**
  * エンドツーエンド統合テスト: ユーザー登録API
@@ -21,16 +16,22 @@ vi.mock('../lib/cognito/cognito-service.js');
 // DynamoDBクライアントをモック
 vi.mock('../lib/dynamodb.js');
 
+// RateLimiterをモック
+vi.mock('../lib/rate-limiter.js');
+
 // モック設定後にインポート
 import app from '../index.js';
 import { CognitoService } from '../lib/cognito/cognito-service.js';
 import { docClient } from '../lib/dynamodb.js';
+import { RateLimiter } from '../lib/rate-limiter.js';
 
 describe('Auth Router - End-to-End Integration Tests', () => {
   let mockSignUp: ReturnType<typeof vi.fn>;
   let mockAuthenticate: ReturnType<typeof vi.fn>;
   let mockDeleteUser: ReturnType<typeof vi.fn>;
   let mockDynamoDBSend: ReturnType<typeof vi.fn>;
+  let mockCheckLimit: ReturnType<typeof vi.fn>;
+  let mockGetRetryAfter: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     // 環境変数を設定
@@ -54,11 +55,23 @@ describe('Auth Router - End-to-End Integration Tests', () => {
           signUp: mockSignUp,
           authenticate: mockAuthenticate,
           deleteUser: mockDeleteUser,
-        }) as any
+        }) as unknown as CognitoService
     );
 
     // DynamoDBのモックを設定
     mockDynamoDBSend = vi.mocked(docClient.send);
+
+    // RateLimiterのモックを設定
+    mockCheckLimit = vi.fn().mockResolvedValue(true); // デフォルトは許可
+    mockGetRetryAfter = vi.fn().mockResolvedValue(60);
+
+    vi.mocked(RateLimiter).mockImplementation(
+      () =>
+        ({
+          checkLimit: mockCheckLimit,
+          getRetryAfter: mockGetRetryAfter,
+        }) as unknown as RateLimiter
+    );
   });
 
   describe('登録成功フロー', () => {
@@ -83,11 +96,8 @@ describe('Auth Router - End-to-End Integration Tests', () => {
         expiresIn: 900,
       });
 
-      // DynamoDBのモックレスポンス
-      mockDynamoDBSend
-        .mockResolvedValueOnce({ Item: undefined }) // レート制限チェック
-        .mockResolvedValueOnce({}) // レート制限レコード作成
-        .mockResolvedValueOnce({}); // ユーザーレコード作成
+      // DynamoDBのモックレスポンス (ユーザーレコード作成のみ)
+      mockDynamoDBSend.mockResolvedValueOnce({});
 
       // Act
       const res = await app.request('/auth/register', {
@@ -117,9 +127,9 @@ describe('Auth Router - End-to-End Integration Tests', () => {
       expect(mockAuthenticate).toHaveBeenCalledWith('newuser@example.com', 'SecurePass123');
 
       // DynamoDBが正しく呼ばれたことを確認
-      expect(mockDynamoDBSend).toHaveBeenCalledTimes(3);
+      expect(mockDynamoDBSend).toHaveBeenCalledTimes(1);
 
-      const userPutCall = mockDynamoDBSend.mock.calls[2][0];
+      const userPutCall = mockDynamoDBSend.mock.calls[0][0];
       expect(userPutCall).toBeInstanceOf(PutCommand);
       expect(userPutCall.input.Item).toMatchObject({
         PK: 'USER#test-user-id-123',
@@ -151,10 +161,7 @@ describe('Auth Router - End-to-End Integration Tests', () => {
         expiresIn: 900,
       });
 
-      mockDynamoDBSend
-        .mockResolvedValueOnce({ Item: undefined })
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({});
+      mockDynamoDBSend.mockResolvedValueOnce({});
 
       // Act
       const res = await app.request('/auth/register', {
@@ -410,13 +417,9 @@ describe('Auth Router - End-to-End Integration Tests', () => {
         username: 'existinguser',
       };
 
-      // レート制限チェックは通過
-      mockDynamoDBSend.mockResolvedValueOnce({ Item: undefined }).mockResolvedValueOnce({});
-
       // Cognitoが重複エラーを返す
       const usernameExistsError = new Error('User already exists');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (usernameExistsError as any).code = 'UsernameExistsException';
+      (usernameExistsError as { code: string }).code = 'UsernameExistsException';
       mockSignUp.mockRejectedValueOnce(usernameExistsError);
 
       // Act
@@ -445,11 +448,8 @@ describe('Auth Router - End-to-End Integration Tests', () => {
         username: 'duplicateuser',
       };
 
-      mockDynamoDBSend.mockResolvedValueOnce({ Item: undefined }).mockResolvedValueOnce({});
-
       const usernameExistsError = new Error('User already exists');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (usernameExistsError as any).code = 'UsernameExistsException';
+      (usernameExistsError as { code: string }).code = 'UsernameExistsException';
       mockSignUp.mockRejectedValueOnce(usernameExistsError);
 
       // Act
@@ -464,8 +464,7 @@ describe('Auth Router - End-to-End Integration Tests', () => {
 
       // Assert
       // DynamoDBへのユーザーレコード作成が呼ばれていないことを確認
-      // レート制限チェック（2回）のみ
-      expect(mockDynamoDBSend).toHaveBeenCalledTimes(2);
+      expect(mockDynamoDBSend).not.toHaveBeenCalled();
     });
   });
 
@@ -480,16 +479,9 @@ describe('Auth Router - End-to-End Integration Tests', () => {
 
       const ipAddress = '192.168.1.100';
 
-      // レート制限レコードが既に5回のリクエストを記録している
-      const rateLimitRecord = {
-        PK: 'RATELIMIT#register#192.168.1.100',
-        SK: 'RATELIMIT#register#192.168.1.100',
-        count: 5,
-        windowStart: Math.floor(Date.now() / 1000) - 30,
-        expiresAt: Math.floor(Date.now() / 1000) + 90,
-      };
-
-      mockDynamoDBSend.mockResolvedValueOnce({ Item: rateLimitRecord });
+      // レート制限を超過したことをシミュレート
+      mockCheckLimit.mockResolvedValueOnce(false);
+      mockGetRetryAfter.mockResolvedValueOnce(70);
 
       // Act
       const res = await app.request('/auth/register', {
@@ -522,19 +514,10 @@ describe('Auth Router - End-to-End Integration Tests', () => {
 
       const ipAddress = '192.168.1.101';
 
-      // レート制限レコードが3回のリクエストを記録している（制限内）
-      const rateLimitRecord = {
-        PK: 'RATELIMIT#register#192.168.1.101',
-        SK: 'RATELIMIT#register#192.168.1.101',
-        count: 3,
-        windowStart: Math.floor(Date.now() / 1000) - 30,
-        expiresAt: Math.floor(Date.now() / 1000) + 90,
-      };
+      // レート制限内（許可される）
+      mockCheckLimit.mockResolvedValueOnce(true);
 
-      mockDynamoDBSend
-        .mockResolvedValueOnce({ Item: rateLimitRecord })
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({});
+      mockDynamoDBSend.mockResolvedValueOnce({});
 
       mockSignUp.mockResolvedValueOnce({
         userId: 'within-limit-user-id',
@@ -560,10 +543,7 @@ describe('Auth Router - End-to-End Integration Tests', () => {
 
       // Assert
       expect(res.status).toBe(201);
-
-      // カウントがインクリメントされたことを確認
-      const updateCall = mockDynamoDBSend.mock.calls[1][0];
-      expect(updateCall).toBeInstanceOf(UpdateCommand);
+      expect(mockCheckLimit).toHaveBeenCalledWith(ipAddress, 'register');
     });
 
     it('異なるIPアドレスからのリクエストは独立してカウントされる', async () => {
@@ -580,21 +560,14 @@ describe('Auth Router - End-to-End Integration Tests', () => {
         username: 'ip2user',
       };
 
-      // IP1のレート制限レコード（5回）
-      const rateLimitRecord1 = {
-        PK: 'RATELIMIT#register#192.168.1.102',
-        SK: 'RATELIMIT#register#192.168.1.102',
-        count: 5,
-        windowStart: Math.floor(Date.now() / 1000) - 30,
-        expiresAt: Math.floor(Date.now() / 1000) + 90,
-      };
+      // IP1は制限超過、IP2は許可
+      mockCheckLimit
+        .mockResolvedValueOnce(false) // IP1: 制限超過
+        .mockResolvedValueOnce(true); // IP2: 許可
 
-      // IP2のレート制限レコード（存在しない）
-      mockDynamoDBSend
-        .mockResolvedValueOnce({ Item: rateLimitRecord1 })
-        .mockResolvedValueOnce({ Item: undefined })
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({});
+      mockGetRetryAfter.mockResolvedValueOnce(60);
+
+      mockDynamoDBSend.mockResolvedValueOnce({});
 
       mockSignUp.mockResolvedValueOnce({
         userId: 'ip2-user-id',
@@ -642,11 +615,8 @@ describe('Auth Router - End-to-End Integration Tests', () => {
         username: 'rollbackuser',
       };
 
-      // レート制限チェックは通過
-      mockDynamoDBSend
-        .mockResolvedValueOnce({ Item: undefined })
-        .mockResolvedValueOnce({})
-        .mockRejectedValueOnce(new Error('DynamoDB write failed'));
+      // DynamoDB書き込みが失敗
+      mockDynamoDBSend.mockRejectedValueOnce(new Error('DynamoDB write failed'));
 
       // Cognitoは成功
       mockSignUp.mockResolvedValueOnce({
@@ -686,10 +656,7 @@ describe('Auth Router - End-to-End Integration Tests', () => {
         username: 'corsuser',
       };
 
-      mockDynamoDBSend
-        .mockResolvedValueOnce({ Item: undefined })
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({});
+      mockDynamoDBSend.mockResolvedValueOnce({});
 
       mockSignUp.mockResolvedValueOnce({
         userId: 'cors-user-id',
