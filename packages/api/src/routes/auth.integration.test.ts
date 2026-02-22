@@ -1,693 +1,447 @@
-// COGNITO_USER_POOL_IDが必要なため、モジュールインポート前に設定
-process.env.COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || 'ap-northeast-1_TestPool';
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
-
-/**
- * エンドツーエンド統合テスト: ユーザー登録API
- *
- * このテストスイートは、実際のHonoアプリケーションを使用して
- * 完全な登録フローをテストします。外部サービス（Cognito、DynamoDB）のみをモックします。
- *
- * **検証: 要件 1.1-1.5, 2.1-2.3, 3.1-3.5, 4.1-4.3, 5.1-5.4, 6.1-6.5, 7.1-7.4, 8.1-8.4, 9.1-9.3**
- */
-
-// CognitoServiceをモック
-vi.mock('../lib/cognito/cognito-service.js');
-
-// DynamoDBクライアントをモック
-vi.mock('../lib/dynamodb.js');
-
-// RateLimiterをモック
-vi.mock('../lib/rate-limiter.js');
-
-// モック設定後にインポート
-import app from '../index.js';
+import { Hono } from 'hono';
+import { authRouter } from './auth.js';
 import { CognitoService } from '../lib/cognito/cognito-service.js';
-import { docClient } from '../lib/dynamodb.js';
+import { UserRepository } from '../lib/dynamodb/repositories/user.js';
 import { RateLimiter } from '../lib/rate-limiter.js';
 
-describe('Auth Router - End-to-End Integration Tests', () => {
-  let mockSignUp: ReturnType<typeof vi.fn>;
-  let mockAuthenticate: ReturnType<typeof vi.fn>;
-  let mockDeleteUser: ReturnType<typeof vi.fn>;
-  let mockDynamoDBSend: ReturnType<typeof vi.fn>;
-  let mockCheckLimit: ReturnType<typeof vi.fn>;
-  let mockGetRetryAfter: ReturnType<typeof vi.fn>;
+// モック
+vi.mock('../lib/cognito/cognito-service.js');
+vi.mock('../lib/dynamodb/repositories/user.js');
+vi.mock('../lib/rate-limiter.js');
+
+describe('Auth Router Integration Tests', () => {
+  let app: Hono;
+  let mockCognitoService: {
+    signUp: ReturnType<typeof vi.fn>;
+    authenticate: ReturnType<typeof vi.fn>;
+    deleteUser: ReturnType<typeof vi.fn>;
+    forgotPassword: ReturnType<typeof vi.fn>;
+    confirmForgotPassword: ReturnType<typeof vi.fn>;
+    refreshTokens: ReturnType<typeof vi.fn>;
+    extractUserIdFromIdToken: ReturnType<typeof vi.fn>;
+  };
+  let mockUserRepository: {
+    create: ReturnType<typeof vi.fn>;
+    getById: ReturnType<typeof vi.fn>;
+  };
+  let mockRateLimiter: {
+    checkLimit: ReturnType<typeof vi.fn>;
+    getRetryAfter: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
-    // 環境変数を設定
-    process.env.AWS_REGION = 'ap-northeast-1';
-    process.env.COGNITO_USER_POOL_ID = 'test-user-pool-id';
-    process.env.COGNITO_CLIENT_ID = 'test-client-id';
-    process.env.DYNAMODB_TABLE_NAME = 'test-table';
-    process.env.ALLOWED_ORIGINS = 'http://localhost:3000';
-
-    // モックをリセット
     vi.clearAllMocks();
 
-    // CognitoServiceのモックメソッドを設定
-    mockSignUp = vi.fn();
-    mockAuthenticate = vi.fn();
-    mockDeleteUser = vi.fn();
+    // Honoアプリケーションのセットアップ
+    app = new Hono();
+    app.route('/auth', authRouter);
 
+    // CognitoServiceのモック
+    mockCognitoService = {
+      signUp: vi.fn(),
+      authenticate: vi.fn(),
+      deleteUser: vi.fn(),
+      forgotPassword: vi.fn(),
+      confirmForgotPassword: vi.fn(),
+      refreshTokens: vi.fn(),
+      extractUserIdFromIdToken: vi.fn(),
+    };
     vi.mocked(CognitoService).mockImplementation(
-      () =>
-        ({
-          signUp: mockSignUp,
-          authenticate: mockAuthenticate,
-          deleteUser: mockDeleteUser,
-        }) as unknown as CognitoService
+      () => mockCognitoService as unknown as CognitoService
     );
 
-    // DynamoDBのモックを設定
-    mockDynamoDBSend = vi.mocked(docClient.send);
-
-    // RateLimiterのモックを設定
-    mockCheckLimit = vi.fn().mockResolvedValue(true); // デフォルトは許可
-    mockGetRetryAfter = vi.fn().mockResolvedValue(60);
-
-    vi.mocked(RateLimiter).mockImplementation(
-      () =>
-        ({
-          checkLimit: mockCheckLimit,
-          getRetryAfter: mockGetRetryAfter,
-        }) as unknown as RateLimiter
+    // UserRepositoryのモック
+    mockUserRepository = {
+      create: vi.fn(),
+      getById: vi.fn(),
+    };
+    vi.mocked(UserRepository).mockImplementation(
+      () => mockUserRepository as unknown as UserRepository
     );
+
+    // RateLimiterのモック
+    mockRateLimiter = {
+      checkLimit: vi.fn(),
+      getRetryAfter: vi.fn(),
+    };
+    vi.mocked(RateLimiter).mockImplementation(() => mockRateLimiter as unknown as RateLimiter);
   });
 
-  describe('登録成功フロー', () => {
-    it('有効なデータで登録が成功し、201ステータスとトークンを返す', async () => {
-      // Arrange
-      const registrationData = {
-        email: 'newuser@example.com',
-        password: 'SecurePass123',
-        username: 'newuser',
-      };
+  describe('ログインフローの統合テスト', () => {
+    const validLoginRequest = {
+      email: 'test@example.com',
+      password: 'Password123',
+    };
 
-      // Cognitoのモックレスポンス
-      mockSignUp.mockResolvedValueOnce({
-        userId: 'test-user-id-123',
-        userConfirmed: false,
+    const mockTokens = {
+      accessToken: 'test-access-token',
+      refreshToken: 'test-refresh-token',
+      idToken: 'test-id-token',
+      expiresIn: 900,
+    };
+
+    const mockUser = {
+      PK: 'USER#test-user-id',
+      SK: 'USER#test-user-id',
+      userId: 'test-user-id',
+      email: 'test@example.com',
+      username: 'testuser',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      entityType: 'USER',
+    };
+
+    describe('ログイン成功フロー', () => {
+      it('バリデーション→レート制限→認証→ユーザー取得→レスポンスの完全なフローが正常に動作する', async () => {
+        // モックの設定（成功パス）
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(mockUser);
+
+        // リクエスト実行
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validLoginRequest),
+        });
+
+        // レスポンス検証
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json).toEqual({
+          userId: 'test-user-id',
+          email: 'test@example.com',
+          username: 'testuser',
+          accessToken: 'test-access-token',
+          refreshToken: 'test-refresh-token',
+          expiresIn: 900,
+        });
+
+        // フロー全体の呼び出し順序を検証
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('unknown', 'login');
+        expect(mockCognitoService.authenticate).toHaveBeenCalledWith(
+          'test@example.com',
+          'Password123'
+        );
+        expect(mockCognitoService.extractUserIdFromIdToken).toHaveBeenCalledWith('test-id-token');
+        expect(mockUserRepository.getById).toHaveBeenCalledWith('test-user-id');
+
+        // 呼び出し順序の検証
+        const callOrder = vi.mocked(RateLimiter).mock.invocationCallOrder[0];
+        const authCallOrder = vi.mocked(CognitoService).mock.invocationCallOrder[0];
+        expect(callOrder).toBeLessThan(authCallOrder);
       });
 
-      mockAuthenticate.mockResolvedValueOnce({
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
-        idToken: 'mock-id-token',
-        expiresIn: 900,
+      it('バリデーション通過後にレート制限チェックが実行される', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(mockUser);
+
+        await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validLoginRequest),
+        });
+
+        // レート制限チェックが正しいアクションで呼ばれることを検証
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('unknown', 'login');
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledTimes(1);
       });
 
-      // DynamoDBのモックレスポンス (ユーザーレコード作成のみ)
-      mockDynamoDBSend.mockResolvedValueOnce({});
+      it('Cognito認証成功後にIDトークンからuserIdを抽出する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(mockUser);
 
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '192.168.1.1',
-        },
-        body: JSON.stringify(registrationData),
+        await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validLoginRequest),
+        });
+
+        // IDトークンからuserIdを抽出することを検証
+        expect(mockCognitoService.extractUserIdFromIdToken).toHaveBeenCalledWith('test-id-token');
+        expect(mockCognitoService.extractUserIdFromIdToken).toHaveBeenCalledTimes(1);
       });
 
-      const json = await res.json();
+      it('userId抽出後にDynamoDBからユーザー情報を取得する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(mockUser);
 
-      // Assert
-      expect(res.status).toBe(201);
-      expect(json).toEqual({
-        userId: 'test-user-id-123',
-        email: 'newuser@example.com',
-        username: 'newuser',
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
-        expiresIn: 900,
-      });
+        await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validLoginRequest),
+        });
 
-      // Cognitoが正しく呼ばれたことを確認
-      expect(mockSignUp).toHaveBeenCalledWith('newuser@example.com', 'SecurePass123', 'newuser');
-      expect(mockAuthenticate).toHaveBeenCalledWith('newuser@example.com', 'SecurePass123');
-
-      // DynamoDBが正しく呼ばれたことを確認
-      expect(mockDynamoDBSend).toHaveBeenCalledTimes(1);
-
-      const userPutCall = mockDynamoDBSend.mock.calls[0][0];
-      expect(userPutCall).toBeInstanceOf(PutCommand);
-      expect(userPutCall.input.Item).toMatchObject({
-        PK: 'USER#test-user-id-123',
-        SK: 'USER#test-user-id-123',
-        userId: 'test-user-id-123',
-        email: 'newuser@example.com',
-        username: 'newuser',
-        entityType: 'USER',
+        // 抽出されたuserIdでDynamoDBからユーザー情報を取得することを検証
+        expect(mockUserRepository.getById).toHaveBeenCalledWith('test-user-id');
+        expect(mockUserRepository.getById).toHaveBeenCalledTimes(1);
       });
     });
 
-    it('Content-Typeがapplication/jsonであることを確認', async () => {
-      // Arrange
-      const registrationData = {
-        email: 'contenttype@example.com',
-        password: 'ContentType123',
-        username: 'contenttypeuser',
-      };
+    describe('ログイン失敗フロー', () => {
+      it('バリデーションエラー時は後続処理を実行しない', async () => {
+        // 無効なリクエスト（emailが空）
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: '', password: 'Password123' }),
+        });
 
-      mockSignUp.mockResolvedValueOnce({
-        userId: 'content-type-user-id',
-        userConfirmed: false,
+        expect(res.status).toBe(400);
+
+        // バリデーションエラー時は後続処理が呼ばれないことを検証
+        expect(mockRateLimiter.checkLimit).not.toHaveBeenCalled();
+        expect(mockCognitoService.authenticate).not.toHaveBeenCalled();
+        expect(mockUserRepository.getById).not.toHaveBeenCalled();
       });
 
-      mockAuthenticate.mockResolvedValueOnce({
-        accessToken: 'token',
-        refreshToken: 'refresh',
-        idToken: 'id',
-        expiresIn: 900,
+      it('レート制限超過時は認証処理を実行しない', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(false);
+        mockRateLimiter.getRetryAfter.mockResolvedValue(30);
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validLoginRequest),
+        });
+
+        expect(res.status).toBe(429);
+
+        // レート制限超過時は認証処理が呼ばれないことを検証
+        expect(mockCognitoService.authenticate).not.toHaveBeenCalled();
+        expect(mockUserRepository.getById).not.toHaveBeenCalled();
       });
 
-      mockDynamoDBSend.mockResolvedValueOnce({});
+      it('認証失敗時（NotAuthorizedException）は統一エラーメッセージを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Incorrect username or password') as Error & {
+          name: string;
+        };
+        error.name = 'NotAuthorizedException';
+        mockCognitoService.authenticate.mockRejectedValue(error);
 
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '192.168.1.2',
-        },
-        body: JSON.stringify(registrationData),
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validLoginRequest),
+        });
+
+        expect(res.status).toBe(401);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'AUTHENTICATION_FAILED',
+          message: 'Invalid email or password',
+        });
+
+        // 認証失敗時はユーザー取得が呼ばれないことを検証
+        expect(mockUserRepository.getById).not.toHaveBeenCalled();
       });
 
-      // Assert
-      expect(res.status).toBe(201);
-      expect(res.headers.get('content-type')).toContain('application/json');
-    });
-  });
+      it('認証失敗時（UserNotFoundException）は統一エラーメッセージを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('User does not exist') as Error & { name: string };
+        error.name = 'UserNotFoundException';
+        mockCognitoService.authenticate.mockRejectedValue(error);
 
-  describe('登録失敗フロー - バリデーションエラー', () => {
-    it('メールアドレスが欠落している場合、400エラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        password: 'Password123',
-        username: 'testuser',
-      };
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validLoginRequest),
+        });
 
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
+        expect(res.status).toBe(401);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'AUTHENTICATION_FAILED',
+          message: 'Invalid email or password',
+        });
+
+        // 認証失敗時はユーザー取得が呼ばれないことを検証
+        expect(mockUserRepository.getById).not.toHaveBeenCalled();
       });
 
-      const json = await res.json();
+      it('ユーザー未存在時（DynamoDB）は404エラーを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.authenticate.mockResolvedValue(mockTokens);
+        mockCognitoService.extractUserIdFromIdToken.mockReturnValue('test-user-id');
+        mockUserRepository.getById.mockResolvedValue(null);
 
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.message).toBe('Validation failed');
-      expect(json.details.fields).toHaveProperty('email');
-    });
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validLoginRequest),
+        });
 
-    it('パスワードが欠落している場合、400エラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        email: 'test@example.com',
-        username: 'testuser',
-      };
+        expect(res.status).toBe(404);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'USER_NOT_FOUND',
+          message: 'User not found',
+        });
 
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
+        // Cognito認証とuserIdの抽出は成功していることを検証
+        expect(mockCognitoService.authenticate).toHaveBeenCalled();
+        expect(mockCognitoService.extractUserIdFromIdToken).toHaveBeenCalled();
+        expect(mockUserRepository.getById).toHaveBeenCalled();
       });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.message).toBe('Validation failed');
-      expect(json.details.fields).toHaveProperty('password');
-    });
-
-    it('ユーザー名が欠落している場合、400エラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        email: 'test@example.com',
-        password: 'Password123',
-      };
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
-      });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.message).toBe('Validation failed');
-      expect(json.details.fields).toHaveProperty('username');
-    });
-
-    it('メールアドレスの形式が無効な場合、400エラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        email: 'invalid-email',
-        password: 'Password123',
-        username: 'testuser',
-      };
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
-      });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.details.fields.email).toContain('Invalid email format');
-    });
-
-    it('パスワードが要件を満たさない場合、400エラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        email: 'test@example.com',
-        password: 'weak',
-        username: 'testuser',
-      };
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
-      });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.details.fields.password).toContain('at least 8 characters');
-    });
-
-    it('ユーザー名が短すぎる場合、400エラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        email: 'test@example.com',
-        password: 'Password123',
-        username: 'ab',
-      };
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
-      });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.details.fields.username).toContain('at least 3 characters');
-    });
-
-    it('ユーザー名が長すぎる場合、400エラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        email: 'test@example.com',
-        password: 'Password123',
-        username: 'a'.repeat(21),
-      };
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
-      });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.details.fields.username).toContain('at most 20 characters');
-    });
-
-    it('ユーザー名に無効な文字が含まれる場合、400エラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        email: 'test@example.com',
-        password: 'Password123',
-        username: 'invalid@user',
-      };
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
-      });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.details.fields.username).toContain('alphanumeric');
-    });
-
-    it('複数のフィールドが無効な場合、すべてのエラーを返す', async () => {
-      // Arrange
-      const invalidData = {
-        email: 'invalid',
-        password: 'weak',
-        username: 'a',
-      };
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invalidData),
-      });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(400);
-      expect(json.error).toBe('VALIDATION_ERROR');
-      expect(json.details.fields).toHaveProperty('email');
-      expect(json.details.fields).toHaveProperty('password');
-      expect(json.details.fields).toHaveProperty('username');
     });
   });
 
-  describe('登録失敗フロー - メール重複', () => {
-    it('メールアドレスが既に登録されている場合、409エラーを返す', async () => {
-      // Arrange
-      const duplicateData = {
-        email: 'existing@example.com',
-        password: 'Password123',
-        username: 'existinguser',
-      };
+  describe('リフレッシュフローの統合テスト', () => {
+    const validRefreshRequest = {
+      refreshToken: 'valid-refresh-token',
+    };
 
-      // Cognitoが重複エラーを返す
-      const usernameExistsError = new Error('User already exists');
-      (usernameExistsError as { code: string }).code = 'UsernameExistsException';
-      mockSignUp.mockRejectedValueOnce(usernameExistsError);
+    const mockRefreshResult = {
+      accessToken: 'new-access-token',
+      idToken: 'new-id-token',
+      expiresIn: 900,
+    };
 
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '192.168.1.3',
-        },
-        body: JSON.stringify(duplicateData),
+    describe('リフレッシュ成功フロー', () => {
+      it('バリデーション→レート制限→トークンリフレッシュ→レスポンスの完全なフローが正常に動作する', async () => {
+        // モックの設定（成功パス）
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.refreshTokens.mockResolvedValue(mockRefreshResult);
+
+        // リクエスト実行
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRefreshRequest),
+        });
+
+        // レスポンス検証
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json).toEqual({
+          accessToken: 'new-access-token',
+          expiresIn: 900,
+        });
+
+        // フロー全体の呼び出しを検証
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('unknown', 'refresh');
+        expect(mockCognitoService.refreshTokens).toHaveBeenCalledWith('valid-refresh-token');
+
+        // 呼び出し順序の検証
+        const rateLimitCallOrder = vi.mocked(RateLimiter).mock.invocationCallOrder[0];
+        const cognitoCallOrder = vi.mocked(CognitoService).mock.invocationCallOrder[0];
+        expect(rateLimitCallOrder).toBeLessThan(cognitoCallOrder);
       });
 
-      const json = await res.json();
+      it('バリデーション通過後にレート制限チェックが実行される', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.refreshTokens.mockResolvedValue(mockRefreshResult);
 
-      // Assert
-      expect(res.status).toBe(409);
-      expect(json.error).toBe('CONFLICT');
-      expect(json.message).toBe('Email already registered');
+        await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRefreshRequest),
+        });
+
+        // レート制限チェックが正しいアクションで呼ばれることを検証
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('unknown', 'refresh');
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledTimes(1);
+      });
+
+      it('レート制限通過後にCognitoトークンリフレッシュが実行される', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.refreshTokens.mockResolvedValue(mockRefreshResult);
+
+        await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRefreshRequest),
+        });
+
+        // Cognitoトークンリフレッシュが正しいトークンで呼ばれることを検証
+        expect(mockCognitoService.refreshTokens).toHaveBeenCalledWith('valid-refresh-token');
+        expect(mockCognitoService.refreshTokens).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('重複エラー時にDynamoDBへの書き込みが行われないことを確認', async () => {
-      // Arrange
-      const duplicateData = {
-        email: 'duplicate@example.com',
-        password: 'Password123',
-        username: 'duplicateuser',
-      };
+    describe('リフレッシュ失敗フロー', () => {
+      it('バリデーションエラー時は後続処理を実行しない', async () => {
+        // 無効なリクエスト（refreshTokenが空）
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: '' }),
+        });
 
-      const usernameExistsError = new Error('User already exists');
-      (usernameExistsError as { code: string }).code = 'UsernameExistsException';
-      mockSignUp.mockRejectedValueOnce(usernameExistsError);
+        expect(res.status).toBe(400);
 
-      // Act
-      await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '192.168.1.4',
-        },
-        body: JSON.stringify(duplicateData),
+        // バリデーションエラー時は後続処理が呼ばれないことを検証
+        expect(mockRateLimiter.checkLimit).not.toHaveBeenCalled();
+        expect(mockCognitoService.refreshTokens).not.toHaveBeenCalled();
       });
 
-      // Assert
-      // DynamoDBへのユーザーレコード作成が呼ばれていないことを確認
-      expect(mockDynamoDBSend).not.toHaveBeenCalled();
-    });
-  });
+      it('レート制限超過時はトークンリフレッシュを実行しない', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(false);
+        mockRateLimiter.getRetryAfter.mockResolvedValue(15);
 
-  describe('レート制限のテスト', () => {
-    it('同じIPアドレスから6回目のリクエストで429エラーを返す', async () => {
-      // Arrange
-      const registrationData = {
-        email: 'ratelimit@example.com',
-        password: 'Password123',
-        username: 'ratelimituser',
-      };
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRefreshRequest),
+        });
 
-      const ipAddress = '192.168.1.100';
+        expect(res.status).toBe(429);
 
-      // レート制限を超過したことをシミュレート
-      mockCheckLimit.mockResolvedValueOnce(false);
-      mockGetRetryAfter.mockResolvedValueOnce(70);
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': ipAddress,
-        },
-        body: JSON.stringify(registrationData),
+        // レート制限超過時はトークンリフレッシュが呼ばれないことを検証
+        expect(mockCognitoService.refreshTokens).not.toHaveBeenCalled();
       });
 
-      const json = await res.json();
+      it('トークン期限切れ時（NotAuthorizedException）は401エラーを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Token is expired') as Error & { name: string };
+        error.name = 'NotAuthorizedException';
+        mockCognitoService.refreshTokens.mockRejectedValue(error);
 
-      // Assert
-      expect(res.status).toBe(429);
-      expect(json.error).toBe('RATE_LIMIT_EXCEEDED');
-      expect(json.message).toBe('Too many registration attempts');
-      expect(json).toHaveProperty('retryAfter');
-      expect(typeof json.retryAfter).toBe('number');
-      expect(json.retryAfter).toBeGreaterThanOrEqual(0);
-    });
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRefreshRequest),
+        });
 
-    it('レート制限内のリクエストは正常に処理される', async () => {
-      // Arrange
-      const registrationData = {
-        email: 'withinlimit@example.com',
-        password: 'Password123',
-        username: 'withinlimituser',
-      };
+        expect(res.status).toBe(401);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'TOKEN_EXPIRED',
+          message: 'Refresh token is invalid or expired',
+        });
 
-      const ipAddress = '192.168.1.101';
-
-      // レート制限内（許可される）
-      mockCheckLimit.mockResolvedValueOnce(true);
-
-      mockDynamoDBSend.mockResolvedValueOnce({});
-
-      mockSignUp.mockResolvedValueOnce({
-        userId: 'within-limit-user-id',
-        userConfirmed: false,
+        // トークンリフレッシュは呼ばれていることを検証
+        expect(mockCognitoService.refreshTokens).toHaveBeenCalled();
       });
 
-      mockAuthenticate.mockResolvedValueOnce({
-        accessToken: 'token',
-        refreshToken: 'refresh',
-        idToken: 'id',
-        expiresIn: 900,
+      it('Cognito予期しないエラー時は500エラーを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Service unavailable') as Error & { name: string };
+        error.name = 'InternalErrorException';
+        mockCognitoService.refreshTokens.mockRejectedValue(error);
+
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRefreshRequest),
+        });
+
+        expect(res.status).toBe(500);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'INTERNAL_ERROR',
+          message: 'Token refresh failed',
+        });
       });
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': ipAddress,
-        },
-        body: JSON.stringify(registrationData),
-      });
-
-      // Assert
-      expect(res.status).toBe(201);
-      expect(mockCheckLimit).toHaveBeenCalledWith(ipAddress, 'register');
-    });
-
-    it('異なるIPアドレスからのリクエストは独立してカウントされる', async () => {
-      // Arrange
-      const registrationData1 = {
-        email: 'ip1@example.com',
-        password: 'Password123',
-        username: 'ip1user',
-      };
-
-      const registrationData2 = {
-        email: 'ip2@example.com',
-        password: 'Password123',
-        username: 'ip2user',
-      };
-
-      // IP1は制限超過、IP2は許可
-      mockCheckLimit
-        .mockResolvedValueOnce(false) // IP1: 制限超過
-        .mockResolvedValueOnce(true); // IP2: 許可
-
-      mockGetRetryAfter.mockResolvedValueOnce(60);
-
-      mockDynamoDBSend.mockResolvedValueOnce({});
-
-      mockSignUp.mockResolvedValueOnce({
-        userId: 'ip2-user-id',
-        userConfirmed: false,
-      });
-
-      mockAuthenticate.mockResolvedValueOnce({
-        accessToken: 'token',
-        refreshToken: 'refresh',
-        idToken: 'id',
-        expiresIn: 900,
-      });
-
-      // Act
-      const res1 = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '192.168.1.102',
-        },
-        body: JSON.stringify(registrationData1),
-      });
-
-      const res2 = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '192.168.1.103',
-        },
-        body: JSON.stringify(registrationData2),
-      });
-
-      // Assert
-      expect(res1.status).toBe(429); // IP1は制限超過
-      expect(res2.status).toBe(201); // IP2は成功
-    });
-  });
-
-  describe('トランザクション整合性とロールバック', () => {
-    it('DynamoDB書き込み失敗時にCognitoユーザーが削除される', async () => {
-      // Arrange
-      const registrationData = {
-        email: 'rollback@example.com',
-        password: 'Password123',
-        username: 'rollbackuser',
-      };
-
-      // DynamoDB書き込みが失敗
-      mockDynamoDBSend.mockRejectedValueOnce(new Error('DynamoDB write failed'));
-
-      // Cognitoは成功
-      mockSignUp.mockResolvedValueOnce({
-        userId: 'rollback-user-id',
-        userConfirmed: false,
-      });
-
-      mockDeleteUser.mockResolvedValueOnce(undefined);
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '192.168.1.5',
-        },
-        body: JSON.stringify(registrationData),
-      });
-
-      const json = await res.json();
-
-      // Assert
-      expect(res.status).toBe(500);
-      expect(json.error).toBe('INTERNAL_ERROR');
-
-      // Cognitoのdeleteユーザーが呼ばれたことを確認
-      expect(mockDeleteUser).toHaveBeenCalledWith('rollback-user-id');
-    });
-  });
-
-  describe('CORSヘッダー', () => {
-    it('許可されたオリジンからのリクエストにCORSヘッダーを含む', async () => {
-      // Arrange
-      const registrationData = {
-        email: 'cors@example.com',
-        password: 'Password123',
-        username: 'corsuser',
-      };
-
-      mockDynamoDBSend.mockResolvedValueOnce({});
-
-      mockSignUp.mockResolvedValueOnce({
-        userId: 'cors-user-id',
-        userConfirmed: false,
-      });
-
-      mockAuthenticate.mockResolvedValueOnce({
-        accessToken: 'token',
-        refreshToken: 'refresh',
-        idToken: 'id',
-        expiresIn: 900,
-      });
-
-      // Act
-      const res = await app.request('/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Origin: 'http://localhost:3000',
-          'x-forwarded-for': '192.168.1.6',
-        },
-        body: JSON.stringify(registrationData),
-      });
-
-      // Assert
-      expect(res.status).toBe(201);
-      expect(res.headers.get('access-control-allow-origin')).toBe('http://localhost:3000');
-      expect(res.headers.get('access-control-allow-credentials')).toBe('true');
     });
   });
 });

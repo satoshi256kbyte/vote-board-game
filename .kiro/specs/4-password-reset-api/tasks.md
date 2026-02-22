@@ -74,7 +74,7 @@
 - [x] 4. チェックポイント - 基礎実装の確認
   - すべてのテストが通過することを確認し、質問があればユーザーに確認してください。
 
-- [-] 5. Auth Routerへのパスワードリセットエンドポイント追加
+- [x] 5. Auth Routerへのパスワードリセットエンドポイント追加
   - [x] 5.1 パスワードリセット要求エンドポイントを実装
     - `packages/api/src/routes/auth.ts`に`POST /password-reset`を追加
     - Zodバリデーター統合（passwordResetRequestSchema）
@@ -153,7 +153,7 @@
     - **検証: 要件 8.2, 8.3, 8.4**
 
 - [ ] 6. CORS設定の確認
-  - [~] 6.1 CORS設定のユニットテストを作成
+  - [-] 6.1 CORS設定のユニットテストを作成
     - `packages/api/src/routes/auth.test.ts`に追加
     - パスワードリセットエンドポイントがCORSヘッダーを返すことを確認
     - 許可オリジン: localhost:3000、stg.vote-board-game.example.com、vote-board-game.example.com
