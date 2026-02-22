@@ -122,9 +122,10 @@ jobs:
           DISTRIBUTION_ID=$(jq -r '.[] | .DistributionId' packages/infra/cdk-outputs.json)
           API_URL=$(jq -r '.[] | .ApiUrl' packages/infra/cdk-outputs.json)
           API_LAMBDA_NAME=$(jq -r '.[] | .ApiLambdaFunctionName' packages/infra/cdk-outputs.json)
+          DOMAIN_NAME=$(jq -r '.[] | .DistributionDomainName' packages/infra/cdk-outputs.json)
 
-          # Calculate CloudFront URL from distribution ID
-          CLOUDFRONT_URL="https://${DISTRIBUTION_ID}.cloudfront.net"
+          # Build CloudFront URL from distribution domain name
+          CLOUDFRONT_URL="https://${DOMAIN_NAME}"
 
           echo "bucket-name=$BUCKET_NAME" >> $GITHUB_OUTPUT
           echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
