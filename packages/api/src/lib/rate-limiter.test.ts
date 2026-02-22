@@ -1,11 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { RateLimiter } from './rate-limiter.js';
-import {
-  DynamoDBDocumentClient,
-  GetCommand,
-  PutCommand,
-  UpdateCommand,
-} from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 // DynamoDBDocumentClientをモック
 vi.mock('@aws-sdk/lib-dynamodb', async () => {
@@ -30,6 +25,8 @@ describe('RateLimiter', () => {
 
     rateLimiter = new RateLimiter();
     mockSend = vi.fn();
+    // Access private property for testing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (rateLimiter as any).docClient.send = mockSend;
   });
 
