@@ -122,26 +122,26 @@
   - [x] 5.3 CognitoServiceのプロパティテストを作成
     - **プロパティ6: Cognitoユーザー作成**
     - **検証: 要件 5.1, 5.2, 5.4**
-  - [~] 5.4 CognitoServiceのプロパティテストを作成
+  - [x] 5.4 CognitoServiceのプロパティテストを作成
     - **プロパティ7: Cognitoエラーハンドリング**
     - **検証: 要件 5.3**
-  - [~] 5.5 CognitoServiceのプロパティテストを作成
+  - [x] 5.5 CognitoServiceのプロパティテストを作成
     - **プロパティ10: 認証トークン取得**
     - **検証: 要件 7.1, 7.2, 7.3, 7.4**
-  - [~] 5.6 RateLimiterを作成
+  - [x] 5.6 RateLimiterを作成
     - `packages/api/src/lib/rate-limiter.ts`を作成
     - `RateLimitRecord`インターフェースを定義
     - `checkLimit`メソッドを実装（1分あたり5リクエスト）
     - `getRetryAfter`メソッドを実装
     - DynamoDBでカウンター管理（スライディングウィンドウ）
     - _要件: 9.1-9.3_
-  - [~] 5.7 RateLimiterのユニットテストを作成
+  - [x] 5.7 RateLimiterのユニットテストを作成
     - `checkLimit`メソッドのテスト（制限内）
     - `checkLimit`メソッドのテスト（制限超過）
     - `getRetryAfter`メソッドのテスト
     - DynamoDBクライアントをモック
     - _要件: 9.1-9.3_
-  - [~] 5.8 RateLimiterのプロパティテストを作成
+  - [-] 5.8 RateLimiterのプロパティテストを作成
     - **プロパティ12: レート制限**
     - **検証: 要件 9.1, 9.2, 9.3**
 
