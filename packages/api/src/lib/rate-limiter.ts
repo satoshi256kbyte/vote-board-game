@@ -14,11 +14,20 @@ interface RateLimitRecord {
   expiresAt: number;
 }
 
+const RATE_LIMITS: Record<string, number> = {
+  register: 5,
+  login: 10,
+  refresh: 20,
+  'password-reset': 3,
+  'password-reset-confirm': 5,
+};
+
+const DEFAULT_MAX_REQUESTS = 5;
+
 export class RateLimiter {
   private docClient: DynamoDBDocumentClient;
   private tableName: string;
   private windowSeconds: number = 60; // 1分
-  private maxRequests: number = 5;
 
   constructor() {
     const client = new DynamoDBClient({});
@@ -67,7 +76,8 @@ export class RateLimiter {
       }
 
       // 制限を超えているかチェック
-      if (record.count >= this.maxRequests) {
+      const maxRequests = RATE_LIMITS[action] ?? DEFAULT_MAX_REQUESTS;
+      if (record.count >= maxRequests) {
         return false;
       }
 
