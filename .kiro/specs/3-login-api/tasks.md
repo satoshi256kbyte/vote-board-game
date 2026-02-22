@@ -14,7 +14,7 @@
 
 ## タスク
 
-- [-] 1. バリデーションスキーマの追加
+- [x] 1. バリデーションスキーマの追加
   - [x] 1.1 loginSchemaとrefreshSchemaを作成
     - `packages/api/src/lib/validation/auth-schemas.ts`に追加
     - `loginSchema`: email（必須、非空）、password（必須、非空）
@@ -28,17 +28,17 @@
     - password欠落/空のテスト
     - refreshToken欠落/空のテスト
     - _要件: 1.2, 1.3, 1.4, 5.2_
-  - [~] 1.3 プロパティテスト: ログイン必須フィールド検証
+  - [x] 1.3 プロパティテスト: ログイン必須フィールド検証
     - `packages/api/src/lib/validation/auth-schemas.property.test.ts`に追加
     - **プロパティ1: ログイン必須フィールド検証**
     - **検証: 要件 1.2, 1.3, 1.4**
-  - [~] 1.4 プロパティテスト: リフレッシュトークンバリデーション
+  - [x] 1.4 プロパティテスト: リフレッシュトークンバリデーション
     - `packages/api/src/lib/validation/auth-schemas.property.test.ts`に追加
     - **プロパティ4: リフレッシュトークンバリデーション**
     - **検証: 要件 5.2**
 
-- [ ] 2. CognitoServiceの拡張
-  - [~] 2.1 refreshTokensメソッドを追加
+- [-] 2. CognitoServiceの拡張
+  - [x] 2.1 refreshTokensメソッドを追加
     - `packages/api/src/lib/cognito/cognito-service.ts`に追加
     - `REFRESH_TOKEN_AUTH`フローを使用
     - `RefreshResult`インターフェースを定義（accessToken、idToken、expiresIn）

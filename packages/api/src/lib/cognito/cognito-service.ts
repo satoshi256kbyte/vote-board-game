@@ -17,6 +17,12 @@ export interface AuthTokens {
   expiresIn: number;
 }
 
+export interface RefreshResult {
+  accessToken: string;
+  idToken: string;
+  expiresIn: number;
+}
+
 export class CognitoService {
   private client: CognitoIdentityProviderClient;
   private userPoolId: string;
@@ -109,6 +115,36 @@ export class CognitoService {
     } catch (error) {
       console.error('Failed to delete Cognito user:', error);
       // ロールバック失敗はログのみ（手動対応が必要）
+    }
+  }
+
+  /**
+   * リフレッシュトークンで新しいアクセストークンを取得
+   */
+  async refreshTokens(refreshToken: string): Promise<RefreshResult> {
+    try {
+      const command = new InitiateAuthCommand({
+        ClientId: this.clientId,
+        AuthFlow: 'REFRESH_TOKEN_AUTH',
+        AuthParameters: {
+          REFRESH_TOKEN: refreshToken,
+        },
+      });
+
+      const response = await this.client.send(command);
+
+      if (!response.AuthenticationResult) {
+        throw new Error('Token refresh failed');
+      }
+
+      return {
+        accessToken: response.AuthenticationResult.AccessToken!,
+        idToken: response.AuthenticationResult.IdToken!,
+        expiresIn: response.AuthenticationResult.ExpiresIn || 900,
+      };
+    } catch (error) {
+      console.error('Cognito token refresh error:', error);
+      throw error;
     }
   }
 }
