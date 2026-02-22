@@ -94,7 +94,7 @@
     - `create`メソッドを実装（PutCommandで条件付き書き込み）
     - `getById`メソッドを実装（GetCommand）
     - _要件: 6.1-6.4_
-  - [~] 4.3 UserRepositoryのユニットテストを作成
+  - [x] 4.3 UserRepositoryのユニットテストを作成
     - `create`メソッドのテスト（成功ケース）
     - `create`メソッドのテスト（重複エラー）
     - `getById`メソッドのテスト
