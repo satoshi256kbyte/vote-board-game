@@ -686,3 +686,550 @@ describe('Property 9: 機密データのログ保護', () => {
     );
   });
 });
+
+// ============================================================
+// ログインAPI プロパティテスト (Feature: 3-login-api)
+// ============================================================
+
+// --- ログインAPI用ジェネレーター ---
+
+/** ランダムなUUID形式のuserIdを生成 */
+const userIdArb = fc.uuid();
+
+/** ランダムなユーザー名を生成（3〜20文字、英数字とアンダースコア） */
+const usernameArb = fc
+  .string({ minLength: 3, maxLength: 20 })
+  .map((s) => s.replace(/[^a-zA-Z0-9_]/g, 'a'))
+  .filter((s) => s.length >= 3);
+
+/** ランダムなトークン文字列を生成 */
+const tokenArb = fc.string({ minLength: 10, maxLength: 200 }).filter((s) => s.length >= 10);
+
+/**
+ * Feature: 3-login-api, Property 2: ログイン成功レスポンス形式
+ *
+ * **Validates: Requirements 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 4.3, 4.4**
+ *
+ * 任意の有効なログインリクエスト（認証成功、ユーザー存在）に対して、
+ * APIは200ステータスコード、Content-Type `application/json`、
+ * および以下のフィールドを含むレスポンスボディを返すべきです:
+ * userId、email、username、accessToken、refreshToken、expiresIn（値: 900）。
+ */
+describe('Feature: 3-login-api, Property 2: ログイン成功レスポンス形式', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDefaultMocks();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('有効なログインリクエストに対して200とすべての必須フィールドを返す', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        validEmailArb,
+        validPasswordArb,
+        userIdArb,
+        usernameArb,
+        tokenArb,
+        tokenArb,
+        tokenArb,
+        async (email, password, userId, username, accessToken, refreshToken, idToken) => {
+          // Cognito認証成功モック
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn(),
+                authenticate: vi.fn().mockResolvedValue({
+                  accessToken,
+                  refreshToken,
+                  idToken,
+                  expiresIn: 900,
+                }),
+                deleteUser: vi.fn(),
+                forgotPassword: vi.fn(),
+                confirmForgotPassword: vi.fn(),
+                refreshTokens: vi.fn(),
+                extractUserIdFromIdToken: vi.fn().mockReturnValue(userId),
+              }) as unknown as CognitoService
+          );
+
+          // ユーザー存在モック
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn(),
+                getById: vi.fn().mockResolvedValue({
+                  PK: `USER#${userId}`,
+                  SK: `USER#${userId}`,
+                  userId,
+                  email,
+                  username,
+                  createdAt: '2024-01-01T00:00:00.000Z',
+                  updatedAt: '2024-01-01T00:00:00.000Z',
+                  entityType: 'USER',
+                }),
+              }) as unknown as UserRepository
+          );
+
+          const res = await app.request('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+
+          // ステータスコード検証
+          expect(res.status).toBe(200);
+
+          // Content-Type検証
+          expect(res.headers.get('content-type')).toContain('application/json');
+
+          // レスポンスボディ検証
+          const json = await res.json();
+          expect(json.userId).toBe(userId);
+          expect(json.email).toBe(email);
+          expect(json.username).toBe(username);
+          expect(json.accessToken).toBe(accessToken);
+          expect(json.refreshToken).toBe(refreshToken);
+          expect(json.expiresIn).toBe(900);
+
+          // 必須フィールドがすべて存在することを検証
+          expect(json).toHaveProperty('userId');
+          expect(json).toHaveProperty('email');
+          expect(json).toHaveProperty('username');
+          expect(json).toHaveProperty('accessToken');
+          expect(json).toHaveProperty('refreshToken');
+          expect(json).toHaveProperty('expiresIn');
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+});
+
+/**
+ * Feature: 3-login-api, Property 3: 認証失敗時の統一エラーメッセージ
+ *
+ * **Validates: Requirements 2.3, 8.1**
+ *
+ * 任意の認証失敗（NotAuthorizedException または UserNotFoundException）に対して、
+ * APIは401ステータスコード、エラーコード`AUTHENTICATION_FAILED`、
+ * メッセージ「Invalid email or password」を返すべきです。
+ * レスポンスにはメールアドレスの存在有無を示す情報を含んではなりません。
+ */
+describe('Feature: 3-login-api, Property 3: 認証失敗時の統一エラーメッセージ', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDefaultMocks();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // 認証失敗エラータイプ
+  const authErrorNameArb = fc.oneof(
+    fc.constant('NotAuthorizedException'),
+    fc.constant('UserNotFoundException')
+  );
+
+  it('NotAuthorizedException/UserNotFoundExceptionのどちらでも同一の401レスポンスを返す', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        validEmailArb,
+        validPasswordArb,
+        authErrorNameArb,
+        async (email, password, errorName) => {
+          // 認証失敗モック
+          const authError = new Error(`Auth error: ${errorName}`) as Error & { name: string };
+          authError.name = errorName;
+
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn(),
+                authenticate: vi.fn().mockRejectedValue(authError),
+                deleteUser: vi.fn(),
+                forgotPassword: vi.fn(),
+                confirmForgotPassword: vi.fn(),
+                refreshTokens: vi.fn(),
+                extractUserIdFromIdToken: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          const res = await app.request('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+
+          // 401ステータスコード検証
+          expect(res.status).toBe(401);
+
+          const json = await res.json();
+
+          // 統一エラーメッセージ検証
+          expect(json.error).toBe('AUTHENTICATION_FAILED');
+          expect(json.message).toBe('Invalid email or password');
+
+          // レスポンスにメールアドレスの存在有無を示す情報が含まれていないことを検証
+          const responseStr = JSON.stringify(json);
+          expect(responseStr).not.toContain(email);
+          expect(responseStr).not.toContain('not found');
+          expect(responseStr).not.toContain('does not exist');
+          expect(responseStr).not.toContain('not registered');
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+});
+
+/**
+ * Feature: 3-login-api, Property 7: レート制限
+ *
+ * **Validates: Requirements 6.1, 6.2, 6.3, 6.4**
+ *
+ * 任意のIPアドレスに対して、ログインエンドポイントでは1分間に10リクエスト、
+ * リフレッシュエンドポイントでは1分間に20リクエストを超えた場合、
+ * 超過リクエストは429ステータスコード、エラーコード`RATE_LIMIT_EXCEEDED`、
+ * および`retryAfter`フィールドを返すべきです。
+ */
+describe('Feature: 3-login-api, Property 7: レート制限', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const retryAfterArb = fc.integer({ min: 1, max: 60 });
+
+  it('ログインエンドポイントでレート制限超過時に429とretryAfterを返す', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        validEmailArb,
+        validPasswordArb,
+        retryAfterArb,
+        async (email, password, retryAfter) => {
+          // レート制限超過モック
+          vi.mocked(RateLimiter).mockImplementation(
+            () =>
+              ({
+                checkLimit: vi.fn().mockResolvedValue(false),
+                getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
+              }) as unknown as RateLimiter
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn(),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn(),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn(),
+                forgotPassword: vi.fn(),
+                confirmForgotPassword: vi.fn(),
+                refreshTokens: vi.fn(),
+                extractUserIdFromIdToken: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          const res = await app.request('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+
+          expect(res.status).toBe(429);
+          const json = await res.json();
+          expect(json.error).toBe('RATE_LIMIT_EXCEEDED');
+          expect(json.retryAfter).toBe(retryAfter);
+          expect(typeof json.retryAfter).toBe('number');
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('リフレッシュエンドポイントでレート制限超過時に429とretryAfterを返す', async () => {
+    await fc.assert(
+      fc.asyncProperty(tokenArb, retryAfterArb, async (refreshToken, retryAfter) => {
+        // レート制限超過モック
+        vi.mocked(RateLimiter).mockImplementation(
+          () =>
+            ({
+              checkLimit: vi.fn().mockResolvedValue(false),
+              getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
+            }) as unknown as RateLimiter
+        );
+
+        vi.mocked(UserRepository).mockImplementation(
+          () =>
+            ({
+              create: vi.fn(),
+              getById: vi.fn(),
+            }) as unknown as UserRepository
+        );
+
+        vi.mocked(CognitoService).mockImplementation(
+          () =>
+            ({
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn(),
+              refreshTokens: vi.fn(),
+              extractUserIdFromIdToken: vi.fn(),
+            }) as unknown as CognitoService
+        );
+
+        const res = await app.request('/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        expect(res.status).toBe(429);
+        const json = await res.json();
+        expect(json.error).toBe('RATE_LIMIT_EXCEEDED');
+        expect(json.retryAfter).toBe(retryAfter);
+        expect(typeof json.retryAfter).toBe('number');
+      }),
+      { numRuns: 20 }
+    );
+  });
+});
+
+/**
+ * Feature: 3-login-api, Property 8: エラーレスポンス形式の一貫性
+ *
+ * **Validates: Requirements 7.1, 7.2, 7.3, 7.4**
+ *
+ * 任意のエラーケースに対して、APIは`error`（機械可読なエラーコード）と
+ * `message`（人間が読めるエラー説明）フィールドを含むJSONレスポンスを返すべきです。
+ * 検証エラーの場合は、`details.fields`オブジェクトにフィールド名とエラーメッセージの
+ * マッピングを含むべきです。
+ */
+describe('Feature: 3-login-api, Property 8: エラーレスポンス形式の一貫性', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDefaultMocks();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('バリデーションエラー時にerror, message, details.fieldsを含むレスポンスを返す', async () => {
+    // バリデーションエラーのパターン: emailまたはpasswordが欠落/空
+    const invalidLoginPayloadArb = fc.oneof(
+      // emailが空
+      fc.record({
+        email: fc.constant(''),
+        password: validPasswordArb,
+      }),
+      // passwordが空
+      fc.record({
+        email: validEmailArb,
+        password: fc.constant(''),
+      }),
+      // 両方空
+      fc.record({
+        email: fc.constant(''),
+        password: fc.constant(''),
+      }),
+      // emailが欠落
+      fc.record({
+        password: validPasswordArb,
+      }),
+      // passwordが欠落
+      fc.record({
+        email: validEmailArb,
+      })
+    );
+
+    await fc.assert(
+      fc.asyncProperty(invalidLoginPayloadArb, async (payload) => {
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+
+        // error フィールド（機械可読なエラーコード）が存在すること
+        expect(json).toHaveProperty('error');
+        expect(typeof json.error).toBe('string');
+        expect(json.error).toBe('VALIDATION_ERROR');
+
+        // message フィールド（人間が読めるエラー説明）が存在すること
+        expect(json).toHaveProperty('message');
+        expect(typeof json.message).toBe('string');
+
+        // details.fields が存在し、フィールド名とエラーメッセージのマッピングを含むこと
+        expect(json).toHaveProperty('details');
+        expect(json.details).toHaveProperty('fields');
+        expect(typeof json.details.fields).toBe('object');
+
+        // fieldsの各値が文字列であること
+        for (const [fieldName, fieldMessage] of Object.entries(json.details.fields)) {
+          expect(typeof fieldName).toBe('string');
+          expect(typeof fieldMessage).toBe('string');
+        }
+      }),
+      { numRuns: 20 }
+    );
+  });
+
+  it('認証失敗時にerrorとmessageフィールドを含むレスポンスを返す', async () => {
+    await fc.assert(
+      fc.asyncProperty(validEmailArb, validPasswordArb, async (email, password) => {
+        // 認証失敗モック
+        const authError = new Error('Not authorized') as Error & { name: string };
+        authError.name = 'NotAuthorizedException';
+
+        vi.mocked(CognitoService).mockImplementation(
+          () =>
+            ({
+              signUp: vi.fn(),
+              authenticate: vi.fn().mockRejectedValue(authError),
+              deleteUser: vi.fn(),
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn(),
+              refreshTokens: vi.fn(),
+              extractUserIdFromIdToken: vi.fn(),
+            }) as unknown as CognitoService
+        );
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        expect(res.status).toBe(401);
+        const json = await res.json();
+
+        // error フィールドが存在し文字列であること
+        expect(json).toHaveProperty('error');
+        expect(typeof json.error).toBe('string');
+
+        // message フィールドが存在し文字列であること
+        expect(json).toHaveProperty('message');
+        expect(typeof json.message).toBe('string');
+      }),
+      { numRuns: 20 }
+    );
+  });
+
+  it('レート制限エラー時にerror, message, retryAfterフィールドを含むレスポンスを返す', async () => {
+    const retryAfterArb = fc.integer({ min: 1, max: 60 });
+
+    await fc.assert(
+      fc.asyncProperty(
+        validEmailArb,
+        validPasswordArb,
+        retryAfterArb,
+        async (email, password, retryAfter) => {
+          vi.mocked(RateLimiter).mockImplementation(
+            () =>
+              ({
+                checkLimit: vi.fn().mockResolvedValue(false),
+                getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
+              }) as unknown as RateLimiter
+          );
+
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn(),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn(),
+                forgotPassword: vi.fn(),
+                confirmForgotPassword: vi.fn(),
+                refreshTokens: vi.fn(),
+                extractUserIdFromIdToken: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          const res = await app.request('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+
+          expect(res.status).toBe(429);
+          const json = await res.json();
+
+          // error フィールドが存在し文字列であること
+          expect(json).toHaveProperty('error');
+          expect(typeof json.error).toBe('string');
+
+          // message フィールドが存在し文字列であること
+          expect(json).toHaveProperty('message');
+          expect(typeof json.message).toBe('string');
+
+          // retryAfter フィールドが存在し数値であること
+          expect(json).toHaveProperty('retryAfter');
+          expect(typeof json.retryAfter).toBe('number');
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('内部エラー時にerrorとmessageフィールドを含むレスポンスを返す', async () => {
+    await fc.assert(
+      fc.asyncProperty(validEmailArb, validPasswordArb, async (email, password) => {
+        // 予期しないエラーモック
+        const internalError = new Error('Unexpected error') as Error & { name: string };
+        internalError.name = 'InternalErrorException';
+
+        vi.mocked(CognitoService).mockImplementation(
+          () =>
+            ({
+              signUp: vi.fn(),
+              authenticate: vi.fn().mockRejectedValue(internalError),
+              deleteUser: vi.fn(),
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn(),
+              refreshTokens: vi.fn(),
+              extractUserIdFromIdToken: vi.fn(),
+            }) as unknown as CognitoService
+        );
+
+        const res = await app.request('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        expect(res.status).toBe(500);
+        const json = await res.json();
+
+        // error フィールドが存在し文字列であること
+        expect(json).toHaveProperty('error');
+        expect(typeof json.error).toBe('string');
+        expect(json.error).toBe('INTERNAL_ERROR');
+
+        // message フィールドが存在し文字列であること
+        expect(json).toHaveProperty('message');
+        expect(typeof json.message).toBe('string');
+      }),
+      { numRuns: 20 }
+    );
+  });
+});
