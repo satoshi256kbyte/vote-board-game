@@ -4,6 +4,7 @@ import {
   InitiateAuthCommand,
   AdminDeleteUserCommand,
   ForgotPasswordCommand,
+  ConfirmForgotPasswordCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 export interface SignUpResult {
@@ -156,6 +157,23 @@ export class CognitoService {
     const command = new ForgotPasswordCommand({
       ClientId: this.clientId,
       Username: email,
+    });
+    await this.client.send(command);
+  }
+
+  /**
+   * 確認コードと新しいパスワードでパスワードをリセット
+   */
+  async confirmForgotPassword(
+    email: string,
+    confirmationCode: string,
+    newPassword: string
+  ): Promise<void> {
+    const command = new ConfirmForgotPasswordCommand({
+      ClientId: this.clientId,
+      Username: email,
+      ConfirmationCode: confirmationCode,
+      Password: newPassword,
     });
     await this.client.send(command);
   }
