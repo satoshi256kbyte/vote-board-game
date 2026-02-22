@@ -15,8 +15,6 @@
     "test": "pnpm -r test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:md": "markdownlint-cli2 \"**/*.md\"",
-    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\"",
     "prepare": "husky",
     "cdk": "pnpm --filter infra cdk",
     "deploy": "pnpm --filter infra deploy",
@@ -28,7 +26,6 @@
   "packageManager": "pnpm@10.30.0",
   "lint-staged": {
     "*.md": [
-      "markdownlint-cli2 --fix",
       "prettier --write"
     ],
     "*.{js,ts,tsx,json}": [
