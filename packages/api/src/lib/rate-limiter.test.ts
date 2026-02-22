@@ -244,3 +244,119 @@ describe('RateLimiter', () => {
     });
   });
 });
+
+describe('login action (limit: 10)', () => {
+  let rateLimiter: RateLimiter;
+  let mockSend: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.DYNAMODB_TABLE_NAME = 'test-table';
+
+    rateLimiter = new RateLimiter();
+    mockSend = vi.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (rateLimiter as any).docClient.send = mockSend;
+  });
+
+  it('10リクエスト目まではtrueを返す', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const windowStart = now - (now % 60);
+
+    // 既存のレコードを返す（カウント: 9）
+    mockSend.mockResolvedValueOnce({
+      Item: {
+        PK: 'RATELIMIT#login#10.0.0.1',
+        SK: 'RATELIMIT#login#10.0.0.1',
+        count: 9,
+        windowStart,
+        expiresAt: now + 120,
+      },
+    });
+    mockSend.mockResolvedValueOnce({});
+
+    const result = await rateLimiter.checkLimit('10.0.0.1', 'login');
+
+    expect(result).toBe(true);
+    expect(mockSend).toHaveBeenNthCalledWith(2, expect.any(UpdateCommand));
+  });
+
+  it('10リクエストに達した場合はfalseを返す', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const windowStart = now - (now % 60);
+
+    // 既存のレコードを返す（カウント: 10、制限に達している）
+    mockSend.mockResolvedValueOnce({
+      Item: {
+        PK: 'RATELIMIT#login#10.0.0.1',
+        SK: 'RATELIMIT#login#10.0.0.1',
+        count: 10,
+        windowStart,
+        expiresAt: now + 120,
+      },
+    });
+
+    const result = await rateLimiter.checkLimit('10.0.0.1', 'login');
+
+    expect(result).toBe(false);
+    expect(mockSend).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('refresh action (limit: 20)', () => {
+  let rateLimiter: RateLimiter;
+  let mockSend: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.DYNAMODB_TABLE_NAME = 'test-table';
+
+    rateLimiter = new RateLimiter();
+    mockSend = vi.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (rateLimiter as any).docClient.send = mockSend;
+  });
+
+  it('20リクエスト目まではtrueを返す', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const windowStart = now - (now % 60);
+
+    // 既存のレコードを返す（カウント: 19）
+    mockSend.mockResolvedValueOnce({
+      Item: {
+        PK: 'RATELIMIT#refresh#10.0.0.1',
+        SK: 'RATELIMIT#refresh#10.0.0.1',
+        count: 19,
+        windowStart,
+        expiresAt: now + 120,
+      },
+    });
+    mockSend.mockResolvedValueOnce({});
+
+    const result = await rateLimiter.checkLimit('10.0.0.1', 'refresh');
+
+    expect(result).toBe(true);
+    expect(mockSend).toHaveBeenNthCalledWith(2, expect.any(UpdateCommand));
+  });
+
+  it('20リクエストに達した場合はfalseを返す', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const windowStart = now - (now % 60);
+
+    // 既存のレコードを返す（カウント: 20、制限に達している）
+    mockSend.mockResolvedValueOnce({
+      Item: {
+        PK: 'RATELIMIT#refresh#10.0.0.1',
+        SK: 'RATELIMIT#refresh#10.0.0.1',
+        count: 20,
+        windowStart,
+        expiresAt: now + 120,
+      },
+    });
+
+    const result = await rateLimiter.checkLimit('10.0.0.1', 'refresh');
+
+    expect(result).toBe(false);
+    expect(mockSend).toHaveBeenCalledTimes(1);
+  });
+});

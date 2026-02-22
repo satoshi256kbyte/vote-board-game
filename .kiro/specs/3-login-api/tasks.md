@@ -37,7 +37,7 @@
     - **プロパティ4: リフレッシュトークンバリデーション**
     - **検証: 要件 5.2**
 
-- [-] 2. CognitoServiceの拡張
+- [x] 2. CognitoServiceの拡張
   - [x] 2.1 refreshTokensメソッドを追加
     - `packages/api/src/lib/cognito/cognito-service.ts`に追加
     - `REFRESH_TOKEN_AUTH`フローを使用
@@ -65,11 +65,11 @@
     - **検証: 要件 5.5**
 
 - [ ] 3. RateLimiterのアクション別設定対応
-  - [~] 3.1 アクション別のレート制限設定を追加
+  - [x] 3.1 アクション別のレート制限設定を追加
     - `packages/api/src/lib/rate-limiter.ts`を修正
     - アクション別のmaxRequests設定: register=5、login=10、refresh=20
     - _要件: 6.1, 6.2_
-  - [~] 3.2 アクション別レート制限のユニットテストを作成
+  - [x] 3.2 アクション別レート制限のユニットテストを作成
     - `packages/api/src/lib/rate-limiter.test.ts`に追加
     - loginアクションで10リクエスト制限のテスト
     - refreshアクションで20リクエスト制限のテスト
