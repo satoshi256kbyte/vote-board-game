@@ -100,12 +100,12 @@
     - `getById`メソッドのテスト
     - DynamoDBクライアントをモック
     - _要件: 6.1-6.4_
-  - [~] 4.4 UserRepositoryのプロパティテストを作成
+  - [x] 4.4 UserRepositoryのプロパティテストを作成
     - **プロパティ8: DynamoDBユーザーレコード作成**
     - **検証: 要件 6.1, 6.2, 6.3, 6.4**
 
 - [ ] 5. サービス層の実装
-  - [~] 5.1 CognitoServiceを作成
+  - [x] 5.1 CognitoServiceを作成
     - `packages/api/src/lib/cognito/cognito-service.ts`を作成
     - `SignUpResult`と`AuthTokens`インターフェースを定義
     - `signUp`メソッドを実装（SignUpCommand）
