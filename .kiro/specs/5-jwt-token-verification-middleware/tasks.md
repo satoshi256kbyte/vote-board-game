@@ -13,7 +13,7 @@
 
 ## タスク
 
-- [-] 1. joseライブラリのインストールと型定義
+- [x] 1. joseライブラリのインストールと型定義
   - [x] 1.1 joseパッケージをインストール
     - `packages/api`ディレクトリで`pnpm add jose`を実行
     - JWT署名検証とJWKインポートに使用
@@ -24,19 +24,19 @@
     - `AuthMiddlewareConfig`インターフェース: userPoolId、region
     - `JwksCacheEntry`インターフェース: keys(JsonWebKey[])、fetchedAt(number)
     - _要件: 9.1, 9.2, 9.3_
-  - [-] 1.3 エクスポートファイルを作成
+  - [x] 1.3 エクスポートファイルを作成
     - `packages/api/src/lib/auth/index.ts`を作成
     - createAuthMiddleware、AuthVariables、AuthMiddlewareConfig、CognitoAccessTokenPayloadをエクスポート
 
-- [ ] 2. JWKSキャッシュの実装
-  - [~] 2.1 JwksCacheクラスを実装
+- [x] 2. JWKSキャッシュの実装
+  - [x] 2.1 JwksCacheクラスを実装
     - `packages/api/src/lib/auth/jwks-cache.ts`を作成
     - コンストラクタ: jwksUrl(string)を受け取る
     - `getKeys()`メソッド: キャッシュ有効時はキャッシュを返す、期限切れ時はfetchして更新
     - キャッシュTTL: 1時間（3,600,000ミリ秒）
     - フォールバック: fetch失敗時に期限切れキャッシュがあれば使用、なければエラーをスロー
     - _要件: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
-  - [~] 2.2 JwksCacheのユニットテストを作成
+  - [x] 2.2 JwksCacheのユニットテストを作成
     - `packages/api/src/lib/auth/jwks-cache.test.ts`を作成
     - キャッシュヒット: 2回目の呼び出しでfetchが発生しないことを検証
     - キャッシュ期限切れ: TTL経過後にfetchが再発生することを検証
@@ -45,8 +45,8 @@
     - global.fetchをモック
     - _要件: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-- [ ] 3. JWT検証ミドルウェアの実装
-  - [~] 3.1 createAuthMiddlewareファクトリ関数を実装
+- [x] 3. JWT検証ミドルウェアの実装
+  - [x] 3.1 createAuthMiddlewareファクトリ関数を実装
     - `packages/api/src/lib/auth/auth-middleware.ts`を作成
     - `extractBearerToken`ヘルパー関数: Authorizationヘッダーからトークンを抽出
     - `getKidFromToken`ヘルパー関数: JWTヘッダーからkidを取得
@@ -60,11 +60,11 @@
     - 認証コンテキスト設定: sub→userId、email→email、preferred_username→username
     - ログ: トークン文字列・ペイロード非出力、エラー種類のみ記録
     - _要件: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4, 7.1, 7.2, 7.3, 7.4, 8.1, 8.2, 8.3, 8.4_
-  - [~] 3.2 エクスポートファイルを更新
+  - [x] 3.2 エクスポートファイルを更新
     - `packages/api/src/lib/auth/index.ts`にcreateAuthMiddlewareのエクスポートを追加
 
-- [ ] 4. ルート保護設定
-  - [~] 4.1 index.tsにミドルウェアを適用
+- [x] 4. ルート保護設定
+  - [x] 4.1 index.tsにミドルウェアを適用
     - `packages/api/src/index.ts`を修正
     - 環境変数チェック: COGNITO_USER_POOL_IDが未設定の場合エラーをスロー
     - createAuthMiddlewareでミドルウェアを生成
@@ -74,11 +74,11 @@
     - AuthVariables型をHonoアプリの型パラメータに追加
     - _要件: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 8.5_
 
-- [ ] 5. チェックポイント - 基礎実装の確認
+- [x] 5. チェックポイント - 基礎実装の確認
   - すべてのファイルが正しく作成され、型チェックが通ることを確認してください。質問があればユーザーに確認してください。
 
-- [ ] 6. ユニットテスト
-  - [~] 6.1 ミドルウェアのユニットテストを作成
+- [-] 6. ユニットテスト
+  - [x] 6.1 ミドルウェアのユニットテストを作成
     - `packages/api/src/lib/auth/auth-middleware.test.ts`を作成
     - Authorizationヘッダーなし→401 UNAUTHORIZED "Authorization header is required"
     - Bearer形式でない→401 UNAUTHORIZED "Invalid authorization format"
@@ -94,7 +94,7 @@
     - JWKS取得失敗（キャッシュなし）→500 INTERNAL_ERROR "Authentication service unavailable"
     - joseとJwksCacheをモック
     - _要件: 1.1, 1.2, 1.3, 1.4, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4, 5.6, 7.1, 7.2, 7.3, 7.4, 8.1, 8.2, 8.3_
-  - [~] 6.2 ルート保護設定のユニットテストを作成
+  - [-] 6.2 ルート保護設定のユニットテストを作成
     - `packages/api/src/index.test.ts`に追加（または新規ファイル）
     - `/api/votes`にAuthorizationヘッダーなしでPOST→401
     - `POST /api/candidates`にAuthorizationヘッダーなし→401
@@ -103,7 +103,7 @@
     - `GET /health`にAuthorizationヘッダーなし→200（公開）
     - `/auth/register`にAuthorizationヘッダーなし→認証不要
     - _要件: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
-  - [~] 6.3 環境変数チェックのユニットテストを作成
+  - [-] 6.3 環境変数チェックのユニットテストを作成
     - COGNITO_USER_POOL_ID未設定時にエラーがスローされることを検証
     - _要件: 8.5_
 

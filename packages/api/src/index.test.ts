@@ -45,3 +45,69 @@ describe('API', () => {
     expect(res.headers.get('access-control-allow-methods')).toContain('POST');
   });
 });
+
+describe('ルート保護設定', () => {
+  describe('保護対象ルート（認証なしで401）', () => {
+    it('POST /api/votes にAuthorizationヘッダーなし→401', async () => {
+      const res = await app.request('/api/votes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId: 'game-1', candidateId: 'candidate-1' }),
+      });
+
+      expect(res.status).toBe(401);
+      const body = (await res.json()) as { error: string };
+      expect(body.error).toBe('UNAUTHORIZED');
+    });
+
+    it('POST /api/candidates にAuthorizationヘッダーなし→401', async () => {
+      const res = await app.request('/api/candidates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId: 'game-1',
+          position: { row: 2, col: 3 },
+          description: 'テスト候補',
+        }),
+      });
+
+      expect(res.status).toBe(401);
+      const body = (await res.json()) as { error: string };
+      expect(body.error).toBe('UNAUTHORIZED');
+    });
+  });
+
+  describe('公開ルート（認証なしで401以外）', () => {
+    it('GET /api/candidates にAuthorizationヘッダーなし→401ではない', async () => {
+      const res = await app.request('/api/candidates?gameId=game-1');
+
+      expect(res.status).not.toBe(401);
+    });
+
+    it('GET /api/games にAuthorizationヘッダーなし→401ではない', async () => {
+      const res = await app.request('/api/games');
+
+      expect(res.status).not.toBe(401);
+    });
+
+    it('GET /health にAuthorizationヘッダーなし→200', async () => {
+      const res = await app.request('/health');
+
+      expect(res.status).toBe(200);
+    });
+
+    it('POST /auth/register にAuthorizationヘッダーなし→401ではない', async () => {
+      const res = await app.request('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'test@example.com',
+          password: 'Password123!',
+          username: 'testuser',
+        }),
+      });
+
+      expect(res.status).not.toBe(401);
+    });
+  });
+});
