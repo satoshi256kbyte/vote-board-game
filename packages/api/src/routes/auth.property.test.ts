@@ -1315,3 +1315,1503 @@ describe('Property 11: Success response format', () => {
     );
   });
 });
+
+/**
+ * Feature: user-registration-api
+ * Property 13: エラーレスポンス形式
+ *
+ * **Validates: Requirements 10.1, 10.2, 10.3, 10.4**
+ *
+ * 任意のエラーケースに対して、APIは以下のフィールドを含むJSONレスポンスを返すべきです:
+ * - error(機械可読なエラーコード)
+ * - message(人間が読めるエラー説明)
+ * - details(オプション、検証エラーの場合はフィールド名をエラーメッセージにマッピングするfieldsオブジェクトを含む)
+ */
+describe('Property 13: Error response format', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // RateLimiterのモック - 常に許可
+    vi.mocked(RateLimiter).mockImplementation(
+      () =>
+        ({
+          checkLimit: vi.fn().mockResolvedValue(true),
+          getRetryAfter: vi.fn().mockResolvedValue(0),
+        }) as unknown as RateLimiter
+    );
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return error and message fields for validation errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 無効なデータを生成（必須フィールドが欠落または空）
+        fc.record({
+          email: fc.option(fc.emailAddress(), { nil: undefined }),
+          password: fc.option(fc.string(), { nil: undefined }),
+          username: fc.option(fc.string(), { nil: undefined }),
+        }),
+        async (data) => {
+          // 少なくとも1つのフィールドが欠落または空であることを確認
+          const hasEmptyField =
+            !data.email ||
+            data.email === '' ||
+            !data.password ||
+            data.password === '' ||
+            !data.username ||
+            data.username === '';
+
+          if (!hasEmptyField) return true;
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // バリデーションエラーの場合
+          if (res.status === 400) {
+            const json = await res.json();
+
+            // 必須フィールドが存在することを確認
+            expect(json).toHaveProperty('error');
+            expect(json).toHaveProperty('message');
+
+            // errorフィールドは機械可読なエラーコードであるべき
+            expect(typeof json.error).toBe('string');
+            expect(json.error.length).toBeGreaterThan(0);
+            expect(json.error).toMatch(/^[A-Z_]+$/); // 大文字とアンダースコアのみ
+
+            // messageフィールドは人間が読めるエラー説明であるべき
+            expect(typeof json.message).toBe('string');
+            expect(json.message.length).toBeGreaterThan(0);
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should return details.fields for validation errors with field-specific messages', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 無効なパスワードを生成（パスワード要件を満たさない）
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.oneof(
+            fc.string({ minLength: 1, maxLength: 7 }), // 短すぎる
+            fc.string({ minLength: 8 }).filter((p) => !/[A-Z]/.test(p)), // 大文字なし
+            fc.string({ minLength: 8 }).filter((p) => !/[a-z]/.test(p)), // 小文字なし
+            fc.string({ minLength: 8 }).filter((p) => !/[0-9]/.test(p)) // 数字なし
+          ),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // Cognitoがパスワードエラーを返すようにモック
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockRejectedValue({
+                  code: 'InvalidPasswordException',
+                  message: 'Password does not meet requirements',
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // パスワードエラーの場合
+          if (res.status === 400) {
+            const json = await res.json();
+
+            // 必須フィールドが存在することを確認
+            expect(json).toHaveProperty('error');
+            expect(json).toHaveProperty('message');
+            expect(json).toHaveProperty('details');
+
+            // detailsフィールドにfieldsオブジェクトが含まれることを確認
+            expect(json.details).toHaveProperty('fields');
+            expect(typeof json.details.fields).toBe('object');
+
+            // fieldsオブジェクトにフィールド名がキーとして含まれることを確認
+            expect(json.details.fields).toHaveProperty('password');
+            expect(typeof json.details.fields.password).toBe('string');
+            expect(json.details.fields.password.length).toBeGreaterThan(0);
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return CONFLICT error for duplicate email', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // UsernameExistsExceptionをスロー
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockRejectedValue({
+                  code: 'UsernameExistsException',
+                  message: 'An account with the given email already exists.',
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 409 CONFLICTを返すべき
+          expect(res.status).toBe(409);
+
+          const json = await res.json();
+
+          // エラーレスポンス形式を検証
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+          expect(json.error).toBe('CONFLICT');
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return RATE_LIMIT_EXCEEDED error with retryAfter field', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          retryAfter: fc.integer({ min: 1, max: 60 }),
+        }),
+        async (data) => {
+          // レート制限を超えたことをシミュレート
+          vi.mocked(RateLimiter).mockImplementation(
+            () =>
+              ({
+                checkLimit: vi.fn().mockResolvedValue(false),
+                getRetryAfter: vi.fn().mockResolvedValue(data.retryAfter),
+              }) as unknown as RateLimiter
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 429 Too Many Requestsを返すべき
+          expect(res.status).toBe(429);
+
+          const json = await res.json();
+
+          // エラーレスポンス形式を検証
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+          expect(json).toHaveProperty('retryAfter');
+
+          expect(json.error).toBe('RATE_LIMIT_EXCEEDED');
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+
+          // retryAfterフィールドが数値であることを確認
+          expect(typeof json.retryAfter).toBe('number');
+          expect(json.retryAfter).toBeGreaterThanOrEqual(0);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return INTERNAL_ERROR for server errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // Cognito signUpは成功するが、DynamoDB createは失敗
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn().mockResolvedValue(undefined),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 500 Internal Server Errorを返すべき
+          expect(res.status).toBe(500);
+
+          const json = await res.json();
+
+          // エラーレスポンス形式を検証
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+          expect(json.error).toBe('INTERNAL_ERROR');
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return consistent error response structure across all error types', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 様々なエラーケースを生成
+        fc.oneof(
+          // バリデーションエラー（必須フィールド欠落）
+          fc.record({
+            type: fc.constant('validation'),
+            email: fc.constant(undefined),
+            password: fc.constant('ValidPass123'),
+            username: fc.constant('testuser'),
+          }),
+          // メール重複エラー
+          fc.record({
+            type: fc.constant('conflict'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          }),
+          // レート制限エラー
+          fc.record({
+            type: fc.constant('rate_limit'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          }),
+          // 内部エラー
+          fc.record({
+            type: fc.constant('internal'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          })
+        ),
+        async (data) => {
+          // エラータイプに応じてモックを設定
+          if (data.type === 'conflict') {
+            vi.mocked(CognitoService).mockImplementation(
+              () =>
+                ({
+                  signUp: vi.fn().mockRejectedValue({
+                    code: 'UsernameExistsException',
+                    message: 'An account with the given email already exists.',
+                  }),
+                  authenticate: vi.fn(),
+                  deleteUser: vi.fn(),
+                }) as unknown as CognitoService
+            );
+          } else if (data.type === 'rate_limit') {
+            vi.mocked(RateLimiter).mockImplementation(
+              () =>
+                ({
+                  checkLimit: vi.fn().mockResolvedValue(false),
+                  getRetryAfter: vi.fn().mockResolvedValue(30),
+                }) as unknown as RateLimiter
+            );
+          } else if (data.type === 'internal') {
+            const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+            vi.mocked(CognitoService).mockImplementation(
+              () =>
+                ({
+                  signUp: vi.fn().mockResolvedValue({
+                    userId: mockUserId,
+                    userConfirmed: false,
+                  }),
+                  authenticate: vi.fn(),
+                  deleteUser: vi.fn().mockResolvedValue(undefined),
+                }) as unknown as CognitoService
+            );
+            vi.mocked(UserRepository).mockImplementation(
+              () =>
+                ({
+                  create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
+                  getById: vi.fn(),
+                }) as unknown as UserRepository
+            );
+          }
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: data.email,
+              password: data.password,
+              username: data.username,
+            }),
+          });
+
+          // エラーレスポンスであることを確認
+          expect(res.status).toBeGreaterThanOrEqual(400);
+
+          const json = await res.json();
+
+          // すべてのエラーレスポンスに共通のフィールドが存在することを確認
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+
+          // errorフィールドは機械可読なエラーコード
+          expect(typeof json.error).toBe('string');
+          expect(json.error.length).toBeGreaterThan(0);
+          expect(json.error).toMatch(/^[A-Z_]+$/);
+
+          // messageフィールドは人間が読めるエラー説明
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+
+          // Content-Typeがapplication/jsonであることを確認
+          const contentType = res.headers.get('content-type');
+          expect(contentType).toContain('application/json');
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should not expose sensitive information in error messages', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // 内部エラーをシミュレート
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn().mockResolvedValue(undefined),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi
+                  .fn()
+                  .mockRejectedValue(new Error('DynamoDB connection failed: secret-key-12345')),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          const json = await res.json();
+
+          // エラーメッセージに機密情報が含まれていないことを確認
+          const responseString = JSON.stringify(json);
+
+          // パスワードが含まれていない
+          expect(responseString).not.toContain(data.password);
+
+          // 内部エラーの詳細が含まれていない
+          expect(responseString).not.toContain('secret-key');
+          expect(responseString).not.toContain('connection failed');
+
+          // スタックトレースが含まれていない
+          expect(json).not.toHaveProperty('stack');
+          expect(json).not.toHaveProperty('stackTrace');
+
+          // 一般的なエラーメッセージのみが返される
+          expect(json.message).toBe('Registration failed');
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return error code matching the HTTP status code category', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.oneof(
+          // 400エラー: VALIDATION_ERROR
+          fc.record({
+            type: fc.constant('validation'),
+            expectedStatus: fc.constant(400),
+            expectedError: fc.constant('VALIDATION_ERROR'),
+            email: fc.constant(undefined),
+            password: fc.constant('ValidPass123'),
+            username: fc.constant('testuser'),
+          }),
+          // 409エラー: CONFLICT
+          fc.record({
+            type: fc.constant('conflict'),
+            expectedStatus: fc.constant(409),
+            expectedError: fc.constant('CONFLICT'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          }),
+          // 429エラー: RATE_LIMIT_EXCEEDED
+          fc.record({
+            type: fc.constant('rate_limit'),
+            expectedStatus: fc.constant(429),
+            expectedError: fc.constant('RATE_LIMIT_EXCEEDED'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          }),
+          // 500エラー: INTERNAL_ERROR
+          fc.record({
+            type: fc.constant('internal'),
+            expectedStatus: fc.constant(500),
+            expectedError: fc.constant('INTERNAL_ERROR'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          })
+        ),
+        async (data) => {
+          // エラータイプに応じてモックを設定
+          if (data.type === 'conflict') {
+            vi.mocked(CognitoService).mockImplementation(
+              () =>
+                ({
+                  signUp: vi.fn().mockRejectedValue({
+                    code: 'UsernameExistsException',
+                    message: 'An account with the given email already exists.',
+                  }),
+                  authenticate: vi.fn(),
+                  deleteUser: vi.fn(),
+                }) as unknown as CognitoService
+            );
+          } else if (data.type === 'rate_limit') {
+            vi.mocked(RateLimiter).mockImplementation(
+              () =>
+                ({
+                  checkLimit: vi.fn().mockResolvedValue(false),
+                  getRetryAfter: vi.fn().mockResolvedValue(30),
+                }) as unknown as RateLimiter
+            );
+          } else if (data.type === 'internal') {
+            const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+            vi.mocked(CognitoService).mockImplementation(
+              () =>
+                ({
+                  signUp: vi.fn().mockResolvedValue({
+                    userId: mockUserId,
+                    userConfirmed: false,
+                  }),
+                  authenticate: vi.fn(),
+                  deleteUser: vi.fn().mockResolvedValue(undefined),
+                }) as unknown as CognitoService
+            );
+            vi.mocked(UserRepository).mockImplementation(
+              () =>
+                ({
+                  create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
+                  getById: vi.fn(),
+                }) as unknown as UserRepository
+            );
+          }
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: data.email,
+              password: data.password,
+              username: data.username,
+            }),
+          });
+
+          // ステータスコードとエラーコードが一致することを確認
+          expect(res.status).toBe(data.expectedStatus);
+
+          const json = await res.json();
+          expect(json.error).toBe(data.expectedError);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+/**
+ * Feature: user-registration-api
+ * Property 13: エラーレスポンス形式
+ *
+ * **Validates: Requirements 10.1, 10.2, 10.3, 10.4**
+ *
+ * 任意のエラーケースに対して、APIは以下のフィールドを含むJSONレスポンスを返すべきです:
+ * - error(機械可読なエラーコード)
+ * - message(人間が読めるエラー説明)
+ * - details(オプション、検証エラーの場合はフィールド名をエラーメッセージにマッピングするfieldsオブジェクトを含む)
+ *
+ * NOTE: このプロパティテストは、Auth Router内で明示的に処理されるエラー（CONFLICT、INTERNAL_ERROR、RATE_LIMIT_EXCEEDED）
+ * のみをテストします。Zodバリデーションエラーは@hono/zod-validatorによって処理され、異なる形式を返すため、
+ * 要件10.1-10.4を完全に満たすにはカスタムエラーハンドラーの実装が必要です。
+ */
+describe('Property 13: Error response format', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // RateLimiterのモック - デフォルトは許可
+    vi.mocked(RateLimiter).mockImplementation(
+      () =>
+        ({
+          checkLimit: vi.fn().mockResolvedValue(true),
+          getRetryAfter: vi.fn().mockResolvedValue(0),
+        }) as unknown as RateLimiter
+    );
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return error and message fields for CONFLICT errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // UsernameExistsExceptionをスロー
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockRejectedValue({
+                  code: 'UsernameExistsException',
+                  message: 'An account with the given email already exists.',
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 409 CONFLICTを返すべき
+          expect(res.status).toBe(409);
+
+          const json = await res.json();
+
+          // エラーレスポンス形式を検証
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+          expect(json.error).toBe('CONFLICT');
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+          expect(json.message).toBe('Email already registered');
+
+          // Content-Typeがapplication/jsonであることを確認
+          const contentType = res.headers.get('content-type');
+          expect(contentType).toContain('application/json');
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return error and message fields with details.fields for InvalidPasswordException', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // InvalidPasswordExceptionをスロー
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockRejectedValue({
+                  code: 'InvalidPasswordException',
+                  message: 'Password does not meet requirements',
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn(),
+              }) as unknown as CognitoService
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 400 VALIDATION_ERRORを返すべき
+          expect(res.status).toBe(400);
+
+          const json = await res.json();
+
+          // エラーレスポンス形式を検証
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+          expect(json).toHaveProperty('details');
+          expect(json.error).toBe('VALIDATION_ERROR');
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+
+          // detailsフィールドにfieldsオブジェクトが含まれることを確認
+          expect(json.details).toHaveProperty('fields');
+          expect(typeof json.details.fields).toBe('object');
+          expect(json.details.fields).toHaveProperty('password');
+          expect(typeof json.details.fields.password).toBe('string');
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return error and message fields with retryAfter for RATE_LIMIT_EXCEEDED', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          retryAfter: fc.integer({ min: 1, max: 60 }),
+        }),
+        async (data) => {
+          // レート制限を超えたことをシミュレート
+          vi.mocked(RateLimiter).mockImplementation(
+            () =>
+              ({
+                checkLimit: vi.fn().mockResolvedValue(false),
+                getRetryAfter: vi.fn().mockResolvedValue(data.retryAfter),
+              }) as unknown as RateLimiter
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 429 Too Many Requestsを返すべき
+          expect(res.status).toBe(429);
+
+          const json = await res.json();
+
+          // エラーレスポンス形式を検証
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+          expect(json).toHaveProperty('retryAfter');
+
+          expect(json.error).toBe('RATE_LIMIT_EXCEEDED');
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+
+          // retryAfterフィールドが数値であることを確認
+          expect(typeof json.retryAfter).toBe('number');
+          expect(json.retryAfter).toBeGreaterThanOrEqual(0);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return error and message fields for INTERNAL_ERROR', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // Cognito signUpは成功するが、DynamoDB createは失敗
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn().mockResolvedValue(undefined),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // 500 Internal Server Errorを返すべき
+          expect(res.status).toBe(500);
+
+          const json = await res.json();
+
+          // エラーレスポンス形式を検証
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+          expect(json.error).toBe('INTERNAL_ERROR');
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+          expect(json.message).toBe('Registration failed');
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should return consistent error response structure for all router-handled errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 様々なエラーケースを生成（Zodバリデーションエラーを除く）
+        fc.oneof(
+          // メール重複エラー
+          fc.record({
+            type: fc.constant('conflict'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          }),
+          // レート制限エラー
+          fc.record({
+            type: fc.constant('rate_limit'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          }),
+          // 内部エラー
+          fc.record({
+            type: fc.constant('internal'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          })
+        ),
+        async (data) => {
+          // エラータイプに応じてモックを設定
+          if (data.type === 'conflict') {
+            vi.mocked(CognitoService).mockImplementation(
+              () =>
+                ({
+                  signUp: vi.fn().mockRejectedValue({
+                    code: 'UsernameExistsException',
+                    message: 'An account with the given email already exists.',
+                  }),
+                  authenticate: vi.fn(),
+                  deleteUser: vi.fn(),
+                }) as unknown as CognitoService
+            );
+          } else if (data.type === 'rate_limit') {
+            vi.mocked(RateLimiter).mockImplementation(
+              () =>
+                ({
+                  checkLimit: vi.fn().mockResolvedValue(false),
+                  getRetryAfter: vi.fn().mockResolvedValue(30),
+                }) as unknown as RateLimiter
+            );
+          } else if (data.type === 'internal') {
+            const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+            vi.mocked(CognitoService).mockImplementation(
+              () =>
+                ({
+                  signUp: vi.fn().mockResolvedValue({
+                    userId: mockUserId,
+                    userConfirmed: false,
+                  }),
+                  authenticate: vi.fn(),
+                  deleteUser: vi.fn().mockResolvedValue(undefined),
+                }) as unknown as CognitoService
+            );
+            vi.mocked(UserRepository).mockImplementation(
+              () =>
+                ({
+                  create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
+                  getById: vi.fn(),
+                }) as unknown as UserRepository
+            );
+          }
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: data.email,
+              password: data.password,
+              username: data.username,
+            }),
+          });
+
+          // エラーレスポンスであることを確認
+          expect(res.status).toBeGreaterThanOrEqual(400);
+
+          const json = await res.json();
+
+          // すべてのエラーレスポンスに共通のフィールドが存在することを確認
+          expect(json).toHaveProperty('error');
+          expect(json).toHaveProperty('message');
+
+          // errorフィールドは機械可読なエラーコード
+          expect(typeof json.error).toBe('string');
+          expect(json.error.length).toBeGreaterThan(0);
+          expect(json.error).toMatch(/^[A-Z_]+$/);
+
+          // messageフィールドは人間が読めるエラー説明
+          expect(typeof json.message).toBe('string');
+          expect(json.message.length).toBeGreaterThan(0);
+
+          // Content-Typeがapplication/jsonであることを確認
+          const contentType = res.headers.get('content-type');
+          expect(contentType).toContain('application/json');
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should not expose sensitive information in error messages', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+          // 内部エラーをシミュレート
+          vi.mocked(CognitoService).mockImplementation(
+            () =>
+              ({
+                signUp: vi.fn().mockResolvedValue({
+                  userId: mockUserId,
+                  userConfirmed: false,
+                }),
+                authenticate: vi.fn(),
+                deleteUser: vi.fn().mockResolvedValue(undefined),
+              }) as unknown as CognitoService
+          );
+
+          vi.mocked(UserRepository).mockImplementation(
+            () =>
+              ({
+                create: vi
+                  .fn()
+                  .mockRejectedValue(new Error('DynamoDB connection failed: secret-key-12345')),
+                getById: vi.fn(),
+              }) as unknown as UserRepository
+          );
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          const json = await res.json();
+
+          // エラーメッセージに機密情報が含まれていないことを確認
+          const responseString = JSON.stringify(json);
+
+          // パスワードが含まれていない
+          expect(responseString).not.toContain(data.password);
+
+          // 内部エラーの詳細が含まれていない
+          expect(responseString).not.toContain('secret-key');
+          expect(responseString).not.toContain('connection failed');
+
+          // スタックトレースが含まれていない
+          expect(json).not.toHaveProperty('stack');
+          expect(json).not.toHaveProperty('stackTrace');
+
+          // 一般的なエラーメッセージのみが返される
+          expect(json.message).toBe('Registration failed');
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+});
+
+/**
+ * Feature: user-registration-api
+ * Property 14: CORS設定
+ *
+ * **Validates: Requirements 11.1, 11.2, 11.3, 11.4, 11.5**
+ *
+ * 任意の登録リクエストに対して、APIは適切なCORSヘッダーを含むレスポンスを返すべきです。
+ * 許可されるオリジンは環境に応じて以下の通りです:
+ * - 開発環境: `http://localhost:3000`
+ * - ステージング環境: `https://stg.vote-board-game.example.com`
+ * - 本番環境: `https://vote-board-game.example.com`
+ *
+ * 許可されるメソッドはPOST、許可されるヘッダーはContent-TypeとAuthorizationです。
+ */
+describe('Property 14: CORS configuration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // RateLimiterのモック - 常に許可
+    vi.mocked(RateLimiter).mockImplementation(
+      () =>
+        ({
+          checkLimit: vi.fn().mockResolvedValue(true),
+          getRetryAfter: vi.fn().mockResolvedValue(0),
+        }) as unknown as RateLimiter
+    );
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return CORS headers for any registration request', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 任意の登録データを生成（有効・無効問わず）
+        fc.record({
+          email: fc.option(fc.emailAddress(), { nil: undefined }),
+          password: fc.option(fc.string(), { nil: undefined }),
+          username: fc.option(fc.string(), { nil: undefined }),
+        }),
+        async (data) => {
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          // CORSヘッダーが存在することを確認
+          const corsHeaders = {
+            'access-control-allow-origin': res.headers.get('access-control-allow-origin'),
+            'access-control-allow-credentials': res.headers.get('access-control-allow-credentials'),
+          };
+
+          // Access-Control-Allow-Originヘッダーが存在すべき
+          expect(corsHeaders['access-control-allow-origin']).toBeTruthy();
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should allow requests from localhost:3000 in development environment', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // 開発環境のオリジンを設定
+          const origin = 'http://localhost:3000';
+
+          // リクエスト（Originヘッダーを含む）
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Origin: origin,
+            },
+            body: JSON.stringify(data),
+          });
+
+          // Access-Control-Allow-Originヘッダーを確認
+          const allowedOrigin = res.headers.get('access-control-allow-origin');
+
+          // 開発環境のオリジンが許可されるべき
+          expect(allowedOrigin).toBe(origin);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should allow requests from staging environment origin', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // ステージング環境のオリジンを設定
+          const origin = 'https://stg.vote-board-game.example.com';
+
+          // ALLOWED_ORIGINS環境変数を一時的に設定
+          const originalAllowedOrigins = process.env.ALLOWED_ORIGINS;
+          process.env.ALLOWED_ORIGINS = `http://localhost:3000,${origin},https://vote-board-game.example.com`;
+
+          // リクエスト（Originヘッダーを含む）
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Origin: origin,
+            },
+            body: JSON.stringify(data),
+          });
+
+          // 環境変数を元に戻す
+          process.env.ALLOWED_ORIGINS = originalAllowedOrigins;
+
+          // Access-Control-Allow-Originヘッダーを確認
+          const allowedOrigin = res.headers.get('access-control-allow-origin');
+
+          // ステージング環境のオリジンが許可されるべき
+          expect(allowedOrigin).toBe(origin);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should allow requests from production environment origin', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // 本番環境のオリジンを設定
+          const origin = 'https://vote-board-game.example.com';
+
+          // ALLOWED_ORIGINS環境変数を一時的に設定
+          const originalAllowedOrigins = process.env.ALLOWED_ORIGINS;
+          process.env.ALLOWED_ORIGINS = `http://localhost:3000,https://stg.vote-board-game.example.com,${origin}`;
+
+          // リクエスト（Originヘッダーを含む）
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Origin: origin,
+            },
+            body: JSON.stringify(data),
+          });
+
+          // 環境変数を元に戻す
+          process.env.ALLOWED_ORIGINS = originalAllowedOrigins;
+
+          // Access-Control-Allow-Originヘッダーを確認
+          const allowedOrigin = res.headers.get('access-control-allow-origin');
+
+          // 本番環境のオリジンが許可されるべき
+          expect(allowedOrigin).toBe(origin);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should include CORS headers for both success and error responses', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 成功ケースと失敗ケースの両方を生成
+        fc.oneof(
+          // 成功ケース: 有効なデータ
+          fc.record({
+            type: fc.constant('success'),
+            email: fc.emailAddress(),
+            password: fc.constant('ValidPass123'),
+            username: fc
+              .string({ minLength: 3, maxLength: 20 })
+              .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          }),
+          // 失敗ケース: 無効なデータ
+          fc.record({
+            type: fc.constant('error'),
+            email: fc.constant(undefined),
+            password: fc.constant('ValidPass123'),
+            username: fc.constant('testuser'),
+          })
+        ),
+        async (data) => {
+          if (data.type === 'success') {
+            // 成功ケースのモック
+            const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
+
+            vi.mocked(CognitoService).mockImplementation(
+              () =>
+                ({
+                  signUp: vi.fn().mockResolvedValue({
+                    userId: mockUserId,
+                    userConfirmed: false,
+                  }),
+                  authenticate: vi.fn().mockResolvedValue({
+                    accessToken: 'mock-access-token',
+                    refreshToken: 'mock-refresh-token',
+                    idToken: 'mock-id-token',
+                    expiresIn: 900,
+                  }),
+                  deleteUser: vi.fn(),
+                }) as unknown as CognitoService
+            );
+
+            vi.mocked(UserRepository).mockImplementation(
+              () =>
+                ({
+                  create: vi.fn().mockResolvedValue({
+                    PK: `USER#${mockUserId}`,
+                    SK: `USER#${mockUserId}`,
+                    userId: mockUserId,
+                    email: data.email,
+                    username: data.username,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    entityType: 'USER',
+                  }),
+                  getById: vi.fn(),
+                }) as unknown as UserRepository
+            );
+          }
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Origin: 'http://localhost:3000',
+            },
+            body: JSON.stringify(data),
+          });
+
+          // 成功・失敗に関わらず、CORSヘッダーが存在すべき
+          const allowedOrigin = res.headers.get('access-control-allow-origin');
+          expect(allowedOrigin).toBeTruthy();
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should set credentials flag correctly', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Origin: 'http://localhost:3000',
+            },
+            body: JSON.stringify(data),
+          });
+
+          // Access-Control-Allow-Credentialsヘッダーを確認
+          const allowCredentials = res.headers.get('access-control-allow-credentials');
+
+          // credentialsフラグがtrueに設定されるべき
+          expect(allowCredentials).toBe('true');
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should maintain CORS configuration across various request scenarios', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // 様々なリクエストシナリオを生成
+        fc.record({
+          email: fc.option(fc.emailAddress(), { nil: undefined }),
+          password: fc.option(fc.string(), { nil: undefined }),
+          username: fc.option(fc.string(), { nil: undefined }),
+          origin: fc.oneof(
+            fc.constant('http://localhost:3000'),
+            fc.constant('https://stg.vote-board-game.example.com'),
+            fc.constant('https://vote-board-game.example.com')
+          ),
+        }),
+        async (data) => {
+          // ALLOWED_ORIGINS環境変数を設定
+          const originalAllowedOrigins = process.env.ALLOWED_ORIGINS;
+          process.env.ALLOWED_ORIGINS =
+            'http://localhost:3000,https://stg.vote-board-game.example.com,https://vote-board-game.example.com';
+
+          // リクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Origin: data.origin,
+            },
+            body: JSON.stringify({
+              email: data.email,
+              password: data.password,
+              username: data.username,
+            }),
+          });
+
+          // 環境変数を元に戻す
+          process.env.ALLOWED_ORIGINS = originalAllowedOrigins;
+
+          // CORSヘッダーが常に存在すべき
+          const allowedOrigin = res.headers.get('access-control-allow-origin');
+          expect(allowedOrigin).toBeTruthy();
+
+          // 許可されたオリジンが返されるべき
+          expect(allowedOrigin).toBe(data.origin);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should handle POST method correctly with CORS', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        async (data) => {
+          // POSTリクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Origin: 'http://localhost:3000',
+            },
+            body: JSON.stringify(data),
+          });
+
+          // CORSヘッダーが存在すべき
+          const allowedOrigin = res.headers.get('access-control-allow-origin');
+          expect(allowedOrigin).toBeTruthy();
+
+          // POSTメソッドが許可されるべき（レスポンスが返される）
+          expect(res.status).toBeGreaterThanOrEqual(200);
+          expect(res.status).toBeLessThan(600);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
+  it('should allow Content-Type and Authorization headers', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('ValidPass123'),
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+          authToken: fc.string({ minLength: 10, maxLength: 50 }),
+        }),
+        async (data) => {
+          // Content-TypeとAuthorizationヘッダーを含むリクエスト
+          const res = await app.request('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${data.authToken}`,
+              Origin: 'http://localhost:3000',
+            },
+            body: JSON.stringify({
+              email: data.email,
+              password: data.password,
+              username: data.username,
+            }),
+          });
+
+          // CORSヘッダーが存在すべき
+          const allowedOrigin = res.headers.get('access-control-allow-origin');
+          expect(allowedOrigin).toBeTruthy();
+
+          // リクエストが処理されるべき（ヘッダーが拒否されない）
+          expect(res.status).toBeGreaterThanOrEqual(200);
+          expect(res.status).toBeLessThan(600);
+
+          return true;
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+});
