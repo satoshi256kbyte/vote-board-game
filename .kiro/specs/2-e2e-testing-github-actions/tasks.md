@@ -71,7 +71,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
     - Install dependencies with frozen lockfile
     - _Requirements: 3.1, 3.7_
 
-  - [~] 4.3 Add Playwright browser caching
+  - [x] 4.3 Add Playwright browser caching
     - Get Playwright version from package
     - Cache Playwright browsers by version and OS
     - Install browsers only if cache miss
