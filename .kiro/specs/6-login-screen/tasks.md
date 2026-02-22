@@ -21,7 +21,7 @@
     - SSR対応（`typeof window !== 'undefined'`チェック）
     - _要件: 4.2_
 
-  - [~] 2.2 Storage Serviceのユニットテスト
+  - [x] 2.2 Storage Serviceのユニットテスト
     - `packages/web/src/lib/services/storage-service.test.ts`を作成
     - トークンの保存・取得・削除のテスト
     - SSR環境でのnullチェックのテスト
