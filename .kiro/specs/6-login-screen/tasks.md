@@ -35,7 +35,7 @@
     - 初期化時のトークン存在確認
     - _要件: 4.3_
 
-  - [~] 3.2 Auth Contextのユニットテスト
+  - [x] 3.2 Auth Contextのユニットテスト
     - `packages/web/src/lib/contexts/auth-context.test.tsx`を作成
     - ユーザー情報の設定・取得のテスト
     - 認証状態の判定テスト
