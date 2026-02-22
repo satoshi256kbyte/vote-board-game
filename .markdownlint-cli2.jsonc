@@ -6,7 +6,12 @@
     "MD033": false,
     "MD036": false,
     "MD041": false,
-    "MD060": false,
+    "MD049": {
+      "style": "asterisk",
+    },
+    "MD050": {
+      "style": "asterisk",
+    },
   },
   "globs": ["**/*.md"],
   "ignores": ["node_modules", "**/node_modules/**"],
