@@ -679,3 +679,459 @@ describe('Property 4: Password requirements validation', () => {
     );
   });
 });
+
+/**
+ * Feature: user-registration-api
+ * Property 5: ユーザー名要件検証
+ *
+ * **Validates: Requirements 4.1, 4.2, 4.3**
+ *
+ * 任意の登録リクエストに対して、usernameフィールドが以下の要件を満たさない場合、
+ * バリデーションは失敗し、エラーコード`VALIDATION_ERROR`を返すべきです:
+ * - 3〜20文字の長さ
+ * - 英数字、ハイフン、アンダースコアのみを含む
+ */
+describe('Property 5: Username requirements validation', () => {
+  // 無効なユーザー名を生成するジェネレーター（空文字列を除外）
+  const invalidUsernameGenerator = fc.oneof(
+    // 3文字未満（空文字列を除外）
+    fc.string({ minLength: 1, maxLength: 2 }),
+    // 20文字超過
+    fc.string({ minLength: 21, maxLength: 50 }),
+    // 無効な文字を含む（英数字・ハイフン・アンダースコア以外）
+    fc
+      .string({ minLength: 3, maxLength: 20 })
+      .filter((s) => !/^[a-zA-Z0-9_-]+$/.test(s) && s.length >= 3 && s.length <= 20)
+  );
+
+  it('should reject usernames not meeting requirements', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc
+            .tuple(
+              fc.integer({ min: 0, max: 25 }),
+              fc.integer({ min: 0, max: 25 }),
+              fc.integer({ min: 0, max: 9 })
+            )
+            .map(([upperIdx, lowerIdx, num]) => {
+              const upper = String.fromCharCode(65 + upperIdx);
+              const lower = String.fromCharCode(97 + lowerIdx);
+              return `${upper}${lower}${num}Pass1`;
+            }),
+          username: invalidUsernameGenerator,
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          // バリデーションは失敗すべき
+          expect(result.success).toBe(false);
+
+          if (!result.success) {
+            // usernameフィールドのエラーを探す
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+
+            // usernameエラーが存在することを確認
+            expect(usernameError).toBeDefined();
+
+            if (usernameError) {
+              // エラーメッセージにユーザー名要件が含まれることを確認
+              const message = usernameError.message;
+              expect(
+                message.includes('at least 3 characters') ||
+                  message.includes('at most 20 characters') ||
+                  message.includes('alphanumeric characters, hyphens, and underscores')
+              ).toBe(true);
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('should specifically reject usernames shorter than 3 characters', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          username: fc.string({ minLength: 1, maxLength: 2 }),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            expect(usernameError).toBeDefined();
+            if (usernameError) {
+              expect(usernameError.message).toBe('Username must be at least 3 characters');
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should specifically reject usernames longer than 20 characters', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          username: fc.string({ minLength: 21, maxLength: 50 }),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            expect(usernameError).toBeDefined();
+            if (usernameError) {
+              expect(usernameError.message).toBe('Username must be at most 20 characters');
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should specifically reject usernames with invalid characters', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          // 無効な文字を含むユーザー名を生成（スペース、特殊文字など）
+          username: fc.oneof(
+            fc.constant('user name'), // スペース
+            fc.constant('user@name'), // @記号
+            fc.constant('user.name'), // ドット
+            fc.constant('user!name'), // 感嘆符
+            fc.constant('user#name'), // ハッシュ
+            fc.constant('user$name'), // ドル記号
+            fc.constant('user%name'), // パーセント
+            fc.constant('ユーザー名'), // 日本語
+            fc.constant('user+name'), // プラス
+            fc.constant('user=name') // イコール
+          ),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            expect(usernameError).toBeDefined();
+            if (usernameError) {
+              expect(usernameError.message).toBe(
+                'Username can only contain alphanumeric characters, hyphens, and underscores'
+              );
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should accept valid usernames', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          // 有効なユーザー名を生成: 3-20文字、英数字・ハイフン・アンダースコアのみ
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          // ユーザー名が有効な場合、usernameフィールドのエラーはないはず
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            // usernameフィールドにエラーがないことを確認
+            expect(usernameError).toBeUndefined();
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('should accept usernames with hyphens and underscores', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          // ハイフンとアンダースコアを含む有効なユーザー名
+          username: fc.oneof(
+            fc.constant('user-name'),
+            fc.constant('user_name'),
+            fc.constant('user-name_123'),
+            fc.constant('test_user-01'),
+            fc.constant('my-user_name')
+          ),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          // これらのユーザー名は有効なので、usernameフィールドのエラーはないはず
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            expect(usernameError).toBeUndefined();
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+});
+
+/**
+ * Feature: user-registration-api
+ * Property 5: ユーザー名要件検証
+ *
+ * **Validates: Requirements 4.1, 4.2, 4.3**
+ *
+ * 任意の登録リクエストに対して、usernameフィールドが以下の要件を満たさない場合、
+ * バリデーションは失敗し、エラーコード`VALIDATION_ERROR`を返すべきです:
+ * - 3〜20文字の長さ
+ * - 英数字、ハイフン、アンダースコアのみを含む
+ */
+describe('Property 5: Username requirements validation', () => {
+  // 無効なユーザー名を生成するジェネレーター（空文字列を除外）
+  const invalidUsernameGenerator = fc.oneof(
+    // 3文字未満（空文字列を除外）
+    fc.string({ minLength: 1, maxLength: 2 }),
+    // 20文字超過
+    fc.string({ minLength: 21, maxLength: 50 }),
+    // 無効な文字を含む（英数字・ハイフン・アンダースコア以外）
+    fc
+      .string({ minLength: 3, maxLength: 20 })
+      .filter((s) => !/^[a-zA-Z0-9_-]+$/.test(s) && s.length >= 3 && s.length <= 20)
+  );
+
+  it('should reject usernames not meeting requirements', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc
+            .tuple(
+              fc.integer({ min: 0, max: 25 }),
+              fc.integer({ min: 0, max: 25 }),
+              fc.integer({ min: 0, max: 9 })
+            )
+            .map(([upperIdx, lowerIdx, num]) => {
+              const upper = String.fromCharCode(65 + upperIdx);
+              const lower = String.fromCharCode(97 + lowerIdx);
+              return `${upper}${lower}${num}Pass1`;
+            }),
+          username: invalidUsernameGenerator,
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          // バリデーションは失敗すべき
+          expect(result.success).toBe(false);
+
+          if (!result.success) {
+            // usernameフィールドのエラーを探す
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+
+            // usernameエラーが存在することを確認
+            expect(usernameError).toBeDefined();
+
+            if (usernameError) {
+              // エラーメッセージにユーザー名要件が含まれることを確認
+              const message = usernameError.message;
+              expect(
+                message.includes('at least 3 characters') ||
+                  message.includes('at most 20 characters') ||
+                  message.includes('alphanumeric characters, hyphens, and underscores')
+              ).toBe(true);
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('should specifically reject usernames shorter than 3 characters', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          username: fc.string({ minLength: 1, maxLength: 2 }),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            expect(usernameError).toBeDefined();
+            if (usernameError) {
+              expect(usernameError.message).toBe('Username must be at least 3 characters');
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should specifically reject usernames longer than 20 characters', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          username: fc.string({ minLength: 21, maxLength: 50 }),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            expect(usernameError).toBeDefined();
+            if (usernameError) {
+              expect(usernameError.message).toBe('Username must be at most 20 characters');
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should specifically reject usernames with invalid characters', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          // 無効な文字を含むユーザー名を生成（スペース、特殊文字など）
+          username: fc.oneof(
+            fc.constant('user name'), // スペース
+            fc.constant('user@name'), // @記号
+            fc.constant('user.name'), // ドット
+            fc.constant('user!name'), // 感嘆符
+            fc.constant('user#name'), // ハッシュ
+            fc.constant('user$name'), // ドル記号
+            fc.constant('user%name'), // パーセント
+            fc.constant('ユーザー名'), // 日本語
+            fc.constant('user+name'), // プラス
+            fc.constant('user=name') // イコール
+          ),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            expect(usernameError).toBeDefined();
+            if (usernameError) {
+              expect(usernameError.message).toBe(
+                'Username can only contain alphanumeric characters, hyphens, and underscores'
+              );
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should accept valid usernames', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          // 有効なユーザー名を生成: 3-20文字、英数字・ハイフン・アンダースコアのみ
+          username: fc
+            .string({ minLength: 3, maxLength: 20 })
+            .filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          // ユーザー名が有効な場合、usernameフィールドのエラーはないはず
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            // usernameフィールドにエラーがないことを確認
+            expect(usernameError).toBeUndefined();
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('should accept usernames with hyphens and underscores', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+          password: fc.constant('Password123'),
+          // ハイフンとアンダースコアを含む有効なユーザー名
+          username: fc.oneof(
+            fc.constant('user-name'),
+            fc.constant('user_name'),
+            fc.constant('user-name_123'),
+            fc.constant('test_user-01'),
+            fc.constant('my-user_name')
+          ),
+        }),
+        (data) => {
+          const result = registerSchema.safeParse(data);
+
+          // これらのユーザー名は有効なので、usernameフィールドのエラーはないはず
+          if (!result.success) {
+            const usernameError = result.error.issues.find((issue) => issue.path[0] === 'username');
+            expect(usernameError).toBeUndefined();
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+});
