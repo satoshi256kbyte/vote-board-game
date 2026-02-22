@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "name": "Post Task: Lint, Test & Push",
+  "description": "タスク完了後にリントとテストを実行、エラーを修正した上でGitHubにプッシュする",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "タスクが完了しました。以下の手順を実行してください：\n1. pnpm lint を実行してリントエラーを確認・修正\n2. pnpm test を実行してテストエラーを確認・修正\n3. すべてのエラーが解消されたら、変更をコミットしてGitHubにプッシュ\n注意：mainブランチへの直接プッシュは禁止です。現在のブランチにのみプッシュしてください。"
+  },
+  "workspaceFolderName": "vote-board-game",
+  "shortName": "post-task-lint-test-push"
+}
