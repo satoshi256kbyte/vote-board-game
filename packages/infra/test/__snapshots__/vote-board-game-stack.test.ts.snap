@@ -1,0 +1,4890 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation template snapshot for dev environment 1`] = `
+{
+  "Outputs": {
+    "ApiId": {
+      "Description": "API Gateway ID",
+      "Export": {
+        "Name": "VoteBoardGameApiId-dev",
+      },
+      "Value": {
+        "Ref": "HttpApiF5A9A8A7",
+      },
+    },
+    "ApiLambdaFunctionArn": {
+      "Description": "API Lambda 関数 ARN",
+      "Export": {
+        "Name": "VoteBoardGameApiLambdaArn-dev",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "ApiFunctionCE271BD4",
+          "Arn",
+        ],
+      },
+    },
+    "ApiLambdaFunctionName": {
+      "Description": "API Lambda 関数名",
+      "Export": {
+        "Name": "VoteBoardGameApiLambdaName-dev",
+      },
+      "Value": {
+        "Ref": "ApiFunctionCE271BD4",
+      },
+    },
+    "ApiUrl": {
+      "Description": "API Gateway エンドポイント URL",
+      "Export": {
+        "Name": "VoteBoardGameApiUrl-dev",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "HttpApiF5A9A8A7",
+          "ApiEndpoint",
+        ],
+      },
+    },
+    "BatchLambdaFunctionArn": {
+      "Description": "Batch Lambda 関数 ARN",
+      "Export": {
+        "Name": "VoteBoardGameBatchLambdaArn-dev",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "BatchFunction768110B6",
+          "Arn",
+        ],
+      },
+    },
+    "BatchLambdaFunctionName": {
+      "Description": "Batch Lambda 関数名",
+      "Export": {
+        "Name": "VoteBoardGameBatchLambdaName-dev",
+      },
+      "Value": {
+        "Ref": "BatchFunction768110B6",
+      },
+    },
+    "DistributionDomainName": {
+      "Description": "CloudFront ドメイン名",
+      "Export": {
+        "Name": "VoteBoardGameDistributionDomain-dev",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "WebDistribution59C46482",
+          "DomainName",
+        ],
+      },
+    },
+    "DistributionId": {
+      "Description": "CloudFront ディストリビューション ID",
+      "Export": {
+        "Name": "VoteBoardGameDistributionId-dev",
+      },
+      "Value": {
+        "Ref": "WebDistribution59C46482",
+      },
+    },
+    "Environment": {
+      "Description": "デプロイ環境",
+      "Value": "dev",
+    },
+    "ScheduleName": {
+      "Description": "EventBridge Scheduler 名",
+      "Export": {
+        "Name": "VoteBoardGameScheduleName-dev",
+      },
+      "Value": "vbg-dev-schedule-daily-batch",
+    },
+    "TableArn": {
+      "Description": "DynamoDB テーブル ARN",
+      "Export": {
+        "Name": "VoteBoardGameTableArn-dev",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "VoteBoardGameTable4368E79C",
+          "Arn",
+        ],
+      },
+    },
+    "TableName": {
+      "Description": "DynamoDB テーブル名",
+      "Export": {
+        "Name": "VoteBoardGameTableName-dev",
+      },
+      "Value": {
+        "Ref": "VoteBoardGameTable4368E79C",
+      },
+    },
+    "UserPoolArn": {
+      "Description": "Cognito ユーザープール ARN",
+      "Export": {
+        "Name": "VoteBoardGameUserPoolArn-dev",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "UserPool6BA7E5F2",
+          "Arn",
+        ],
+      },
+    },
+    "UserPoolClientId": {
+      "Description": "Cognito ユーザープールクライアント ID",
+      "Export": {
+        "Name": "VoteBoardGameUserPoolClientId-dev",
+      },
+      "Value": {
+        "Ref": "UserPoolClient2F5918F7",
+      },
+    },
+    "UserPoolId": {
+      "Description": "Cognito ユーザープール ID",
+      "Export": {
+        "Name": "VoteBoardGameUserPoolId-dev",
+      },
+      "Value": {
+        "Ref": "UserPool6BA7E5F2",
+      },
+    },
+    "WebBucketName": {
+      "Description": "フロントエンド用 S3 バケット名",
+      "Export": {
+        "Name": "VoteBoardGameWebBucketName-dev",
+      },
+      "Value": {
+        "Ref": "WebBucket12880F5B",
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "ApiFunctionCE271BD4": {
+      "DependsOn": [
+        "ApiLambdaRoleDefaultPolicy84E47AF4",
+        "ApiLambdaRole66D0B4CD",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-L1",
+              "is_reason_encoded": true,
+              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
+            },
+            {
+              "id": "AwsSolutions-IAM4",
+              "is_reason_encoded": true,
+              "reason": "TGFtYmRhIOWun+ihjOODreODvOODq+OBryBBV1Mg44Oe44ON44O844K444OJ44Od44Oq44K344O8IEFXU0xhbWJkYUJhc2ljRXhlY3V0aW9uUm9sZSDjgpLkvb/nlKjjgII=",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "is_reason_encoded": true,
+              "reason": "RHluYW1vREIg44OG44O844OW44Or44G444Gu44Ki44Kv44K744K544Gr44GvIHdpbGRjYXJkIOOBjOW/heimgeOAgkdTSSDjgbjjga7jgqLjgq/jgrvjgrnjgpLlkKvjgoDjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "13231485a9bd639a71be5fcff0c2ecd1b98a338bd91efb0ffc1e29b89f7f9edc.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ALLOWED_ORIGINS": "http://localhost:3000",
+            "COGNITO_CLIENT_ID": {
+              "Ref": "UserPoolClient2F5918F7",
+            },
+            "COGNITO_USER_POOL_ID": {
+              "Ref": "UserPool6BA7E5F2",
+            },
+            "NODE_ENV": "dev",
+            "TABLE_NAME": {
+              "Ref": "VoteBoardGameTable4368E79C",
+            },
+            "USER_POOL_CLIENT_ID": {
+              "Ref": "UserPoolClient2F5918F7",
+            },
+            "USER_POOL_ID": {
+              "Ref": "UserPool6BA7E5F2",
+            },
+          },
+        },
+        "FunctionName": "vbg-dev-lambda-api",
+        "Handler": "lambda.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "ApiLambdaRole66D0B4CD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 30,
+        "TracingConfig": {
+          "Mode": "Active",
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ApiFunctionLogRetentionDCC3A405": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-L1",
+              "is_reason_encoded": true,
+              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
+            },
+            {
+              "id": "AwsSolutions-IAM4",
+              "is_reason_encoded": true,
+              "reason": "TGFtYmRhIOWun+ihjOODreODvOODq+OBryBBV1Mg44Oe44ON44O844K444OJ44Od44Oq44K344O8IEFXU0xhbWJkYUJhc2ljRXhlY3V0aW9uUm9sZSDjgpLkvb/nlKjjgII=",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "is_reason_encoded": true,
+              "reason": "RHluYW1vREIg44OG44O844OW44Or44G444Gu44Ki44Kv44K744K544Gr44GvIHdpbGRjYXJkIOOBjOW/heimgeOAgkdTSSDjgbjjga7jgqLjgq/jgrvjgrnjgpLlkKvjgoDjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "ApiLambdaRole66D0B4CD": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWSLambdaBasicExecutionRole is AWS managed policy for Lambda logging",
+            },
+            {
+              "applies_to": [
+                "Action::cognito-idp:*",
+                {
+                  "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "vbg-dev-iam-lambda-api-role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ApiLambdaRoleDefaultPolicy84E47AF4": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Action::cognito-idp:*",
+                {
+                  "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "xray:PutTraceSegments",
+                "xray:PutTelemetryRecords",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoteBoardGameTable4368E79C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoteBoardGameTable4368E79C",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoteBoardGameTable4368E79C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoteBoardGameTable4368E79C",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "cognito-idp:AdminGetUser",
+                "cognito-idp:AdminUpdateUserAttributes",
+                "cognito-idp:AdminDeleteUser",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "UserPool6BA7E5F2",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ApiLambdaRoleDefaultPolicy84E47AF4",
+        "Roles": [
+          {
+            "Ref": "ApiLambdaRole66D0B4CD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "BatchFunction768110B6": {
+      "DependsOn": [
+        "BatchLambdaRoleDefaultPolicy3F25F2CB",
+        "BatchLambdaRole6C54EF21",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-L1",
+              "is_reason_encoded": true,
+              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "13231485a9bd639a71be5fcff0c2ecd1b98a338bd91efb0ffc1e29b89f7f9edc.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "dev",
+            "TABLE_NAME": {
+              "Ref": "VoteBoardGameTable4368E79C",
+            },
+          },
+        },
+        "FunctionName": "vbg-dev-lambda-batch",
+        "Handler": "batch.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "BatchLambdaRole6C54EF21",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 300,
+        "TracingConfig": {
+          "Mode": "Active",
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "BatchFunctionLogRetention791C2146": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-L1",
+              "is_reason_encoded": true,
+              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "BatchFunction768110B6",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "BatchLambdaRole6C54EF21": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWSLambdaBasicExecutionRole is AWS managed policy for Lambda logging",
+            },
+            {
+              "applies_to": [
+                {
+                  "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, X-Ray tracing requires Resource::*",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "vbg-dev-iam-lambda-batch-role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "BatchLambdaRoleDefaultPolicy3F25F2CB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                {
+                  "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, X-Ray tracing requires Resource::*",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "xray:PutTraceSegments",
+                "xray:PutTelemetryRecords",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoteBoardGameTable4368E79C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoteBoardGameTable4368E79C",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoteBoardGameTable4368E79C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoteBoardGameTable4368E79C",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "BatchLambdaRoleDefaultPolicy3F25F2CB",
+        "Roles": [
+          {
+            "Ref": "BatchLambdaRole6C54EF21",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+      "DependsOn": [
+        "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
+        },
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Lambda function for auto-deleting objects in ",
+              {
+                "Ref": "LogBucketCC3B17E8",
+              },
+              " S3 bucket.",
+            ],
+          ],
+        },
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DailyBatchSchedule": {
+      "Properties": {
+        "Description": "日次バッチ処理（投票集計・次の一手決定・AI候補生成）",
+        "FlexibleTimeWindow": {
+          "Mode": "OFF",
+        },
+        "Name": "vbg-dev-schedule-daily-batch",
+        "ScheduleExpression": "cron(0 15 * * ? *)",
+        "ScheduleExpressionTimezone": "UTC",
+        "Target": {
+          "Arn": {
+            "Fn::GetAtt": [
+              "BatchFunction768110B6",
+              "Arn",
+            ],
+          },
+          "RoleArn": {
+            "Fn::GetAtt": [
+              "SchedulerRole59E73443",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Scheduler::Schedule",
+    },
+    "HttpApiDELETEproxyApiLambdaIntegrationPermission3862360F": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiDELETEproxyED63FCD8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "DELETE /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiDefaultStage3EEB07D6": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AutoDeploy": true,
+        "StageName": "$default",
+      },
+      "Type": "AWS::ApiGatewayV2::Stage",
+    },
+    "HttpApiF5A9A8A7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CorsConfiguration": {
+          "AllowCredentials": true,
+          "AllowHeaders": [
+            "Content-Type",
+            "Authorization",
+          ],
+          "AllowMethods": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS",
+          ],
+          "AllowOrigins": [
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Fn::GetAtt": [
+                      "WebDistribution59C46482",
+                      "DomainName",
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+          "MaxAge": 3600,
+        },
+        "Description": "Vote Board Game API - dev",
+        "Name": "vbg-dev-apigateway-main",
+        "ProtocolType": "HTTP",
+      },
+      "Type": "AWS::ApiGatewayV2::Api",
+    },
+    "HttpApiGEThealthAB1F4856": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /health",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiGEThealthApiLambdaIntegrationPermission18F08784": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/health",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiGETproxyApiLambdaIntegrationFBF9B93D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "PayloadFormatVersion": "2.0",
+      },
+      "Type": "AWS::ApiGatewayV2::Integration",
+    },
+    "HttpApiGETproxyApiLambdaIntegrationPermission0732BF61": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiGETproxyC12F9FC6": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiPATCHproxyApiLambdaIntegrationPermission6844B8C1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiPATCHproxyE9D7FFDC": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "PATCH /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiPOSTproxyApiLambdaIntegrationPermission909E7F90": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiPOSTproxyCBD28088": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "POST /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiPUTproxy52C9B2AF": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "PUT /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiPUTproxyApiLambdaIntegrationPermission86BC9EAC": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "LogBucketAutoDeleteObjectsCustomResource7762F42C": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "LogBucketPolicy900DBE48",
+      ],
+      "Properties": {
+        "BucketName": {
+          "Ref": "LogBucketCC3B17E8",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::S3AutoDeleteObjects",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "LogBucketCC3B17E8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "AccessControl": "LogDeliveryWrite",
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": {
+          "Fn::Join": [
+            "",
+            [
+              "vbg-dev-s3-logs-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+            ],
+          ],
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-delete-objects",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "LogBucketPolicy900DBE48": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "LogBucketCC3B17E8",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "LogBucketCC3B17E8",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "LogBucketCC3B17E8",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:PutBucketPolicy",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                    "Arn",
+                  ],
+                },
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "LogBucketCC3B17E8",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "LogBucketCC3B17E8",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+      "DependsOn": [
+        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip",
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+              "id": "AwsSolutions-IAM4",
+              "is_reason_encoded": true,
+              "reason": "TG9nUmV0ZW50aW9uIExhbWJkYSDjga8gQ0RLIOOBjOiHquWLleeUn+aIkOOAgkFXUyDjg57jg43jg7zjgrjjg4njg53jg6rjgrfjg7zjgpLkvb/nlKjjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "is_reason_encoded": true,
+              "reason": "TG9nUmV0ZW50aW9uIExhbWJkYSDjga8gQ0RLIOOBjOiHquWLleeUn+aIkOOAgkNsb3VkV2F0Y2ggTG9ncyDjgbjjga7jgqLjgq/jgrvjgrnjgasgd2lsZGNhcmQg44GM5b+F6KaB44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:PutRetentionPolicy",
+                "logs:DeleteRetentionPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+        "Roles": [
+          {
+            "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SchedulerRole59E73443": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                {
+                  "regex": "/^Resource::<BatchFunction.*\\.Arn>:\\*$/g",
+                },
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda invoke permission requires wildcard for function versions and aliases",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "scheduler.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RoleName": "vbg-dev-iam-scheduler-role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SchedulerRoleDefaultPolicy66F774B8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                {
+                  "regex": "/^Resource::<BatchFunction.*\\.Arn>:\\*$/g",
+                },
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda invoke permission requires wildcard for function versions and aliases",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "BatchFunction768110B6",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "BatchFunction768110B6",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SchedulerRoleDefaultPolicy66F774B8",
+        "Roles": [
+          {
+            "Ref": "SchedulerRole59E73443",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UserPool6BA7E5F2": {
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-COG2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBNRkEg44Gv44Kq44OX44K344On44OK44Or44CC44Om44O844K244O85L2T6aiT44KS5YSq5YWI44GX44CB5bCG5p2l55qE44Gr5b+F6aCI5YyW44KS5qSc6KiO44CC",
+            },
+            {
+              "id": "AwsSolutions-COG3",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBBZHZhbmNlZCBTZWN1cml0eSBNb2RlIOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AccountRecoverySetting": {
+          "RecoveryMechanisms": [
+            {
+              "Name": "verified_email",
+              "Priority": 1,
+            },
+          ],
+        },
+        "AdminCreateUserConfig": {
+          "AllowAdminCreateUserOnly": false,
+        },
+        "AutoVerifiedAttributes": [
+          "email",
+        ],
+        "EmailVerificationMessage": "The verification code to your new account is {####}",
+        "EmailVerificationSubject": "Verify your new account",
+        "EnabledMfas": [
+          "SOFTWARE_TOKEN_MFA",
+        ],
+        "MfaConfiguration": "OPTIONAL",
+        "Policies": {
+          "PasswordPolicy": {
+            "MinimumLength": 8,
+            "RequireLowercase": true,
+            "RequireNumbers": true,
+            "RequireSymbols": false,
+            "RequireUppercase": true,
+          },
+        },
+        "Schema": [
+          {
+            "Mutable": false,
+            "Name": "email",
+            "Required": true,
+          },
+          {
+            "AttributeDataType": "String",
+            "Mutable": true,
+            "Name": "username",
+            "StringAttributeConstraints": {
+              "MaxLength": "20",
+              "MinLength": "3",
+            },
+          },
+        ],
+        "SmsVerificationMessage": "The verification code to your new account is {####}",
+        "UserPoolName": "vbg-dev-cognito-main",
+        "UsernameAttributes": [
+          "email",
+        ],
+        "VerificationMessageTemplate": {
+          "DefaultEmailOption": "CONFIRM_WITH_CODE",
+          "EmailMessage": "The verification code to your new account is {####}",
+          "EmailSubject": "Verify your new account",
+          "SmsMessage": "The verification code to your new account is {####}",
+        },
+      },
+      "Type": "AWS::Cognito::UserPool",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UserPoolClient2F5918F7": {
+      "Properties": {
+        "AccessTokenValidity": 60,
+        "AllowedOAuthFlows": [
+          "implicit",
+          "code",
+        ],
+        "AllowedOAuthFlowsUserPoolClient": true,
+        "AllowedOAuthScopes": [
+          "profile",
+          "phone",
+          "email",
+          "openid",
+          "aws.cognito.signin.user.admin",
+        ],
+        "CallbackURLs": [
+          "https://example.com",
+        ],
+        "ClientName": "vbg-dev-cognito-client",
+        "EnableTokenRevocation": true,
+        "ExplicitAuthFlows": [
+          "ALLOW_USER_PASSWORD_AUTH",
+          "ALLOW_USER_SRP_AUTH",
+          "ALLOW_REFRESH_TOKEN_AUTH",
+        ],
+        "GenerateSecret": false,
+        "IdTokenValidity": 60,
+        "PreventUserExistenceErrors": "ENABLED",
+        "RefreshTokenValidity": 43200,
+        "SupportedIdentityProviders": [
+          "COGNITO",
+        ],
+        "TokenValidityUnits": {
+          "AccessToken": "minutes",
+          "IdToken": "minutes",
+          "RefreshToken": "minutes",
+        },
+        "UserPoolId": {
+          "Ref": "UserPool6BA7E5F2",
+        },
+      },
+      "Type": "AWS::Cognito::UserPoolClient",
+    },
+    "VoteBoardGameTable4368E79C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "PK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "SK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "GSI1PK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "GSI1SK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "GSI2PK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "GSI2SK",
+            "AttributeType": "S",
+          },
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "GSI1",
+            "KeySchema": [
+              {
+                "AttributeName": "GSI1PK",
+                "KeyType": "HASH",
+              },
+              {
+                "AttributeName": "GSI1SK",
+                "KeyType": "RANGE",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+          },
+          {
+            "IndexName": "GSI2",
+            "KeySchema": [
+              {
+                "AttributeName": "GSI2PK",
+                "KeyType": "HASH",
+              },
+              {
+                "AttributeName": "GSI2SK",
+                "KeyType": "RANGE",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+          },
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "PK",
+            "KeyType": "HASH",
+          },
+          {
+            "AttributeName": "SK",
+            "KeyType": "RANGE",
+          },
+        ],
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true,
+        },
+        "SSESpecification": {
+          "SSEEnabled": true,
+        },
+        "TableName": "vbg-dev-dynamodb-main",
+        "TimeToLiveSpecification": {
+          "AttributeName": "expiresAt",
+          "Enabled": true,
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "WebBucket12880F5B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": {
+          "Fn::Join": [
+            "",
+            [
+              "vbg-dev-s3-web-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+            ],
+          ],
+        },
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Ref": "LogBucketCC3B17E8",
+          },
+          "LogFilePrefix": "web-bucket-logs/",
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-delete-objects",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "WebBucketAutoDeleteObjectsCustomResource9C1A079F": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "WebBucketPolicy95D08FAA",
+      ],
+      "Properties": {
+        "BucketName": {
+          "Ref": "WebBucket12880F5B",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::S3AutoDeleteObjects",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "WebBucketPolicy95D08FAA": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "WebBucket12880F5B",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "WebBucket12880F5B",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "WebBucket12880F5B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:PutBucketPolicy",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                    "Arn",
+                  ],
+                },
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "WebBucket12880F5B",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "WebBucket12880F5B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "s3:GetObject",
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":cloudfront::",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":distribution/",
+                        {
+                          "Ref": "WebDistribution59C46482",
+                        },
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudfront.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "WebBucket12880F5B",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "WebDistribution59C46482": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CFR1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR4",
+              "is_reason_encoded": true,
+              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "DistributionConfig": {
+          "CustomErrorResponses": [
+            {
+              "ErrorCode": 404,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/404.html",
+            },
+          ],
+          "DefaultCacheBehavior": {
+            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+            "Compress": true,
+            "TargetOriginId": "TestStackWebDistributionOrigin18DCD5D1F",
+            "ViewerProtocolPolicy": "redirect-to-https",
+          },
+          "DefaultRootObject": "index.html",
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Logging": {
+            "Bucket": {
+              "Fn::GetAtt": [
+                "LogBucketCC3B17E8",
+                "RegionalDomainName",
+              ],
+            },
+            "Prefix": "cloudfront-logs/",
+          },
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "WebBucket12880F5B",
+                  "RegionalDomainName",
+                ],
+              },
+              "Id": "TestStackWebDistributionOrigin18DCD5D1F",
+              "OriginAccessControlId": {
+                "Fn::GetAtt": [
+                  "WebDistributionOrigin1S3OriginAccessControl83AD2F73",
+                  "Id",
+                ],
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": "",
+              },
+            },
+          ],
+        },
+      },
+      "Type": "AWS::CloudFront::Distribution",
+    },
+    "WebDistributionOrigin1S3OriginAccessControl83AD2F73": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CFR1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR4",
+              "is_reason_encoded": true,
+              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": "TestStackWebDistributionOrigin1S3OriginAccessControl6862C29B",
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4",
+        },
+      },
+      "Type": "AWS::CloudFront::OriginAccessControl",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
+
+exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation template snapshot for prod environment 1`] = `
+{
+  "Outputs": {
+    "ApiId": {
+      "Description": "API Gateway ID",
+      "Export": {
+        "Name": "VoteBoardGameApiId-prod",
+      },
+      "Value": {
+        "Ref": "HttpApiF5A9A8A7",
+      },
+    },
+    "ApiLambdaFunctionArn": {
+      "Description": "API Lambda 関数 ARN",
+      "Export": {
+        "Name": "VoteBoardGameApiLambdaArn-prod",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "ApiFunctionCE271BD4",
+          "Arn",
+        ],
+      },
+    },
+    "ApiLambdaFunctionName": {
+      "Description": "API Lambda 関数名",
+      "Export": {
+        "Name": "VoteBoardGameApiLambdaName-prod",
+      },
+      "Value": {
+        "Ref": "ApiFunctionCE271BD4",
+      },
+    },
+    "ApiUrl": {
+      "Description": "API Gateway エンドポイント URL",
+      "Export": {
+        "Name": "VoteBoardGameApiUrl-prod",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "HttpApiF5A9A8A7",
+          "ApiEndpoint",
+        ],
+      },
+    },
+    "BatchLambdaFunctionArn": {
+      "Description": "Batch Lambda 関数 ARN",
+      "Export": {
+        "Name": "VoteBoardGameBatchLambdaArn-prod",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "BatchFunction768110B6",
+          "Arn",
+        ],
+      },
+    },
+    "BatchLambdaFunctionName": {
+      "Description": "Batch Lambda 関数名",
+      "Export": {
+        "Name": "VoteBoardGameBatchLambdaName-prod",
+      },
+      "Value": {
+        "Ref": "BatchFunction768110B6",
+      },
+    },
+    "CriticalAlertTopicArn": {
+      "Description": "Critical Alert SNS Topic ARN",
+      "Export": {
+        "Name": "VoteBoardGameCriticalAlertTopicArn-prod",
+      },
+      "Value": {
+        "Ref": "CriticalAlertTopicA6C95D9D",
+      },
+    },
+    "DistributionDomainName": {
+      "Description": "CloudFront ドメイン名",
+      "Export": {
+        "Name": "VoteBoardGameDistributionDomain-prod",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "WebDistribution59C46482",
+          "DomainName",
+        ],
+      },
+    },
+    "DistributionId": {
+      "Description": "CloudFront ディストリビューション ID",
+      "Export": {
+        "Name": "VoteBoardGameDistributionId-prod",
+      },
+      "Value": {
+        "Ref": "WebDistribution59C46482",
+      },
+    },
+    "Environment": {
+      "Description": "デプロイ環境",
+      "Value": "prod",
+    },
+    "ScheduleName": {
+      "Description": "EventBridge Scheduler 名",
+      "Export": {
+        "Name": "VoteBoardGameScheduleName-prod",
+      },
+      "Value": "vbg-prod-schedule-daily-batch",
+    },
+    "TableArn": {
+      "Description": "DynamoDB テーブル ARN",
+      "Export": {
+        "Name": "VoteBoardGameTableArn-prod",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "VoteBoardGameTable4368E79C",
+          "Arn",
+        ],
+      },
+    },
+    "TableName": {
+      "Description": "DynamoDB テーブル名",
+      "Export": {
+        "Name": "VoteBoardGameTableName-prod",
+      },
+      "Value": {
+        "Ref": "VoteBoardGameTable4368E79C",
+      },
+    },
+    "UserPoolArn": {
+      "Description": "Cognito ユーザープール ARN",
+      "Export": {
+        "Name": "VoteBoardGameUserPoolArn-prod",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "UserPool6BA7E5F2",
+          "Arn",
+        ],
+      },
+    },
+    "UserPoolClientId": {
+      "Description": "Cognito ユーザープールクライアント ID",
+      "Export": {
+        "Name": "VoteBoardGameUserPoolClientId-prod",
+      },
+      "Value": {
+        "Ref": "UserPoolClient2F5918F7",
+      },
+    },
+    "UserPoolId": {
+      "Description": "Cognito ユーザープール ID",
+      "Export": {
+        "Name": "VoteBoardGameUserPoolId-prod",
+      },
+      "Value": {
+        "Ref": "UserPool6BA7E5F2",
+      },
+    },
+    "WarningAlertTopicArn": {
+      "Description": "Warning Alert SNS Topic ARN",
+      "Export": {
+        "Name": "VoteBoardGameWarningAlertTopicArn-prod",
+      },
+      "Value": {
+        "Ref": "WarningAlertTopicF3646732",
+      },
+    },
+    "WebBucketName": {
+      "Description": "フロントエンド用 S3 バケット名",
+      "Export": {
+        "Name": "VoteBoardGameWebBucketName-prod",
+      },
+      "Value": {
+        "Ref": "WebBucket12880F5B",
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "ApiFunctionCE271BD4": {
+      "DependsOn": [
+        "ApiLambdaRoleDefaultPolicy84E47AF4",
+        "ApiLambdaRole66D0B4CD",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-L1",
+              "is_reason_encoded": true,
+              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
+            },
+            {
+              "id": "AwsSolutions-IAM4",
+              "is_reason_encoded": true,
+              "reason": "TGFtYmRhIOWun+ihjOODreODvOODq+OBryBBV1Mg44Oe44ON44O844K444OJ44Od44Oq44K344O8IEFXU0xhbWJkYUJhc2ljRXhlY3V0aW9uUm9sZSDjgpLkvb/nlKjjgII=",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "is_reason_encoded": true,
+              "reason": "RHluYW1vREIg44OG44O844OW44Or44G444Gu44Ki44Kv44K744K544Gr44GvIHdpbGRjYXJkIOOBjOW/heimgeOAgkdTSSDjgbjjga7jgqLjgq/jgrvjgrnjgpLlkKvjgoDjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "13231485a9bd639a71be5fcff0c2ecd1b98a338bd91efb0ffc1e29b89f7f9edc.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ALLOWED_ORIGINS": "https://vote-board-game.example.com",
+            "COGNITO_CLIENT_ID": {
+              "Ref": "UserPoolClient2F5918F7",
+            },
+            "COGNITO_USER_POOL_ID": {
+              "Ref": "UserPool6BA7E5F2",
+            },
+            "NODE_ENV": "prod",
+            "TABLE_NAME": {
+              "Ref": "VoteBoardGameTable4368E79C",
+            },
+            "USER_POOL_CLIENT_ID": {
+              "Ref": "UserPoolClient2F5918F7",
+            },
+            "USER_POOL_ID": {
+              "Ref": "UserPool6BA7E5F2",
+            },
+          },
+        },
+        "FunctionName": "vbg-prod-lambda-api",
+        "Handler": "lambda.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "ApiLambdaRole66D0B4CD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 30,
+        "TracingConfig": {
+          "Mode": "Active",
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ApiFunctionLogRetentionDCC3A405": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-L1",
+              "is_reason_encoded": true,
+              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
+            },
+            {
+              "id": "AwsSolutions-IAM4",
+              "is_reason_encoded": true,
+              "reason": "TGFtYmRhIOWun+ihjOODreODvOODq+OBryBBV1Mg44Oe44ON44O844K444OJ44Od44Oq44K344O8IEFXU0xhbWJkYUJhc2ljRXhlY3V0aW9uUm9sZSDjgpLkvb/nlKjjgII=",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "is_reason_encoded": true,
+              "reason": "RHluYW1vREIg44OG44O844OW44Or44G444Gu44Ki44Kv44K744K544Gr44GvIHdpbGRjYXJkIOOBjOW/heimgeOAgkdTSSDjgbjjga7jgqLjgq/jgrvjgrnjgpLlkKvjgoDjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "ApiGateway4xxAlarm7286C098": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "WarningAlertTopicF3646732",
+          },
+        ],
+        "AlarmDescription": "API Gateway で 4XX エラーが多発しています",
+        "AlarmName": "vbg-prod-apigateway-4xx",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 3,
+        "Dimensions": [
+          {
+            "Name": "ApiId",
+            "Value": {
+              "Ref": "HttpApiF5A9A8A7",
+            },
+          },
+        ],
+        "EvaluationPeriods": 3,
+        "MetricName": "4XXError",
+        "Namespace": "AWS/ApiGateway",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 100,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ApiGateway5xxAlarm4F808175": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "CriticalAlertTopicA6C95D9D",
+          },
+        ],
+        "AlarmDescription": "API Gateway で 5XX エラーが多発しています",
+        "AlarmName": "vbg-prod-apigateway-5xx",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 2,
+        "Dimensions": [
+          {
+            "Name": "ApiId",
+            "Value": {
+              "Ref": "HttpApiF5A9A8A7",
+            },
+          },
+        ],
+        "EvaluationPeriods": 2,
+        "MetricName": "5XXError",
+        "Namespace": "AWS/ApiGateway",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 10,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ApiGatewayLatencyAlarm5559E5F5": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "WarningAlertTopicF3646732",
+          },
+        ],
+        "AlarmDescription": "API Gateway のレイテンシ（p99）が 3秒 を超えています",
+        "AlarmName": "vbg-prod-apigateway-latency",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 3,
+        "Dimensions": [
+          {
+            "Name": "ApiId",
+            "Value": {
+              "Ref": "HttpApiF5A9A8A7",
+            },
+          },
+        ],
+        "EvaluationPeriods": 3,
+        "ExtendedStatistic": "p99",
+        "MetricName": "Latency",
+        "Namespace": "AWS/ApiGateway",
+        "Period": 300,
+        "Threshold": 3000,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ApiLambdaDurationAlarm5A20E751": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "WarningAlertTopicF3646732",
+          },
+        ],
+        "AlarmDescription": "API Lambda の実行時間（p99）が 25秒 を超えています",
+        "AlarmName": "vbg-prod-api-lambda-duration",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 3,
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ApiFunctionCE271BD4",
+            },
+          },
+        ],
+        "EvaluationPeriods": 3,
+        "ExtendedStatistic": "p99",
+        "MetricName": "Duration",
+        "Namespace": "AWS/Lambda",
+        "Period": 300,
+        "Threshold": 25000,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ApiLambdaErrorRateAlarm1E249D04": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "CriticalAlertTopicA6C95D9D",
+          },
+        ],
+        "AlarmDescription": "API Lambda のエラー率が 5% を超えています",
+        "AlarmName": "vbg-prod-api-lambda-error-rate",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 2,
+        "EvaluationPeriods": 2,
+        "Metrics": [
+          {
+            "Expression": "(errors / invocations) * 100",
+            "Id": "expr_1",
+            "ReturnData": true,
+          },
+          {
+            "Id": "errors",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "FunctionName",
+                    "Value": {
+                      "Ref": "ApiFunctionCE271BD4",
+                    },
+                  },
+                ],
+                "MetricName": "Errors",
+                "Namespace": "AWS/Lambda",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "invocations",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "FunctionName",
+                    "Value": {
+                      "Ref": "ApiFunctionCE271BD4",
+                    },
+                  },
+                ],
+                "MetricName": "Invocations",
+                "Namespace": "AWS/Lambda",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ApiLambdaRole66D0B4CD": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWSLambdaBasicExecutionRole is AWS managed policy for Lambda logging",
+            },
+            {
+              "applies_to": [
+                "Action::cognito-idp:*",
+                {
+                  "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "vbg-prod-iam-lambda-api-role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ApiLambdaRoleDefaultPolicy84E47AF4": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Action::cognito-idp:*",
+                {
+                  "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "xray:PutTraceSegments",
+                "xray:PutTelemetryRecords",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoteBoardGameTable4368E79C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoteBoardGameTable4368E79C",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoteBoardGameTable4368E79C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoteBoardGameTable4368E79C",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "cognito-idp:AdminGetUser",
+                "cognito-idp:AdminUpdateUserAttributes",
+                "cognito-idp:AdminDeleteUser",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "UserPool6BA7E5F2",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ApiLambdaRoleDefaultPolicy84E47AF4",
+        "Roles": [
+          {
+            "Ref": "ApiLambdaRole66D0B4CD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ApiLambdaThrottlesAlarm4B2EE100": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "WarningAlertTopicF3646732",
+          },
+        ],
+        "AlarmDescription": "API Lambda でスロットリングが発生しています",
+        "AlarmName": "vbg-prod-api-lambda-throttles",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 2,
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ApiFunctionCE271BD4",
+            },
+          },
+        ],
+        "EvaluationPeriods": 2,
+        "MetricName": "Throttles",
+        "Namespace": "AWS/Lambda",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "BatchFunction768110B6": {
+      "DependsOn": [
+        "BatchLambdaRoleDefaultPolicy3F25F2CB",
+        "BatchLambdaRole6C54EF21",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-L1",
+              "is_reason_encoded": true,
+              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "13231485a9bd639a71be5fcff0c2ecd1b98a338bd91efb0ffc1e29b89f7f9edc.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "prod",
+            "TABLE_NAME": {
+              "Ref": "VoteBoardGameTable4368E79C",
+            },
+          },
+        },
+        "FunctionName": "vbg-prod-lambda-batch",
+        "Handler": "batch.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "BatchLambdaRole6C54EF21",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 300,
+        "TracingConfig": {
+          "Mode": "Active",
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "BatchFunctionLogRetention791C2146": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-L1",
+              "is_reason_encoded": true,
+              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "BatchFunction768110B6",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 7,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "BatchLambdaDurationAlarm07FF2E2C": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "WarningAlertTopicF3646732",
+          },
+        ],
+        "AlarmDescription": "Batch Lambda の実行時間が 4分 を超えています",
+        "AlarmName": "vbg-prod-batch-lambda-duration",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "BatchFunction768110B6",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Duration",
+        "Namespace": "AWS/Lambda",
+        "Period": 300,
+        "Statistic": "Maximum",
+        "Threshold": 240000,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "BatchLambdaErrorAlarm54CAFE0E": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "CriticalAlertTopicA6C95D9D",
+          },
+        ],
+        "AlarmDescription": "Batch Lambda の実行が失敗しました",
+        "AlarmName": "vbg-prod-batch-lambda-error",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "BatchFunction768110B6",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "BatchLambdaRole6C54EF21": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWSLambdaBasicExecutionRole is AWS managed policy for Lambda logging",
+            },
+            {
+              "applies_to": [
+                {
+                  "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, X-Ray tracing requires Resource::*",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "vbg-prod-iam-lambda-batch-role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "BatchLambdaRoleDefaultPolicy3F25F2CB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                {
+                  "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, X-Ray tracing requires Resource::*",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "xray:PutTraceSegments",
+                "xray:PutTelemetryRecords",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoteBoardGameTable4368E79C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoteBoardGameTable4368E79C",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "VoteBoardGameTable4368E79C",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "VoteBoardGameTable4368E79C",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "BatchLambdaRoleDefaultPolicy3F25F2CB",
+        "Roles": [
+          {
+            "Ref": "BatchLambdaRole6C54EF21",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CriticalAlertTopicA6C95D9D": {
+      "Properties": {
+        "DisplayName": "Vote Board Game Critical Alerts",
+        "TopicName": "vbg-prod-critical-alerts",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "DailyBatchSchedule": {
+      "Properties": {
+        "Description": "日次バッチ処理（投票集計・次の一手決定・AI候補生成）",
+        "FlexibleTimeWindow": {
+          "Mode": "OFF",
+        },
+        "Name": "vbg-prod-schedule-daily-batch",
+        "ScheduleExpression": "cron(0 15 * * ? *)",
+        "ScheduleExpressionTimezone": "UTC",
+        "Target": {
+          "Arn": {
+            "Fn::GetAtt": [
+              "BatchFunction768110B6",
+              "Arn",
+            ],
+          },
+          "RoleArn": {
+            "Fn::GetAtt": [
+              "SchedulerRole59E73443",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Scheduler::Schedule",
+    },
+    "DynamoDBLatencyAlarmD01CD38E": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "WarningAlertTopicF3646732",
+          },
+        ],
+        "AlarmDescription": "DynamoDB のレイテンシ（p99）が 100ms を超えています",
+        "AlarmName": "vbg-prod-dynamodb-latency",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 3,
+        "Dimensions": [
+          {
+            "Name": "Operation",
+            "Value": "GetItem",
+          },
+          {
+            "Name": "TableName",
+            "Value": {
+              "Ref": "VoteBoardGameTable4368E79C",
+            },
+          },
+        ],
+        "EvaluationPeriods": 3,
+        "ExtendedStatistic": "p99",
+        "MetricName": "SuccessfulRequestLatency",
+        "Namespace": "AWS/DynamoDB",
+        "Period": 300,
+        "Threshold": 100,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "DynamoDBSystemErrorAlarm657F368E": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "CriticalAlertTopicA6C95D9D",
+          },
+        ],
+        "AlarmDescription": "DynamoDB でシステムエラーが発生しています",
+        "AlarmName": "vbg-prod-dynamodb-system-error",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "TableName",
+            "Value": {
+              "Ref": "VoteBoardGameTable4368E79C",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "SystemErrors",
+        "Namespace": "AWS/DynamoDB",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "DynamoDBUserErrorAlarmDB14046F": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "WarningAlertTopicF3646732",
+          },
+        ],
+        "AlarmDescription": "DynamoDB でユーザーエラーが多発しています",
+        "AlarmName": "vbg-prod-dynamodb-user-error",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 2,
+        "Dimensions": [
+          {
+            "Name": "TableName",
+            "Value": {
+              "Ref": "VoteBoardGameTable4368E79C",
+            },
+          },
+        ],
+        "EvaluationPeriods": 2,
+        "MetricName": "UserErrors",
+        "Namespace": "AWS/DynamoDB",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 10,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "HttpApiDELETEproxyApiLambdaIntegrationPermission3862360F": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiDELETEproxyED63FCD8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "DELETE /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiDefaultStage3EEB07D6": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AutoDeploy": true,
+        "StageName": "$default",
+      },
+      "Type": "AWS::ApiGatewayV2::Stage",
+    },
+    "HttpApiF5A9A8A7": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "CorsConfiguration": {
+          "AllowCredentials": true,
+          "AllowHeaders": [
+            "Content-Type",
+            "Authorization",
+          ],
+          "AllowMethods": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS",
+          ],
+          "AllowOrigins": [
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Fn::GetAtt": [
+                      "WebDistribution59C46482",
+                      "DomainName",
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+          "MaxAge": 3600,
+        },
+        "Description": "Vote Board Game API - prod",
+        "Name": "vbg-prod-apigateway-main",
+        "ProtocolType": "HTTP",
+      },
+      "Type": "AWS::ApiGatewayV2::Api",
+    },
+    "HttpApiGEThealthAB1F4856": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /health",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiGEThealthApiLambdaIntegrationPermission18F08784": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/health",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiGETproxyApiLambdaIntegrationFBF9B93D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "PayloadFormatVersion": "2.0",
+      },
+      "Type": "AWS::ApiGatewayV2::Integration",
+    },
+    "HttpApiGETproxyApiLambdaIntegrationPermission0732BF61": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiGETproxyC12F9FC6": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiPATCHproxyApiLambdaIntegrationPermission6844B8C1": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiPATCHproxyE9D7FFDC": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "PATCH /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiPOSTproxyApiLambdaIntegrationPermission909E7F90": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "HttpApiPOSTproxyCBD28088": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "POST /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiPUTproxy52C9B2AF": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApiF5A9A8A7",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "PUT /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "HttpApiGETproxyApiLambdaIntegrationFBF9B93D",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "HttpApiPUTproxyApiLambdaIntegrationPermission86BC9EAC": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-APIG1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+OCouOCr+OCu+OCueODreOCsOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+            {
+              "id": "AwsSolutions-APIG4",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBr+iqjeiovOOBquOBl+OBruODkeODluODquODg+OCryBBUEkg44Go44GX44Gm5a6f6KOF44CC5bCG5p2l55qE44GrIENvZ25pdG8gSldUIEF1dGhvcml6ZXIg44KS5a6f6KOF5LqI5a6a44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ApiFunctionCE271BD4",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "LogBucketCC3B17E8": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AccessControl": "LogDeliveryWrite",
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": {
+          "Fn::Join": [
+            "",
+            [
+              "vbg-prod-s3-logs-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+            ],
+          ],
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LogBucketPolicy900DBE48": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "LogBucketCC3B17E8",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "LogBucketCC3B17E8",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "LogBucketCC3B17E8",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+      "DependsOn": [
+        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip",
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+              "id": "AwsSolutions-IAM4",
+              "is_reason_encoded": true,
+              "reason": "TG9nUmV0ZW50aW9uIExhbWJkYSDjga8gQ0RLIOOBjOiHquWLleeUn+aIkOOAgkFXUyDjg57jg43jg7zjgrjjg4njg53jg6rjgrfjg7zjgpLkvb/nlKjjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                "Resource::*",
+              ],
+              "id": "AwsSolutions-IAM5",
+              "is_reason_encoded": true,
+              "reason": "TG9nUmV0ZW50aW9uIExhbWJkYSDjga8gQ0RLIOOBjOiHquWLleeUn+aIkOOAgkNsb3VkV2F0Y2ggTG9ncyDjgbjjga7jgqLjgq/jgrvjgrnjgasgd2lsZGNhcmQg44GM5b+F6KaB44CC",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:PutRetentionPolicy",
+                "logs:DeleteRetentionPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+        "Roles": [
+          {
+            "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SchedulerErrorAlarm02DF039E": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "CriticalAlertTopicA6C95D9D",
+          },
+        ],
+        "AlarmDescription": "EventBridge Scheduler の実行が失敗しました",
+        "AlarmName": "vbg-prod-scheduler-error",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "ScheduleName",
+            "Value": "vbg-prod-schedule-daily-batch",
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "TargetErrorCount",
+        "Namespace": "AWS/Scheduler",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "SchedulerRole59E73443": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                {
+                  "regex": "/^Resource::<BatchFunction.*\\.Arn>:\\*$/g",
+                },
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda invoke permission requires wildcard for function versions and aliases",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "scheduler.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RoleName": "vbg-prod-iam-scheduler-role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SchedulerRoleDefaultPolicy66F774B8": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "applies_to": [
+                {
+                  "regex": "/^Resource::<BatchFunction.*\\.Arn>:\\*$/g",
+                },
+              ],
+              "id": "AwsSolutions-IAM5",
+              "reason": "Lambda invoke permission requires wildcard for function versions and aliases",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "BatchFunction768110B6",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "BatchFunction768110B6",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SchedulerRoleDefaultPolicy66F774B8",
+        "Roles": [
+          {
+            "Ref": "SchedulerRole59E73443",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UserPool6BA7E5F2": {
+      "DeletionPolicy": "Retain",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-COG2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBNRkEg44Gv44Kq44OX44K344On44OK44Or44CC44Om44O844K244O85L2T6aiT44KS5YSq5YWI44GX44CB5bCG5p2l55qE44Gr5b+F6aCI5YyW44KS5qSc6KiO44CC",
+            },
+            {
+              "id": "AwsSolutions-COG3",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBBZHZhbmNlZCBTZWN1cml0eSBNb2RlIOOBr+S4jeimgeOAguWwhuadpeeahOOBq+ODiOODqeODleOCo+ODg+OCr+Wil+WKoOaZguOBq+Wun+ijheOAgg==",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AccountRecoverySetting": {
+          "RecoveryMechanisms": [
+            {
+              "Name": "verified_email",
+              "Priority": 1,
+            },
+          ],
+        },
+        "AdminCreateUserConfig": {
+          "AllowAdminCreateUserOnly": false,
+        },
+        "AutoVerifiedAttributes": [
+          "email",
+        ],
+        "EmailVerificationMessage": "The verification code to your new account is {####}",
+        "EmailVerificationSubject": "Verify your new account",
+        "EnabledMfas": [
+          "SOFTWARE_TOKEN_MFA",
+        ],
+        "MfaConfiguration": "OPTIONAL",
+        "Policies": {
+          "PasswordPolicy": {
+            "MinimumLength": 8,
+            "RequireLowercase": true,
+            "RequireNumbers": true,
+            "RequireSymbols": false,
+            "RequireUppercase": true,
+          },
+        },
+        "Schema": [
+          {
+            "Mutable": false,
+            "Name": "email",
+            "Required": true,
+          },
+          {
+            "AttributeDataType": "String",
+            "Mutable": true,
+            "Name": "username",
+            "StringAttributeConstraints": {
+              "MaxLength": "20",
+              "MinLength": "3",
+            },
+          },
+        ],
+        "SmsVerificationMessage": "The verification code to your new account is {####}",
+        "UserPoolName": "vbg-prod-cognito-main",
+        "UsernameAttributes": [
+          "email",
+        ],
+        "VerificationMessageTemplate": {
+          "DefaultEmailOption": "CONFIRM_WITH_CODE",
+          "EmailMessage": "The verification code to your new account is {####}",
+          "EmailSubject": "Verify your new account",
+          "SmsMessage": "The verification code to your new account is {####}",
+        },
+      },
+      "Type": "AWS::Cognito::UserPool",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "UserPoolClient2F5918F7": {
+      "Properties": {
+        "AccessTokenValidity": 60,
+        "AllowedOAuthFlows": [
+          "implicit",
+          "code",
+        ],
+        "AllowedOAuthFlowsUserPoolClient": true,
+        "AllowedOAuthScopes": [
+          "profile",
+          "phone",
+          "email",
+          "openid",
+          "aws.cognito.signin.user.admin",
+        ],
+        "CallbackURLs": [
+          "https://example.com",
+        ],
+        "ClientName": "vbg-prod-cognito-client",
+        "EnableTokenRevocation": true,
+        "ExplicitAuthFlows": [
+          "ALLOW_USER_PASSWORD_AUTH",
+          "ALLOW_USER_SRP_AUTH",
+          "ALLOW_REFRESH_TOKEN_AUTH",
+        ],
+        "GenerateSecret": false,
+        "IdTokenValidity": 60,
+        "PreventUserExistenceErrors": "ENABLED",
+        "RefreshTokenValidity": 43200,
+        "SupportedIdentityProviders": [
+          "COGNITO",
+        ],
+        "TokenValidityUnits": {
+          "AccessToken": "minutes",
+          "IdToken": "minutes",
+          "RefreshToken": "minutes",
+        },
+        "UserPoolId": {
+          "Ref": "UserPool6BA7E5F2",
+        },
+      },
+      "Type": "AWS::Cognito::UserPoolClient",
+    },
+    "VoteBoardGameTable4368E79C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "PK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "SK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "GSI1PK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "GSI1SK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "GSI2PK",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "GSI2SK",
+            "AttributeType": "S",
+          },
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "GSI1",
+            "KeySchema": [
+              {
+                "AttributeName": "GSI1PK",
+                "KeyType": "HASH",
+              },
+              {
+                "AttributeName": "GSI1SK",
+                "KeyType": "RANGE",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+          },
+          {
+            "IndexName": "GSI2",
+            "KeySchema": [
+              {
+                "AttributeName": "GSI2PK",
+                "KeyType": "HASH",
+              },
+              {
+                "AttributeName": "GSI2SK",
+                "KeyType": "RANGE",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+          },
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "PK",
+            "KeyType": "HASH",
+          },
+          {
+            "AttributeName": "SK",
+            "KeyType": "RANGE",
+          },
+        ],
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true,
+        },
+        "SSESpecification": {
+          "SSEEnabled": true,
+        },
+        "TableName": "vbg-prod-dynamodb-main",
+        "TimeToLiveSpecification": {
+          "AttributeName": "expiresAt",
+          "Enabled": true,
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "WarningAlertTopicF3646732": {
+      "Properties": {
+        "DisplayName": "Vote Board Game Warning Alerts",
+        "TopicName": "vbg-prod-warning-alerts",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "WebBucket12880F5B": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": {
+          "Fn::Join": [
+            "",
+            [
+              "vbg-prod-s3-web-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+            ],
+          ],
+        },
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Ref": "LogBucketCC3B17E8",
+          },
+          "LogFilePrefix": "web-bucket-logs/",
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "WebBucketPolicy95D08FAA": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "WebBucket12880F5B",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "WebBucket12880F5B",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "WebBucket12880F5B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "s3:GetObject",
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":cloudfront::",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":distribution/",
+                        {
+                          "Ref": "WebDistribution59C46482",
+                        },
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudfront.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "WebBucket12880F5B",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "WebDistribution59C46482": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CFR1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR4",
+              "is_reason_encoded": true,
+              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "DistributionConfig": {
+          "CustomErrorResponses": [
+            {
+              "ErrorCode": 404,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/404.html",
+            },
+          ],
+          "DefaultCacheBehavior": {
+            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+            "Compress": true,
+            "TargetOriginId": "TestStackWebDistributionOrigin18DCD5D1F",
+            "ViewerProtocolPolicy": "redirect-to-https",
+          },
+          "DefaultRootObject": "index.html",
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Logging": {
+            "Bucket": {
+              "Fn::GetAtt": [
+                "LogBucketCC3B17E8",
+                "RegionalDomainName",
+              ],
+            },
+            "Prefix": "cloudfront-logs/",
+          },
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "WebBucket12880F5B",
+                  "RegionalDomainName",
+                ],
+              },
+              "Id": "TestStackWebDistributionOrigin18DCD5D1F",
+              "OriginAccessControlId": {
+                "Fn::GetAtt": [
+                  "WebDistributionOrigin1S3OriginAccessControl83AD2F73",
+                  "Id",
+                ],
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": "",
+              },
+            },
+          ],
+        },
+      },
+      "Type": "AWS::CloudFront::Distribution",
+    },
+    "WebDistributionOrigin1S3OriginAccessControl83AD2F73": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CFR1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR4",
+              "is_reason_encoded": true,
+              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": "TestStackWebDistributionOrigin1S3OriginAccessControl6862C29B",
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4",
+        },
+      },
+      "Type": "AWS::CloudFront::OriginAccessControl",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;

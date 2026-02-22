@@ -10,6 +10,3 @@ dist/
 
 # Coverage
 coverage/
-
-# Snapshots
-**/__snapshots__/
