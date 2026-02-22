@@ -5,6 +5,7 @@ import {
   loginSchema,
   refreshSchema,
   passwordResetRequestSchema,
+  passwordResetConfirmSchema,
 } from './auth-schemas.js';
 
 /**
@@ -1542,6 +1543,288 @@ describe('Feature: 4-password-reset-api, Property 1: パスワードリセット
           return true;
         }
       ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+/**
+ * Feature: 4-password-reset-api, Property 5: パスワードリセット確認のフィールド検証
+ *
+ * **Validates: Requirements 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 5.1, 5.2, 5.3, 5.4, 5.5**
+ *
+ * 任意のリクエストボディに対して、email、confirmationCode、newPasswordのいずれかが欠落、空、
+ * または無効な形式（emailが無効形式、confirmationCodeが6桁数字でない、newPasswordがパスワードポリシー不適合）
+ * の場合、passwordResetConfirmSchemaのバリデーションは失敗すべきです。
+ * すべてのフィールドが有効な場合、バリデーションは成功すべきです。
+ */
+describe('Feature: 4-password-reset-api, Property 5: パスワードリセット確認のフィールド検証', () => {
+  // 有効なメールアドレスジェネレーター
+  const validEmailArb = fc.emailAddress();
+
+  // 有効な6桁確認コードジェネレーター
+  const validCodeArb = fc
+    .integer({ min: 0, max: 999999 })
+    .map((n) => n.toString().padStart(6, '0'));
+
+  // 有効なパスワードジェネレーター（ポリシー適合: 8文字以上、大文字・小文字・数字を含む）
+  const validPasswordArb = fc
+    .tuple(
+      fc.integer({ min: 0, max: 25 }),
+      fc.integer({ min: 0, max: 25 }),
+      fc.integer({ min: 0, max: 9 }),
+      fc.stringMatching(/^[a-zA-Z0-9]{2,10}$/)
+    )
+    .map(([upperIdx, lowerIdx, num, extra]) => {
+      const upper = String.fromCharCode(65 + upperIdx);
+      const lower = String.fromCharCode(97 + lowerIdx);
+      return `${upper}${lower}${num}${extra}Pass1`;
+    });
+
+  // 無効な確認コードジェネレーター（6桁数字でない文字列）
+  const invalidCodeArb = fc.oneof(
+    // 数字だが6桁でない（短い）
+    fc.integer({ min: 0, max: 99999 }).map((n) => n.toString()),
+    // 数字だが7桁以上
+    fc.integer({ min: 1000000, max: 9999999 }).map((n) => n.toString()),
+    // アルファベットを含む
+    fc
+      .tuple(fc.stringMatching(/^[a-zA-Z]{1,3}$/), fc.stringMatching(/^[0-9]{1,3}$/))
+      .map(([letters, digits]) => letters + digits),
+    // 特殊文字を含む
+    fc.constant('12345!'),
+    fc.constant('12 345'),
+    // 空白を含む
+    fc.constant(' 12345')
+  );
+
+  // 無効なパスワードジェネレーター（ポリシー不適合）
+  const invalidPasswordArb = fc.oneof(
+    // 8文字未満
+    fc.string({ minLength: 1, maxLength: 7 }),
+    // 大文字なし（小文字と数字のみ）
+    fc
+      .tuple(fc.stringMatching(/^[a-z]{4,8}$/), fc.stringMatching(/^[0-9]{2,4}$/))
+      .map(([letters, numbers]) => letters + numbers),
+    // 小文字なし（大文字と数字のみ）
+    fc
+      .tuple(fc.stringMatching(/^[A-Z]{4,8}$/), fc.stringMatching(/^[0-9]{2,4}$/))
+      .map(([letters, numbers]) => letters + numbers),
+    // 数字なし（大文字と小文字のみ）
+    fc
+      .tuple(fc.stringMatching(/^[A-Z]{4,8}$/), fc.stringMatching(/^[a-z]{2,4}$/))
+      .map(([upper, lower]) => upper + lower)
+  );
+
+  // 無効なメールアドレスジェネレーター
+  const invalidEmailArb = fc.oneof(
+    // @記号がない
+    fc.string({ minLength: 1, maxLength: 50 }).filter((s) => !s.includes('@') && !s.includes(' ')),
+    // ドメインにドットがない
+    fc
+      .tuple(
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => !s.includes('@') && !s.includes(' ')),
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => !s.includes('.') && !s.includes('@') && !s.includes(' '))
+      )
+      .map(([local, domain]) => `${local}@${domain}`),
+    // スペースを含む
+    fc
+      .tuple(fc.string({ minLength: 1, maxLength: 15 }), fc.string({ minLength: 1, maxLength: 15 }))
+      .map(([a, b]) => `${a} ${b}@example.com`)
+  );
+
+  it('should reject requests with invalid confirmation codes (not 6-digit numbers)', () => {
+    fc.assert(
+      fc.property(validEmailArb, invalidCodeArb, validPasswordArb, (email, code, password) => {
+        const result = passwordResetConfirmSchema.safeParse({
+          email,
+          confirmationCode: code,
+          newPassword: password,
+        });
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          const codeError = result.error.issues.find(
+            (issue) => issue.path[0] === 'confirmationCode'
+          );
+          expect(codeError).toBeDefined();
+          if (codeError) {
+            expect(codeError.message).toBe('Confirmation code must be 6 digits');
+          }
+        }
+
+        return true;
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should reject requests with passwords not meeting policy (no uppercase, no lowercase, no number, or < 8 chars)', () => {
+    fc.assert(
+      fc.property(validEmailArb, validCodeArb, invalidPasswordArb, (email, code, password) => {
+        const result = passwordResetConfirmSchema.safeParse({
+          email,
+          confirmationCode: code,
+          newPassword: password,
+        });
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          const passwordError = result.error.issues.find(
+            (issue) => issue.path[0] === 'newPassword'
+          );
+          expect(passwordError).toBeDefined();
+          if (passwordError) {
+            expect(
+              passwordError.message.includes('at least 8 characters') ||
+                passwordError.message.includes('uppercase') ||
+                passwordError.message.includes('lowercase') ||
+                passwordError.message.includes('number')
+            ).toBe(true);
+          }
+        }
+
+        return true;
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should reject requests with invalid email formats', () => {
+    fc.assert(
+      fc.property(invalidEmailArb, validCodeArb, validPasswordArb, (email, code, password) => {
+        const result = passwordResetConfirmSchema.safeParse({
+          email,
+          confirmationCode: code,
+          newPassword: password,
+        });
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          const emailError = result.error.issues.find((issue) => issue.path[0] === 'email');
+          expect(emailError).toBeDefined();
+          if (emailError) {
+            expect(emailError.message).toBe('Invalid email format');
+          }
+        }
+
+        return true;
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should reject requests with missing fields', () => {
+    fc.assert(
+      fc.property(
+        // 少なくとも1つのフィールドが欠落するオブジェクトを生成
+        fc.oneof(
+          // emailが欠落
+          fc.record({
+            confirmationCode: validCodeArb,
+            newPassword: validPasswordArb,
+          }),
+          // confirmationCodeが欠落
+          fc.record({
+            email: validEmailArb,
+            newPassword: validPasswordArb,
+          }),
+          // newPasswordが欠落
+          fc.record({
+            email: validEmailArb,
+            confirmationCode: validCodeArb,
+          }),
+          // すべて欠落
+          fc.constant({})
+        ),
+        (data) => {
+          const result = passwordResetConfirmSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const errorMessages = result.error.issues.map((issue) => issue.message);
+            const hasRequiredError = errorMessages.some(
+              (msg) =>
+                msg.includes('required') ||
+                msg === 'Email is required' ||
+                msg === 'Confirmation code is required' ||
+                msg === 'New password is required'
+            );
+            expect(hasRequiredError).toBe(true);
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should reject requests with empty fields', () => {
+    fc.assert(
+      fc.property(
+        // 少なくとも1つのフィールドが空文字列のオブジェクトを生成
+        fc.oneof(
+          // emailが空
+          fc.tuple(validCodeArb, validPasswordArb).map(([code, pw]) => ({
+            email: '',
+            confirmationCode: code,
+            newPassword: pw,
+          })),
+          // confirmationCodeが空
+          fc.tuple(validEmailArb, validPasswordArb).map(([email, pw]) => ({
+            email,
+            confirmationCode: '',
+            newPassword: pw,
+          })),
+          // newPasswordが空
+          fc.tuple(validEmailArb, validCodeArb).map(([email, code]) => ({
+            email,
+            confirmationCode: code,
+            newPassword: '',
+          }))
+        ),
+        (data) => {
+          const result = passwordResetConfirmSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const errorMessages = result.error.issues.map((issue) => issue.message);
+            const hasValidationError = errorMessages.some(
+              (msg) =>
+                msg.includes('required') ||
+                msg === 'Email is required' ||
+                msg === 'Confirmation code is required' ||
+                msg === 'New password is required' ||
+                msg === 'Confirmation code must be 6 digits'
+            );
+            expect(hasValidationError).toBe(true);
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should accept requests with valid email, 6-digit code, and policy-compliant password', () => {
+    fc.assert(
+      fc.property(validEmailArb, validCodeArb, validPasswordArb, (email, code, password) => {
+        const result = passwordResetConfirmSchema.safeParse({
+          email,
+          confirmationCode: code,
+          newPassword: password,
+        });
+
+        expect(result.success).toBe(true);
+
+        return true;
+      }),
       { numRuns: 100 }
     );
   });
