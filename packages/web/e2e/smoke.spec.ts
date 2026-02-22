@@ -13,14 +13,16 @@ test.describe('Smoke Tests', () => {
     expect(title.length).toBeGreaterThan(0);
   });
 
-  test('homepage has interactive elements', async ({ page }) => {
+  test('homepage has main content', async ({ page }) => {
     await page.goto('/');
 
-    // ボタンまたはリンクが少なくとも1つ存在
-    const buttons = await page.locator('button').count();
-    const links = await page.locator('a').count();
-    const totalInteractive = buttons + links;
+    // 見出しが存在することを確認
+    const heading = page.locator('h1');
+    await expect(heading).toBeVisible();
+    await expect(heading).toContainText('投票ボードゲーム');
 
-    expect(totalInteractive).toBeGreaterThan(0);
+    // 説明文が存在することを確認
+    const description = page.locator('p');
+    await expect(description).toBeVisible();
   });
 });

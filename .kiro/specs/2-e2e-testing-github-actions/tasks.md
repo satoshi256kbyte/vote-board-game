@@ -6,7 +6,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
 
 ## Tasks
 
-- [-] 1. Setup Playwright in web package
+- [x] 1. Setup Playwright in web package
   - Install @playwright/test as dev dependency in packages/web
   - Create playwright.config.ts with Chromium browser configuration
   - Configure BASE_URL from environment variable with validation
@@ -19,7 +19,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
   - Update .gitignore to exclude Playwright artifacts
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [-] 1.1 Write unit tests for Playwright configuration
+- [x] 1.1 Write unit tests for Playwright configuration
   - Create playwright.config.test.ts
   - Test BASE_URL environment variable validation
   - Test CI environment detection for headless mode
@@ -57,7 +57,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
   - Add "playwright:install" script to install Chromium with dependencies
   - _Requirements: 4.1, 4.2_
 
-- [ ] 4. Integrate E2E tests into CD pipeline
+- [x] 4. Integrate E2E tests into CD pipeline
   - [x] 4.1 Modify deploy-reusable.yml to output CloudFront URL
     - Add cloudfront-url to job outputs
     - Calculate CloudFront URL from distribution ID
@@ -105,7 +105,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
     - Confirm workflow status reflects E2E test results
     - _Requirements: 3.5_
 
-- [~] 5. Checkpoint - Verify E2E integration
+- [x] 5. Checkpoint - Verify E2E integration
   - Ensure all tests pass locally with BASE_URL set
   - Verify Playwright configuration loads correctly
   - Test that npm scripts work as expected
