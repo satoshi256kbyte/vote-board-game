@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { registerSchema, loginSchema, refreshSchema } from './auth-schemas.js';
+import {
+  registerSchema,
+  loginSchema,
+  refreshSchema,
+  passwordResetRequestSchema,
+} from './auth-schemas.js';
 
 /**
  * Feature: user-registration-api
@@ -1399,6 +1404,145 @@ describe('Property 4 (Refresh): リフレッシュトークンバリデーショ
         }
       ),
       { numRuns: 20 }
+    );
+  });
+});
+
+/**
+ * Feature: 4-password-reset-api, Property 1: パスワードリセット要求のemail検証
+ *
+ * **Validates: Requirements 1.2, 1.3, 1.4**
+ *
+ * 任意のリクエストボディに対して、emailフィールドが欠落、空、または有効なメール形式でない場合、
+ * passwordResetRequestSchemaのバリデーションは失敗すべきです。
+ * 有効なメール形式の場合、バリデーションは成功すべきです。
+ */
+describe('Feature: 4-password-reset-api, Property 1: パスワードリセット要求のemail検証', () => {
+  // 無効なメールアドレスを生成するジェネレーター（RFC 5322簡易版に基づく）
+  const invalidEmailGenerator = fc.oneof(
+    // @記号がない
+    fc.string({ minLength: 1, maxLength: 50 }).filter((s) => !s.includes('@') && !s.includes(' ')),
+    // @記号の後が空（ドメインなし）
+    fc
+      .string({ minLength: 1, maxLength: 50 })
+      .filter((s) => !s.includes('@') && !s.includes(' '))
+      .map((s) => `${s}@`),
+    // ドメインにドットがない
+    fc
+      .tuple(
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => !s.includes('@') && !s.includes(' ')),
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => !s.includes('.') && !s.includes('@') && !s.includes(' '))
+      )
+      .map(([local, domain]) => `${local}@${domain}`),
+    // スペースを含む
+    fc
+      .tuple(fc.string({ minLength: 1, maxLength: 15 }), fc.string({ minLength: 1, maxLength: 15 }))
+      .map(([a, b]) => `${a} ${b}@example.com`),
+    // 複数の@記号
+    fc
+      .tuple(
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => !s.includes('@') && !s.includes(' ')),
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => !s.includes('@') && !s.includes(' '))
+      )
+      .map(([a, b]) => `${a}@@${b}.com`)
+  );
+
+  it('should reject requests with invalid email formats', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: invalidEmailGenerator,
+        }),
+        (data) => {
+          const result = passwordResetRequestSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+
+          if (!result.success) {
+            const emailError = result.error.issues.find((issue) => issue.path[0] === 'email');
+            expect(emailError).toBeDefined();
+            if (emailError) {
+              expect(emailError.message).toBe('Invalid email format');
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should reject requests with missing email field', () => {
+    fc.assert(
+      fc.property(
+        // emailフィールドを含まないオブジェクトを生成
+        fc.record({
+          someOtherField: fc.option(fc.string({ maxLength: 50 }), { nil: undefined }),
+        }),
+        (data) => {
+          const result = passwordResetRequestSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const emailError = result.error.issues.find((issue) => issue.path[0] === 'email');
+            expect(emailError).toBeDefined();
+            expect(emailError?.message).toBe('Email is required');
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should reject requests with empty email field', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.constant(''),
+        }),
+        (data) => {
+          const result = passwordResetRequestSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const emailError = result.error.issues.find((issue) => issue.path[0] === 'email');
+            expect(emailError).toBeDefined();
+            expect(emailError?.message).toBe('Email is required');
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should accept requests with valid email formats', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          email: fc.emailAddress(),
+        }),
+        (data) => {
+          const result = passwordResetRequestSchema.safeParse(data);
+
+          expect(result.success).toBe(true);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
     );
   });
 });
