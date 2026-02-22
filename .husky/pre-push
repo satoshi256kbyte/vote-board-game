@@ -1,6 +1,26 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+echo "📝 Running format check..."
+if ! pnpm format:check; then
+  echo "❌ Format check failed"
+  echo "Run 'pnpm format' to fix formatting issues"
+  exit 1
+fi
+
+echo "✅ Format check passed"
+echo ""
+
+echo "📄 Running markdown lint..."
+if ! pnpm lint:md; then
+  echo "❌ Markdown lint failed"
+  echo "Run 'pnpm lint:md:fix' to fix markdown issues"
+  exit 1
+fi
+
+echo "✅ Markdown lint passed"
+echo ""
+
 echo "🔍 Running type check..."
 if ! pnpm type-check; then
   echo "❌ Type check failed"
