@@ -58,3 +58,37 @@ export const refreshSchema = z.object({
 });
 
 export type RefreshInput = z.infer<typeof refreshSchema>;
+
+// パスワードリセット要求スキーマ
+export const passwordResetRequestSchema = z.object({
+  email: z
+    .string({ required_error: 'Email is required' })
+    .min(1, 'Email is required')
+    .regex(emailRegex, 'Invalid email format'),
+});
+
+export type PasswordResetRequestInput = z.infer<typeof passwordResetRequestSchema>;
+
+// 確認コードの正規表現（6桁の数字）
+const confirmationCodeRegex = /^\d{6}$/;
+
+// パスワードリセット確認スキーマ
+export const passwordResetConfirmSchema = z.object({
+  email: z
+    .string({ required_error: 'Email is required' })
+    .min(1, 'Email is required')
+    .regex(emailRegex, 'Invalid email format'),
+  confirmationCode: z
+    .string({ required_error: 'Confirmation code is required' })
+    .min(1, 'Confirmation code is required')
+    .regex(confirmationCodeRegex, 'Confirmation code must be 6 digits'),
+  newPassword: z
+    .string({ required_error: 'New password is required' })
+    .min(1, 'New password is required')
+    .refine(validatePassword, {
+      message:
+        'Password must be at least 8 characters and contain uppercase, lowercase, and number',
+    }),
+});
+
+export type PasswordResetConfirmInput = z.infer<typeof passwordResetConfirmSchema>;
