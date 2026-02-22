@@ -4,6 +4,8 @@ import {
   SignUpCommand,
   InitiateAuthCommand,
   AdminDeleteUserCommand,
+  ForgotPasswordCommand,
+  ConfirmForgotPasswordCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 // CognitoIdentityProviderClientをモック
@@ -516,6 +518,207 @@ describe('CognitoService', () => {
 
         // Act & Assert
         await expect(service.refreshTokens(refreshToken)).rejects.toThrow('Token refresh failed');
+      });
+    });
+  });
+
+  describe('forgotPassword', () => {
+    describe('成功ケース', () => {
+      it('有効なメールアドレスで確認コード送信を要求する', async () => {
+        // Arrange
+        const email = 'reset@example.com';
+        mockSend.mockResolvedValueOnce({});
+
+        // Act
+        await service.forgotPassword(email);
+
+        // Assert
+        expect(mockSend).toHaveBeenCalledTimes(1);
+        const forgotPasswordCommand = mockSend.mock.calls[0][0];
+        expect(forgotPasswordCommand).toBeInstanceOf(ForgotPasswordCommand);
+        expect(forgotPasswordCommand.input).toEqual({
+          ClientId: 'test-client-id',
+          Username: email,
+        });
+      });
+
+      it('forgotPasswordが成功した場合は何も返さない', async () => {
+        // Arrange
+        const email = 'void@example.com';
+        mockSend.mockResolvedValueOnce({});
+
+        // Act
+        const result = await service.forgotPassword(email);
+
+        // Assert
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe('失敗ケース', () => {
+      it('UserNotFoundExceptionの場合はエラーをスローする', async () => {
+        // Arrange
+        const email = 'notfound@example.com';
+
+        const userNotFoundError = new Error('User does not exist');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (userNotFoundError as any).name = 'UserNotFoundException';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (userNotFoundError as any).code = 'UserNotFoundException';
+
+        mockSend.mockRejectedValueOnce(userNotFoundError);
+
+        // Act & Assert
+        await expect(service.forgotPassword(email)).rejects.toThrow('User does not exist');
+        expect(mockSend).toHaveBeenCalledTimes(1);
+      });
+
+      it('UserNotFoundExceptionのエラー名が正しく伝播される', async () => {
+        // Arrange
+        const email = 'unknown@example.com';
+
+        const userNotFoundError = new Error('User does not exist');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (userNotFoundError as any).name = 'UserNotFoundException';
+
+        mockSend.mockRejectedValueOnce(userNotFoundError);
+
+        // Act & Assert
+        try {
+          await service.forgotPassword(email);
+          expect.fail('Should have thrown an error');
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          expect(error.name).toBe('UserNotFoundException');
+        }
+      });
+    });
+  });
+
+  describe('confirmForgotPassword', () => {
+    describe('成功ケース', () => {
+      it('有効なパラメータでパスワードをリセットする', async () => {
+        // Arrange
+        const email = 'reset@example.com';
+        const confirmationCode = '123456';
+        const newPassword = 'NewPassword1';
+        mockSend.mockResolvedValueOnce({});
+
+        // Act
+        await service.confirmForgotPassword(email, confirmationCode, newPassword);
+
+        // Assert
+        expect(mockSend).toHaveBeenCalledTimes(1);
+        const confirmCommand = mockSend.mock.calls[0][0];
+        expect(confirmCommand).toBeInstanceOf(ConfirmForgotPasswordCommand);
+        expect(confirmCommand.input).toEqual({
+          ClientId: 'test-client-id',
+          Username: email,
+          ConfirmationCode: confirmationCode,
+          Password: newPassword,
+        });
+      });
+
+      it('confirmForgotPasswordが成功した場合は何も返さない', async () => {
+        // Arrange
+        const email = 'success@example.com';
+        const confirmationCode = '654321';
+        const newPassword = 'SecurePass1';
+        mockSend.mockResolvedValueOnce({});
+
+        // Act
+        const result = await service.confirmForgotPassword(email, confirmationCode, newPassword);
+
+        // Assert
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe('失敗ケース', () => {
+      it('CodeMismatchExceptionの場合はエラーをスローする', async () => {
+        // Arrange
+        const email = 'mismatch@example.com';
+        const confirmationCode = '000000';
+        const newPassword = 'NewPassword1';
+
+        const codeMismatchError = new Error('Invalid verification code provided');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (codeMismatchError as any).name = 'CodeMismatchException';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (codeMismatchError as any).code = 'CodeMismatchException';
+
+        mockSend.mockRejectedValueOnce(codeMismatchError);
+
+        // Act & Assert
+        await expect(
+          service.confirmForgotPassword(email, confirmationCode, newPassword)
+        ).rejects.toThrow('Invalid verification code provided');
+        expect(mockSend).toHaveBeenCalledTimes(1);
+      });
+
+      it('CodeMismatchExceptionのエラー名が正しく伝播される', async () => {
+        // Arrange
+        const email = 'code@example.com';
+        const confirmationCode = '111111';
+        const newPassword = 'NewPassword1';
+
+        const codeMismatchError = new Error('Invalid verification code');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (codeMismatchError as any).name = 'CodeMismatchException';
+
+        mockSend.mockRejectedValueOnce(codeMismatchError);
+
+        // Act & Assert
+        try {
+          await service.confirmForgotPassword(email, confirmationCode, newPassword);
+          expect.fail('Should have thrown an error');
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          expect(error.name).toBe('CodeMismatchException');
+        }
+      });
+
+      it('ExpiredCodeExceptionの場合はエラーをスローする', async () => {
+        // Arrange
+        const email = 'expired@example.com';
+        const confirmationCode = '999999';
+        const newPassword = 'NewPassword1';
+
+        const expiredCodeError = new Error('Invalid code provided, please request a code again');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (expiredCodeError as any).name = 'ExpiredCodeException';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (expiredCodeError as any).code = 'ExpiredCodeException';
+
+        mockSend.mockRejectedValueOnce(expiredCodeError);
+
+        // Act & Assert
+        await expect(
+          service.confirmForgotPassword(email, confirmationCode, newPassword)
+        ).rejects.toThrow('Invalid code provided, please request a code again');
+        expect(mockSend).toHaveBeenCalledTimes(1);
+      });
+
+      it('ExpiredCodeExceptionのエラー名が正しく伝播される', async () => {
+        // Arrange
+        const email = 'expiredcode@example.com';
+        const confirmationCode = '888888';
+        const newPassword = 'NewPassword1';
+
+        const expiredCodeError = new Error('Code has expired');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (expiredCodeError as any).name = 'ExpiredCodeException';
+
+        mockSend.mockRejectedValueOnce(expiredCodeError);
+
+        // Act & Assert
+        try {
+          await service.confirmForgotPassword(email, confirmationCode, newPassword);
+          expect.fail('Should have thrown an error');
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          expect(error.name).toBe('ExpiredCodeException');
+        }
       });
     });
   });
