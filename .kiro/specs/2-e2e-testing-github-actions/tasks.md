@@ -58,7 +58,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
   - _Requirements: 4.1, 4.2_
 
 - [ ] 4. Integrate E2E tests into CD pipeline
-  - [~] 4.1 Modify deploy-reusable.yml to output CloudFront URL
+  - [x] 4.1 Modify deploy-reusable.yml to output CloudFront URL
     - Add cloudfront-url to job outputs
     - Calculate CloudFront URL from distribution ID
     - Export cloudfront-url in Extract CDK Outputs step

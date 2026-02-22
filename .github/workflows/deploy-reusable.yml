@@ -24,6 +24,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    outputs:
+      distribution-id: ${{ steps.cdk-outputs.outputs.distribution-id }}
+      cloudfront-url: ${{ steps.cdk-outputs.outputs.cloudfront-url }}
 
     steps:
       - name: Checkout
@@ -112,8 +115,13 @@ jobs:
           DISTRIBUTION_ID=$(jq -r '.[] | .DistributionId' packages/infra/cdk-outputs.json)
           API_URL=$(jq -r '.[] | .ApiUrl' packages/infra/cdk-outputs.json)
           API_LAMBDA_NAME=$(jq -r '.[] | .ApiLambdaFunctionName' packages/infra/cdk-outputs.json)
+
+          # Calculate CloudFront URL from distribution ID
+          CLOUDFRONT_URL="https://${DISTRIBUTION_ID}.cloudfront.net"
+
           echo "bucket-name=$BUCKET_NAME" >> $GITHUB_OUTPUT
           echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+          echo "cloudfront-url=$CLOUDFRONT_URL" >> $GITHUB_OUTPUT
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
           echo "api-lambda-name=$API_LAMBDA_NAME" >> $GITHUB_OUTPUT
 
