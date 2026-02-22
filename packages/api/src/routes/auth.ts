@@ -1,6 +1,10 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { registerSchema } from '../lib/validation/auth-schemas.js';
+import {
+  registerSchema,
+  passwordResetRequestSchema,
+  passwordResetConfirmSchema,
+} from '../lib/validation/auth-schemas.js';
 import { CognitoService } from '../lib/cognito/cognito-service.js';
 import { UserRepository } from '../lib/dynamodb/repositories/user.js';
 import { RateLimiter } from '../lib/rate-limiter.js';
@@ -151,6 +155,168 @@ authRouter.post(
         },
         500
       );
+    }
+  }
+);
+
+// エラー判定ヘルパー関数
+function isUserNotFoundException(error: unknown): boolean {
+  if (error && typeof error === 'object' && 'name' in error) {
+    return (error as { name: string }).name === 'UserNotFoundException';
+  }
+  return false;
+}
+
+function isInvalidCodeError(error: unknown): boolean {
+  if (error && typeof error === 'object' && 'name' in error) {
+    const name = (error as { name: string }).name;
+    return name === 'CodeMismatchException' || name === 'ExpiredCodeException';
+  }
+  return false;
+}
+
+// POST /auth/password-reset
+authRouter.post(
+  '/password-reset',
+  zValidator('json', passwordResetRequestSchema, (result, c) => {
+    if (!result.success) {
+      const fields: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const fieldName = issue.path.join('.');
+        fields[fieldName] = issue.message;
+      });
+      return c.json(
+        {
+          error: 'VALIDATION_ERROR',
+          message: 'Validation failed',
+          details: { fields },
+        },
+        400
+      );
+    }
+  }),
+  async (c) => {
+    const { email } = c.req.valid('json');
+    const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
+
+    // レート制限チェック（1分あたり3リクエスト）
+    const rateLimiter = new RateLimiter();
+    const isAllowed = await rateLimiter.checkLimit(ipAddress, 'password-reset');
+    if (!isAllowed) {
+      const retryAfter = await rateLimiter.getRetryAfter(ipAddress, 'password-reset');
+      return c.json(
+        {
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many password reset attempts',
+          retryAfter,
+        },
+        429
+      );
+    }
+
+    // リクエストログ
+    console.log('Password reset request', {
+      email: maskEmail(email),
+      ipAddress,
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      const cognitoService = new CognitoService();
+      await cognitoService.forgotPassword(email);
+
+      console.log('Password reset code sent', { timestamp: new Date().toISOString() });
+    } catch (error) {
+      // UserNotFoundExceptionを吸収して200を返す（アカウント列挙防止）
+      if (!isUserNotFoundException(error)) {
+        console.error('Password reset request failed', {
+          email: maskEmail(email),
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        });
+
+        return c.json({ error: 'INTERNAL_ERROR', message: 'Password reset failed' }, 500);
+      }
+    }
+
+    return c.json({ message: 'Password reset code has been sent' }, 200);
+  }
+);
+
+// POST /auth/password-reset/confirm
+authRouter.post(
+  '/password-reset/confirm',
+  zValidator('json', passwordResetConfirmSchema, (result, c) => {
+    if (!result.success) {
+      const fields: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const fieldName = issue.path.join('.');
+        fields[fieldName] = issue.message;
+      });
+      return c.json(
+        {
+          error: 'VALIDATION_ERROR',
+          message: 'Validation failed',
+          details: { fields },
+        },
+        400
+      );
+    }
+  }),
+  async (c) => {
+    const { email, confirmationCode, newPassword } = c.req.valid('json');
+    const ipAddress = c.req.header('x-forwarded-for') || 'unknown';
+
+    // レート制限チェック（1分あたり5リクエスト）
+    const rateLimiter = new RateLimiter();
+    const isAllowed = await rateLimiter.checkLimit(ipAddress, 'password-reset-confirm');
+    if (!isAllowed) {
+      const retryAfter = await rateLimiter.getRetryAfter(ipAddress, 'password-reset-confirm');
+      return c.json(
+        {
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many password reset attempts',
+          retryAfter,
+        },
+        429
+      );
+    }
+
+    // リクエストログ（パスワード・確認コード非出力）
+    console.log('Password reset confirm request', {
+      email: maskEmail(email),
+      ipAddress,
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      const cognitoService = new CognitoService();
+      await cognitoService.confirmForgotPassword(email, confirmationCode, newPassword);
+
+      console.log('Password reset successful', {
+        email: maskEmail(email),
+        timestamp: new Date().toISOString(),
+      });
+
+      return c.json({ message: 'Password has been reset successfully' }, 200);
+    } catch (error) {
+      console.error('Password reset confirm failed', {
+        email: maskEmail(email),
+        errorCode:
+          error && typeof error === 'object' && 'name' in error
+            ? (error as { name: string }).name
+            : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
+      if (isInvalidCodeError(error)) {
+        return c.json(
+          { error: 'INVALID_CODE', message: 'Invalid or expired confirmation code' },
+          400
+        );
+      }
+
+      return c.json({ error: 'INTERNAL_ERROR', message: 'Password reset failed' }, 500);
     }
   }
 );
