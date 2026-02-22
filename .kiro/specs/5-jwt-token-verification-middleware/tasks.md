@@ -77,7 +77,7 @@
 - [x] 5. チェックポイント - 基礎実装の確認
   - すべてのファイルが正しく作成され、型チェックが通ることを確認してください。質問があればユーザーに確認してください。
 
-- [-] 6. ユニットテスト
+- [x] 6. ユニットテスト
   - [x] 6.1 ミドルウェアのユニットテストを作成
     - `packages/api/src/lib/auth/auth-middleware.test.ts`を作成
     - Authorizationヘッダーなし→401 UNAUTHORIZED "Authorization header is required"
@@ -107,45 +107,45 @@
     - COGNITO_USER_POOL_ID未設定時にエラーがスローされることを検証
     - _要件: 8.5_
 
-- [ ] 7. プロパティベーステスト
-  - [~] 7.1 プロパティテスト: Bearerトークン抽出の正当性
+- [x] 7. プロパティベーステスト
+  - [x] 7.1 プロパティテスト: Bearerトークン抽出の正当性
     - `packages/api/src/lib/auth/auth-middleware.property.test.ts`を作成
     - **プロパティ1: Bearerトークン抽出の正当性**
     - 任意の文字列tokenに対して、`Bearer ${token}`から抽出した結果がtokenと一致
     - Bearer で始まらない任意の文字列に対して、抽出が失敗
     - fast-checkでランダムなトークン文字列を生成
     - **検証: 要件 1.1, 1.3**
-  - [~] 7.2 プロパティテスト: JWKSエンドポイントURL構築
+  - [x] 7.2 プロパティテスト: JWKSエンドポイントURL構築
     - `packages/api/src/lib/auth/auth-middleware.property.test.ts`に追加
     - **プロパティ2: JWKSエンドポイントURL構築**
     - 任意のregionとuserPoolIdに対して、正しいURL形式が生成される
     - **検証: 要件 2.1, 8.4**
-  - [~] 7.3 プロパティテスト: 署名検証の正当性
+  - [x] 7.3 プロパティテスト: 署名検証の正当性
     - `packages/api/src/lib/auth/auth-middleware.property.test.ts`に追加
     - **プロパティ3: 署名検証の正当性**
     - 正しい鍵で署名されたトークンは検証成功、異なる鍵で署名されたトークンは401
     - **検証: 要件 2.2, 2.3, 2.4**
-  - [~] 7.4 プロパティテスト: クレーム検証
+  - [x] 7.4 プロパティテスト: クレーム検証
     - `packages/api/src/lib/auth/auth-middleware.property.test.ts`に追加
     - **プロパティ4: クレーム検証**
     - issとtoken_useが正しいトークンは通過、不正なトークンは401
     - **検証: 要件 3.1, 3.2, 3.4, 3.5**
-  - [~] 7.5 プロパティテスト: 有効期限切れトークンのエラーコード区別
+  - [x] 7.5 プロパティテスト: 有効期限切れトークンのエラーコード区別
     - `packages/api/src/lib/auth/auth-middleware.property.test.ts`に追加
     - **プロパティ5: 有効期限切れトークンのエラーコード区別**
     - 期限切れトークンに対してTOKEN_EXPIREDが返る（UNAUTHORIZEDではない）
     - **検証: 要件 3.3, 3.6**
-  - [~] 7.6 プロパティテスト: 認証コンテキストのラウンドトリップ
+  - [x] 7.6 プロパティテスト: 認証コンテキストのラウンドトリップ
     - `packages/api/src/lib/auth/auth-middleware.property.test.ts`に追加
     - **プロパティ6: 認証コンテキストのラウンドトリップ**
     - 任意のクレーム値に対して、コンテキストから取得した値が元のクレーム値と一致
     - **検証: 要件 4.1, 4.2, 4.3, 4.4**
-  - [~] 7.7 プロパティテスト: エラーレスポンス形式の一貫性
+  - [x] 7.7 プロパティテスト: エラーレスポンス形式の一貫性
     - `packages/api/src/lib/auth/auth-middleware.property.test.ts`に追加
     - **プロパティ7: エラーレスポンス形式の一貫性**
     - 任意の認証エラーに対して、errorとmessageフィールドを含み、トークン情報を含まない
     - **検証: 要件 7.1, 7.2, 7.3, 7.4**
-  - [~] 7.8 プロパティテスト: ログセキュリティ
+  - [x] 7.8 プロパティテスト: ログセキュリティ
     - `packages/api/src/lib/auth/auth-middleware.property.test.ts`に追加
     - **プロパティ8: ログセキュリティ**
     - 任意のリクエストに対して、ログにトークン文字列・ペイロード全体が含まれない
