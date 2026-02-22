@@ -64,7 +64,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
     - Export cloudfront-url in Extract CDK Outputs step
     - _Requirements: 3.2_
 
-  - [~] 4.2 Create E2E test job in cd-development.yml
+  - [x] 4.2 Create E2E test job in cd-development.yml
     - Add e2e-tests job that depends on deploy-development
     - Configure job to run only on deployment success
     - Add checkout, pnpm setup, and Node.js setup steps
