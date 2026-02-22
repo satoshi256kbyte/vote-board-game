@@ -28,7 +28,7 @@
     - _要件: 4.2_
 
 - [ ] 3. Auth Contextの実装
-  - [~] 3.1 Auth Contextの実装
+  - [x] 3.1 Auth Contextの実装
     - `packages/web/src/lib/contexts/auth-context.tsx`を作成
     - ユーザー情報の状態管理（User型: userId, email, username）
     - AuthProviderコンポーネントの実装
