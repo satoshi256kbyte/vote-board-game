@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Remove Bold Formatting",
+  "description": "Automatically removes bold formatting (** **) from markdown files when edited",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Remove all bold formatting (text wrapped in **) from this markdown file. Replace **text** with just text throughout the file."
+  }
+}
