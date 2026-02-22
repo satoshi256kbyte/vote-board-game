@@ -15,6 +15,13 @@ on:
       AWS_ROLE_ARN:
         required: true
         description: 'AWS IAM Role ARN for OIDC authentication'
+    outputs:
+      cloudfront-url:
+        description: 'CloudFront distribution URL'
+        value: ${{ jobs.deploy.outputs.cloudfront-url }}
+      distribution-id:
+        description: 'CloudFront distribution ID'
+        value: ${{ jobs.deploy.outputs.distribution-id }}
 
 permissions:
   id-token: write
