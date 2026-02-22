@@ -763,4 +763,325 @@ describe('Auth Router', () => {
       });
     });
   });
+
+  describe('POST /auth/password-reset/confirm', () => {
+    const validRequest = {
+      email: 'test@example.com',
+      confirmationCode: '123456',
+      newPassword: 'NewPassword123',
+    };
+
+    describe('有効なリクエストの成功テスト', () => {
+      it('有効なリクエストで200ステータスと成功メッセージを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.confirmForgotPassword.mockResolvedValue(undefined);
+
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json).toEqual({
+          message: 'Password has been reset successfully',
+        });
+
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith(
+          'unknown',
+          'password-reset-confirm'
+        );
+        expect(mockCognitoService.confirmForgotPassword).toHaveBeenCalledWith(
+          'test@example.com',
+          '123456',
+          'NewPassword123'
+        );
+      });
+    });
+
+    describe('バリデーションエラーのテスト', () => {
+      it('emailが欠落している場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            confirmationCode: '123456',
+            newPassword: 'NewPassword123',
+          }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+        expect(json.message).toBe('Validation failed');
+        expect(json.details.fields).toBeDefined();
+      });
+
+      it('emailが無効な形式の場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'invalid-email',
+            confirmationCode: '123456',
+            newPassword: 'NewPassword123',
+          }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+        expect(json.details.fields.email).toBe('Invalid email format');
+      });
+
+      it('confirmationCodeが欠落している場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            newPassword: 'NewPassword123',
+          }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+      });
+
+      it('confirmationCodeが6桁数字でない場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            confirmationCode: 'abcdef',
+            newPassword: 'NewPassword123',
+          }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+        expect(json.details.fields.confirmationCode).toBe('Confirmation code must be 6 digits');
+      });
+
+      it('newPasswordが欠落している場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            confirmationCode: '123456',
+          }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+      });
+
+      it('newPasswordがポリシー不適合の場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            confirmationCode: '123456',
+            newPassword: 'weak',
+          }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+      });
+    });
+
+    describe('無効な確認コードのテスト（CodeMismatchException）', () => {
+      it('確認コードが不正な場合は400 INVALID_CODEを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Invalid verification code') as Error & { name: string };
+        error.name = 'CodeMismatchException';
+        mockCognitoService.confirmForgotPassword.mockRejectedValue(error);
+
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'INVALID_CODE',
+          message: 'Invalid or expired confirmation code',
+        });
+      });
+    });
+
+    describe('期限切れ確認コードのテスト（ExpiredCodeException）', () => {
+      it('確認コードが期限切れの場合は400 INVALID_CODEを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Code has expired') as Error & { name: string };
+        error.name = 'ExpiredCodeException';
+        mockCognitoService.confirmForgotPassword.mockRejectedValue(error);
+
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'INVALID_CODE',
+          message: 'Invalid or expired confirmation code',
+        });
+      });
+    });
+
+    describe('Cognito予期しないエラーのテスト', () => {
+      it('予期しないCognitoエラーで500 INTERNAL_ERRORを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Service unavailable') as Error & { name: string };
+        error.name = 'InternalErrorException';
+        mockCognitoService.confirmForgotPassword.mockRejectedValue(error);
+
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(500);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'INTERNAL_ERROR',
+          message: 'Password reset failed',
+        });
+      });
+    });
+
+    describe('レート制限のテスト', () => {
+      it('レート制限を超えた場合は429 RATE_LIMIT_EXCEEDEDを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(false);
+        mockRateLimiter.getRetryAfter.mockResolvedValue(20);
+
+        const res = await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(429);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many password reset attempts',
+          retryAfter: 20,
+        });
+
+        expect(mockCognitoService.confirmForgotPassword).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('ログ記録の検証', () => {
+      it('リクエスト時にマスク済みメールをログに記録する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.confirmForgotPassword.mockResolvedValue(undefined);
+        const consoleSpy = vi.spyOn(console, 'log');
+
+        await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Password reset confirm request',
+          expect.objectContaining({
+            email: 't***@example.com',
+            ipAddress: 'unknown',
+            timestamp: expect.any(String),
+          })
+        );
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Password reset successful',
+          expect.objectContaining({
+            email: 't***@example.com',
+            timestamp: expect.any(String),
+          })
+        );
+
+        consoleSpy.mockRestore();
+      });
+
+      it('ログにパスワードが含まれていないことを検証する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.confirmForgotPassword.mockResolvedValue(undefined);
+        const consoleSpy = vi.spyOn(console, 'log');
+
+        await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        consoleSpy.mock.calls.forEach((call) => {
+          const logStr = JSON.stringify(call);
+          expect(logStr).not.toContain('NewPassword123');
+        });
+
+        consoleSpy.mockRestore();
+      });
+
+      it('ログに確認コードが含まれていないことを検証する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.confirmForgotPassword.mockResolvedValue(undefined);
+        const consoleSpy = vi.spyOn(console, 'log');
+
+        await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        consoleSpy.mock.calls.forEach((call) => {
+          const logStr = JSON.stringify(call);
+          expect(logStr).not.toContain('123456');
+        });
+
+        consoleSpy.mockRestore();
+      });
+
+      it('エラー時にもパスワードと確認コードがログに含まれないことを検証する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Code mismatch') as Error & { name: string };
+        error.name = 'CodeMismatchException';
+        mockCognitoService.confirmForgotPassword.mockRejectedValue(error);
+        const consoleSpy = vi.spyOn(console, 'log');
+        const consoleErrorSpy = vi.spyOn(console, 'error');
+
+        await app.request('/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        const allCalls = [...consoleSpy.mock.calls, ...consoleErrorSpy.mock.calls];
+        allCalls.forEach((call) => {
+          const logStr = JSON.stringify(call);
+          expect(logStr).not.toContain('NewPassword123');
+          expect(logStr).not.toContain('123456');
+        });
+
+        consoleSpy.mockRestore();
+        consoleErrorSpy.mockRestore();
+      });
+    });
+  });
 });
