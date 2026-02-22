@@ -1101,3 +1101,142 @@ describe('Property 5: トークンリフレッシュ成功レスポンス形式'
     );
   });
 });
+
+/**
+ * Feature: 3-login-api, Property 6: 無効なリフレッシュトークンのエラーハンドリング
+ *
+ * **Validates: Requirements 5.5**
+ *
+ * 任意の無効または期限切れのリフレッシュトークンに対して、
+ * refreshTokensメソッドはNotAuthorizedExceptionエラーをスローし、
+ * エラーのプロパティ（name、code、message）が正しく伝播されるべきです。
+ */
+describe('Property 6: 無効なリフレッシュトークンのエラーハンドリング', () => {
+  let service: CognitoService;
+  let mockSend: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    // 環境変数を設定
+    process.env.AWS_REGION = 'ap-northeast-1';
+    process.env.COGNITO_USER_POOL_ID = 'test-user-pool-id';
+    process.env.COGNITO_CLIENT_ID = 'test-client-id';
+
+    // モックをリセット
+    vi.clearAllMocks();
+
+    // サービスインスタンスを作成
+    service = new CognitoService();
+
+    // モックされたsendメソッドを取得
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockSend = (service as any).client.send;
+  });
+
+  it('任意の無効なリフレッシュトークンに対して、NotAuthorizedExceptionがスローされるべき', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          // 様々な無効なリフレッシュトークンを生成
+          refreshToken: fc.oneof(
+            fc.string({ minLength: 1, maxLength: 200 }),
+            fc.uuid(),
+            fc.base64String({ minLength: 1, maxLength: 200 }),
+            fc.constant('expired-token-123'),
+            fc.constant('invalid-refresh-token')
+          ),
+          // 様々なエラーメッセージを生成
+          errorMessage: fc.oneof(
+            fc.constant('Refresh Token has expired'),
+            fc.constant('Invalid Refresh Token'),
+            fc.constant('Refresh Token has been revoked'),
+            fc.constant('Not authorized')
+          ),
+        }),
+        async (data) => {
+          // モックをリセット（各プロパティテストの実行前）
+          mockSend.mockClear();
+
+          // Arrange: NotAuthorizedExceptionをスロー
+          const error = new Error(data.errorMessage);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any).name = 'NotAuthorizedException';
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any).code = 'NotAuthorizedException';
+          mockSend.mockRejectedValueOnce(error);
+
+          // Act & Assert: エラーがスローされることを確認
+          try {
+            await service.refreshTokens(data.refreshToken);
+            // エラーがスローされなかった場合は失敗
+            expect.unreachable('refreshTokens should have thrown an error');
+          } catch (err: unknown) {
+            const thrownError = err as Error & { name: string; code: string };
+
+            // Assert 1: エラー名がNotAuthorizedExceptionであることを確認（要件 5.5）
+            expect(thrownError.name).toBe('NotAuthorizedException');
+
+            // Assert 2: エラーコードがNotAuthorizedExceptionであることを確認
+            expect(thrownError.code).toBe('NotAuthorizedException');
+
+            // Assert 3: エラーメッセージが保持されていることを確認
+            expect(thrownError.message).toBe(data.errorMessage);
+          }
+
+          // Assert 4: REFRESH_TOKEN_AUTHフローで呼ばれたことを確認
+          expect(mockSend).toHaveBeenCalledTimes(1);
+          const command = mockSend.mock.calls[0][0];
+          expect(command).toBeInstanceOf(InitiateAuthCommand);
+          expect(command.input.AuthFlow).toBe('REFRESH_TOKEN_AUTH');
+          expect(command.input.AuthParameters?.REFRESH_TOKEN).toBe(data.refreshToken);
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('エラーの$metadataプロパティが正しく伝播されるべき', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          refreshToken: fc.string({ minLength: 1, maxLength: 100 }),
+          httpStatusCode: fc.constant(400),
+        }),
+        async (data) => {
+          // モックをリセット
+          mockSend.mockClear();
+
+          // Arrange: $metadata付きのNotAuthorizedExceptionをスロー
+          const error = new Error('Refresh Token has expired');
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any).name = 'NotAuthorizedException';
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any).code = 'NotAuthorizedException';
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any).$metadata = {
+            httpStatusCode: data.httpStatusCode,
+          };
+          mockSend.mockRejectedValueOnce(error);
+
+          // Act & Assert: エラープロパティが正しく伝播されることを確認
+          try {
+            await service.refreshTokens(data.refreshToken);
+            expect.unreachable('refreshTokens should have thrown an error');
+          } catch (err: unknown) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const thrownError = err as any;
+
+            // Assert: エラープロパティが正しく伝播されることを確認
+            expect(thrownError.name).toBe('NotAuthorizedException');
+            expect(thrownError.code).toBe('NotAuthorizedException');
+            expect(thrownError.$metadata?.httpStatusCode).toBe(data.httpStatusCode);
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+});
