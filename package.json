@@ -28,8 +28,8 @@
   "packageManager": "pnpm@10.30.0",
   "lint-staged": {
     "*.md": [
-      "prettier --write",
-      "markdownlint-cli2 --fix"
+      "markdownlint-cli2 --fix",
+      "prettier --write"
     ],
     "*.{js,ts,tsx,json}": [
       "prettier --write"
