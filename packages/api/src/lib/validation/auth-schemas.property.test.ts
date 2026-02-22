@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { registerSchema, loginSchema } from './auth-schemas.js';
+import { registerSchema, loginSchema, refreshSchema } from './auth-schemas.js';
 
 /**
  * Feature: user-registration-api
@@ -1284,6 +1284,121 @@ describe('Property 1 (Login): ログイン必須フィールド検証', () => {
         }
       ),
       { numRuns: 10 }
+    );
+  });
+});
+
+/**
+ * Feature: 3-login-api, Property 4: リフレッシュトークンバリデーション
+ *
+ * **Validates: Requirement 5.2**
+ *
+ * 任意のトークンリフレッシュリクエストに対して、refreshTokenフィールドが欠落または空の場合、
+ * APIは400ステータスコードとエラーコード`VALIDATION_ERROR`を返すべきです。
+ */
+describe('Property 4 (Refresh): リフレッシュトークンバリデーション', () => {
+  it('should reject refresh requests with missing or empty refreshToken', () => {
+    fc.assert(
+      fc.property(
+        // refreshTokenを欠落または空文字列にするジェネレーター
+        fc.oneof(
+          // refreshTokenフィールドが欠落
+          fc.constant({}),
+          // refreshTokenが空文字列
+          fc.constant({ refreshToken: '' }),
+          // refreshTokenが存在するが空文字列（他のフィールド付き）
+          fc.record({
+            refreshToken: fc.constant(''),
+          })
+        ),
+        (data) => {
+          const result = refreshSchema.safeParse(data);
+
+          // バリデーションは失敗すべき
+          expect(result.success).toBe(false);
+
+          if (!result.success) {
+            const errorMessages = result.error.issues.map((issue) => issue.message);
+            const hasRequiredError = errorMessages.some(
+              (msg) => msg === 'Refresh token is required' || msg.includes('required')
+            );
+            expect(hasRequiredError).toBe(true);
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('should reject refresh requests with missing refreshToken field', () => {
+    fc.assert(
+      fc.property(
+        // refreshTokenフィールドを含まないオブジェクトを生成
+        fc.record({
+          someOtherField: fc.option(fc.string({ maxLength: 50 }), { nil: undefined }),
+        }),
+        (data) => {
+          const result = refreshSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const refreshTokenError = result.error.issues.find(
+              (issue) => issue.path[0] === 'refreshToken'
+            );
+            expect(refreshTokenError).toBeDefined();
+            expect(refreshTokenError?.message).toBe('Refresh token is required');
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should reject refresh requests with empty refreshToken field', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          refreshToken: fc.constant(''),
+        }),
+        (data) => {
+          const result = refreshSchema.safeParse(data);
+
+          expect(result.success).toBe(false);
+          if (!result.success) {
+            const refreshTokenError = result.error.issues.find(
+              (issue) => issue.path[0] === 'refreshToken'
+            );
+            expect(refreshTokenError).toBeDefined();
+            expect(refreshTokenError?.message).toBe('Refresh token is required');
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it('should accept refresh requests with valid non-empty refreshToken', () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          refreshToken: fc.string({ minLength: 1, maxLength: 500 }),
+        }),
+        (data) => {
+          const result = refreshSchema.safeParse(data);
+
+          // 非空のrefreshTokenは有効
+          expect(result.success).toBe(true);
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
     );
   });
 });
