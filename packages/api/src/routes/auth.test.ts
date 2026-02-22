@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { authRouter } from './auth.js';
 import { CognitoService } from '../lib/cognito/cognito-service.js';
 import { UserRepository } from '../lib/dynamodb/repositories/user.js';
@@ -1545,6 +1546,159 @@ describe('Auth Router', () => {
         });
 
         expect(mockCognitoService.refreshTokens).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('CORS設定', () => {
+    // CORSミドルウェアを含むアプリを作成（index.tsと同じ設定）
+    let corsApp: Hono;
+
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://stg.vote-board-game.example.com',
+      'https://vote-board-game.example.com',
+    ];
+
+    beforeEach(() => {
+      corsApp = new Hono();
+      corsApp.use(
+        '*',
+        cors({
+          origin: allowedOrigins,
+          credentials: true,
+        })
+      );
+      corsApp.route('/auth', authRouter);
+    });
+
+    describe('OPTIONSプリフライトリクエスト', () => {
+      it('/auth/password-resetへのOPTIONSリクエストがCORSヘッダーを返す', async () => {
+        const res = await corsApp.request('/auth/password-reset', {
+          method: 'OPTIONS',
+          headers: {
+            Origin: 'http://localhost:3000',
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'Content-Type',
+          },
+        });
+
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
+        expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST');
+        expect(res.headers.get('Access-Control-Allow-Headers')).toContain('Content-Type');
+      });
+
+      it('/auth/password-reset/confirmへのOPTIONSリクエストがCORSヘッダーを返す', async () => {
+        const res = await corsApp.request('/auth/password-reset/confirm', {
+          method: 'OPTIONS',
+          headers: {
+            Origin: 'http://localhost:3000',
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'Content-Type',
+          },
+        });
+
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
+        expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST');
+        expect(res.headers.get('Access-Control-Allow-Headers')).toContain('Content-Type');
+      });
+    });
+
+    describe('許可オリジンの検証', () => {
+      it('http://localhost:3000からのリクエストを許可する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.forgotPassword.mockResolvedValue(undefined);
+
+        const res = await corsApp.request('/auth/password-reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: 'http://localhost:3000',
+          },
+          body: JSON.stringify({ email: 'test@example.com' }),
+        });
+
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
+      });
+
+      it('https://stg.vote-board-game.example.comからのリクエストを許可する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.forgotPassword.mockResolvedValue(undefined);
+
+        const res = await corsApp.request('/auth/password-reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: 'https://stg.vote-board-game.example.com',
+          },
+          body: JSON.stringify({ email: 'test@example.com' }),
+        });
+
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBe(
+          'https://stg.vote-board-game.example.com'
+        );
+      });
+
+      it('https://vote-board-game.example.comからのリクエストを許可する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.forgotPassword.mockResolvedValue(undefined);
+
+        const res = await corsApp.request('/auth/password-reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: 'https://vote-board-game.example.com',
+          },
+          body: JSON.stringify({ email: 'test@example.com' }),
+        });
+
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBe(
+          'https://vote-board-game.example.com'
+        );
+      });
+
+      it('許可されていないオリジンからのリクエストにはAccess-Control-Allow-Originを返さない', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.forgotPassword.mockResolvedValue(undefined);
+
+        const res = await corsApp.request('/auth/password-reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: 'https://evil.example.com',
+          },
+          body: JSON.stringify({ email: 'test@example.com' }),
+        });
+
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
+      });
+    });
+
+    describe('POSTメソッドとContent-Typeヘッダーの許可', () => {
+      it('POSTメソッドがAccess-Control-Allow-Methodsに含まれる', async () => {
+        const res = await corsApp.request('/auth/password-reset', {
+          method: 'OPTIONS',
+          headers: {
+            Origin: 'http://localhost:3000',
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'Content-Type',
+          },
+        });
+
+        expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST');
+      });
+
+      it('Content-TypeがAccess-Control-Allow-Headersに含まれる', async () => {
+        const res = await corsApp.request('/auth/password-reset/confirm', {
+          method: 'OPTIONS',
+          headers: {
+            Origin: 'http://localhost:3000',
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'Content-Type',
+          },
+        });
+
+        expect(res.headers.get('Access-Control-Allow-Headers')).toContain('Content-Type');
       });
     });
   });
