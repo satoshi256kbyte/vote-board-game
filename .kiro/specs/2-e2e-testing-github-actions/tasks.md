@@ -78,7 +78,7 @@ This implementation adds Playwright E2E testing to the GitHub Actions CD pipelin
     - Use cache path ~/.cache/ms-playwright
     - _Requirements: 5.1, 5.2_
 
-  - [~] 4.4 Add E2E test execution step
+  - [x] 4.4 Add E2E test execution step
     - Get CloudFront URL from deploy job outputs
     - Validate CloudFront URL is not empty
     - Run E2E tests with BASE_URL environment variable
