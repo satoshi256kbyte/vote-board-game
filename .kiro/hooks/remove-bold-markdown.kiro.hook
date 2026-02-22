@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "name": "Remove Bold Formatting",
-  "description": "Automatically removes bold formatting (** **) from markdown files when edited",
+  "description": "After saving the Markdown file, please make the following edits to its contents:\n\n- Remove all emphasis formatting (** **)\n- Add language specifications to code blocks lacking them\n- Insert blank lines below headings where none exist",
   "version": "1",
   "when": {
     "type": "fileEdited",
@@ -11,6 +11,8 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Remove all bold formatting (text wrapped in **) from this markdown file. Replace **text** with just text throughout the file."
-  }
+    "prompt": "Remove all bold formatting (text wrapped in **) from this markdown file. Replace **text** with just text throughout the file.If the code block does not have a language specification, please add one.\nIf there is no blank line below the heading, please add one."
+  },
+  "workspaceFolderName": "vote-board-game",
+  "shortName": "remove-bold-markdown"
 }
