@@ -88,7 +88,7 @@
     - DynamoDBDocumentClientの初期化
     - 共通メソッド（`now()`など）を実装
     - _要件: 6.1_
-  - [~] 4.2 UserRepositoryを作成
+  - [x] 4.2 UserRepositoryを作成
     - `packages/api/src/lib/dynamodb/repositories/user.ts`を作成
     - `UserEntity`インターフェースを定義
     - `create`メソッドを実装（PutCommandで条件付き書き込み）
