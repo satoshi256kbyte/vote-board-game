@@ -16,6 +16,8 @@ describe('Auth Router', () => {
     signUp: ReturnType<typeof vi.fn>;
     authenticate: ReturnType<typeof vi.fn>;
     deleteUser: ReturnType<typeof vi.fn>;
+    forgotPassword: ReturnType<typeof vi.fn>;
+    confirmForgotPassword: ReturnType<typeof vi.fn>;
   };
   let mockUserRepository: {
     create: ReturnType<typeof vi.fn>;
@@ -37,6 +39,8 @@ describe('Auth Router', () => {
       signUp: vi.fn(),
       authenticate: vi.fn(),
       deleteUser: vi.fn(),
+      forgotPassword: vi.fn(),
+      confirmForgotPassword: vi.fn(),
     };
     vi.mocked(CognitoService).mockImplementation(
       () => mockCognitoService as unknown as CognitoService
@@ -542,6 +546,220 @@ describe('Auth Router', () => {
         });
 
         expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('unknown', 'register');
+      });
+    });
+  });
+
+  describe('POST /auth/password-reset', () => {
+    const validRequest = {
+      email: 'test@example.com',
+    };
+
+    describe('有効なリクエストの成功テスト', () => {
+      it('有効なリクエストで200ステータスと成功メッセージを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.forgotPassword.mockResolvedValue(undefined);
+
+        const res = await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json).toEqual({
+          message: 'Password reset code has been sent',
+        });
+
+        expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith('unknown', 'password-reset');
+        expect(mockCognitoService.forgotPassword).toHaveBeenCalledWith('test@example.com');
+      });
+    });
+
+    describe('バリデーションエラーのテスト', () => {
+      it('emailが欠落している場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+        expect(json.message).toBe('Validation failed');
+        expect(json.details.fields).toBeDefined();
+      });
+
+      it('emailが空文字列の場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: '' }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+      });
+
+      it('emailが無効な形式の場合は400 VALIDATION_ERRORを返す', async () => {
+        const res = await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'invalid-email' }),
+        });
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('VALIDATION_ERROR');
+        expect(json.details.fields.email).toBe('Invalid email format');
+      });
+    });
+
+    describe('アカウント列挙防止のテスト', () => {
+      it('ユーザーが存在しない場合でも200を返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('User not found') as Error & { name: string };
+        error.name = 'UserNotFoundException';
+        mockCognitoService.forgotPassword.mockRejectedValue(error);
+
+        const res = await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json).toEqual({
+          message: 'Password reset code has been sent',
+        });
+      });
+    });
+
+    describe('Cognito予期しないエラーのテスト', () => {
+      it('UserNotFoundException以外のCognitoエラーで500 INTERNAL_ERRORを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Service unavailable') as Error & { name: string };
+        error.name = 'InternalErrorException';
+        mockCognitoService.forgotPassword.mockRejectedValue(error);
+
+        const res = await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(500);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'INTERNAL_ERROR',
+          message: 'Password reset failed',
+        });
+      });
+    });
+
+    describe('レート制限のテスト', () => {
+      it('レート制限を超えた場合は429 RATE_LIMIT_EXCEEDEDを返す', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(false);
+        mockRateLimiter.getRetryAfter.mockResolvedValue(30);
+
+        const res = await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(res.status).toBe(429);
+        const json = await res.json();
+        expect(json).toEqual({
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many password reset attempts',
+          retryAfter: 30,
+        });
+
+        expect(mockCognitoService.forgotPassword).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('ログ記録の検証', () => {
+      it('リクエスト時にマスク済みメールとタイムスタンプをログに記録する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.forgotPassword.mockResolvedValue(undefined);
+        const consoleSpy = vi.spyOn(console, 'log');
+
+        await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        // リクエストログの検証
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Password reset request',
+          expect.objectContaining({
+            email: 't***@example.com',
+            ipAddress: 'unknown',
+            timestamp: expect.any(String),
+          })
+        );
+
+        // 成功ログの検証
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Password reset code sent',
+          expect.objectContaining({
+            timestamp: expect.any(String),
+          })
+        );
+
+        consoleSpy.mockRestore();
+      });
+
+      it('Cognito予期しないエラー時にエラーログを記録する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        const error = new Error('Service unavailable') as Error & { name: string };
+        error.name = 'InternalErrorException';
+        mockCognitoService.forgotPassword.mockRejectedValue(error);
+        const consoleErrorSpy = vi.spyOn(console, 'error');
+
+        await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Password reset request failed',
+          expect.objectContaining({
+            email: 't***@example.com',
+            error: 'Service unavailable',
+            timestamp: expect.any(String),
+          })
+        );
+
+        consoleErrorSpy.mockRestore();
+      });
+
+      it('ログにパスワードが含まれていないことを検証する', async () => {
+        mockRateLimiter.checkLimit.mockResolvedValue(true);
+        mockCognitoService.forgotPassword.mockResolvedValue(undefined);
+        const consoleSpy = vi.spyOn(console, 'log');
+
+        await app.request('/auth/password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validRequest),
+        });
+
+        // すべてのログ呼び出しでパスワードが含まれていないことを確認
+        consoleSpy.mock.calls.forEach((call) => {
+          const logStr = JSON.stringify(call);
+          expect(logStr).not.toContain('password');
+        });
+
+        consoleSpy.mockRestore();
       });
     });
   });
