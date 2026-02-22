@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "name": "Markdown Format Check",
+  "description": "Checks markdown files for code blocks without language specifications and headings without blank lines below them",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".kiro/steering/**/*.md",
+      "docs/**/*.md",
+      "requirements.md",
+      "design.md",
+      "README.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check the edited markdown file for: 1) Code blocks without language specifications (```without a language), and 2) Headings without a blank line immediately below them. If found, fix these formatting issues."
+  },
+  "workspaceFolderName": "vote-board-game",
+  "shortName": "markdown-format-check"
+}
