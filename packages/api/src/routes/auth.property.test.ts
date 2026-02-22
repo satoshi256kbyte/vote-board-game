@@ -1862,6 +1862,15 @@ describe('Property 13: Error response format', () => {
         async (data) => {
           // エラータイプに応じてモックを設定
           if (data.type === 'conflict') {
+            // RateLimiterをリセット（許可状態に）
+            vi.mocked(RateLimiter).mockImplementation(
+              () =>
+                ({
+                  checkLimit: vi.fn().mockResolvedValue(true),
+                  getRetryAfter: vi.fn().mockResolvedValue(0),
+                }) as unknown as RateLimiter
+            );
+
             vi.mocked(CognitoService).mockImplementation(
               () =>
                 ({
@@ -1882,6 +1891,15 @@ describe('Property 13: Error response format', () => {
                 }) as unknown as RateLimiter
             );
           } else if (data.type === 'internal') {
+            // RateLimiterをリセット（許可状態に）
+            vi.mocked(RateLimiter).mockImplementation(
+              () =>
+                ({
+                  checkLimit: vi.fn().mockResolvedValue(true),
+                  getRetryAfter: vi.fn().mockResolvedValue(0),
+                }) as unknown as RateLimiter
+            );
+
             const mockUserId = `user-${Math.random().toString(36).substring(7)}`;
             vi.mocked(CognitoService).mockImplementation(
               () =>
@@ -1900,6 +1918,15 @@ describe('Property 13: Error response format', () => {
                   create: vi.fn().mockRejectedValue(new Error('DynamoDB write failed')),
                   getById: vi.fn(),
                 }) as unknown as UserRepository
+            );
+          } else if (data.type === 'validation') {
+            // RateLimiterをリセット（許可状態に）
+            vi.mocked(RateLimiter).mockImplementation(
+              () =>
+                ({
+                  checkLimit: vi.fn().mockResolvedValue(true),
+                  getRetryAfter: vi.fn().mockResolvedValue(0),
+                }) as unknown as RateLimiter
             );
           }
 

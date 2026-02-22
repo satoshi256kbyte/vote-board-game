@@ -37,10 +37,37 @@ app.notFound((c) => {
 // エラーハンドラー
 app.onError((err, c) => {
   console.error('Error:', err);
+
+  // Zodバリデーションエラーの処理
+  if (err.name === 'ZodError') {
+    const zodError = err as any;
+    const fields: Record<string, string> = {};
+
+    // Zodのissuesをfieldsオブジェクトに変換
+    if (zodError.issues && Array.isArray(zodError.issues)) {
+      zodError.issues.forEach((issue: any) => {
+        const fieldName = issue.path.join('.');
+        fields[fieldName] = issue.message;
+      });
+    }
+
+    return c.json(
+      {
+        error: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: {
+          fields,
+        },
+      },
+      400
+    );
+  }
+
+  // その他のエラー
   return c.json(
     {
-      error: 'Internal Server Error',
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      error: 'INTERNAL_ERROR',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
     },
     500
   );
