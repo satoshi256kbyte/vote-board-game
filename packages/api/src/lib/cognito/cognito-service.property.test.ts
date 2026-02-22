@@ -977,3 +977,127 @@ describe('Property 10: Authentication token retrieval', () => {
     );
   });
 });
+
+/**
+ * Feature: 3-login-api, Property 5: トークンリフレッシュ成功レスポンス形式
+ *
+ * **Validates: Requirements 5.3, 5.4**
+ *
+ * 任意の有効なリフレッシュトークンに対して、APIは200ステータスコードと
+ * accessToken、expiresIn（値: 900）フィールドを含むレスポンスを返すべきです。
+ */
+describe('Property 5: トークンリフレッシュ成功レスポンス形式', () => {
+  let service: CognitoService;
+  let mockSend: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    // 環境変数を設定
+    process.env.AWS_REGION = 'ap-northeast-1';
+    process.env.COGNITO_USER_POOL_ID = 'test-user-pool-id';
+    process.env.COGNITO_CLIENT_ID = 'test-client-id';
+
+    // モックをリセット
+    vi.clearAllMocks();
+
+    // サービスインスタンスを作成
+    service = new CognitoService();
+
+    // モックされたsendメソッドを取得
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockSend = (service as any).client.send;
+  });
+
+  it('任意の有効なリフレッシュトークンに対して、accessToken（文字列）、idToken（文字列）、expiresIn（デフォルト900）を含むレスポンスを返すべき', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          // 様々なリフレッシュトークン形式を生成
+          refreshToken: fc.oneof(
+            fc.string({ minLength: 20, maxLength: 200 }),
+            fc.uuid(),
+            fc.base64String({ minLength: 20, maxLength: 200 })
+          ),
+          // Cognitoが返す様々なトークン形式を生成
+          accessToken: fc.string({ minLength: 10, maxLength: 200 }).filter((s) => s.length > 0),
+          idToken: fc.string({ minLength: 10, maxLength: 200 }).filter((s) => s.length > 0),
+        }),
+        async (data) => {
+          // モックをリセット（各プロパティテストの実行前）
+          mockSend.mockClear();
+
+          // Arrange: Cognitoの成功レスポンスを設定（ExpiresInはデフォルト900）
+          const mockResponse = {
+            AuthenticationResult: {
+              AccessToken: data.accessToken,
+              IdToken: data.idToken,
+              ExpiresIn: 900,
+            },
+          };
+          mockSend.mockResolvedValueOnce(mockResponse);
+
+          // Act: refreshTokensメソッドを呼び出し
+          const result = await service.refreshTokens(data.refreshToken);
+
+          // Assert 1: レスポンスが定義されていることを確認
+          expect(result).toBeDefined();
+
+          // Assert 2: accessTokenが文字列であることを確認（要件 5.4）
+          expect(typeof result.accessToken).toBe('string');
+          expect(result.accessToken).toBe(data.accessToken);
+
+          // Assert 3: idTokenが文字列であることを確認
+          expect(typeof result.idToken).toBe('string');
+          expect(result.idToken).toBe(data.idToken);
+
+          // Assert 4: expiresInが900であることを確認（要件 5.4）
+          expect(result.expiresIn).toBe(900);
+
+          // Assert 5: REFRESH_TOKEN_AUTHフローが使用されていることを確認（要件 5.3）
+          expect(mockSend).toHaveBeenCalledTimes(1);
+          const command = mockSend.mock.calls[0][0];
+          expect(command).toBeInstanceOf(InitiateAuthCommand);
+          expect(command.input.AuthFlow).toBe('REFRESH_TOKEN_AUTH');
+          expect(command.input.AuthParameters?.REFRESH_TOKEN).toBe(data.refreshToken);
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+
+  it('ExpiresInが未定義の場合、デフォルト値900を使用すべき', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          refreshToken: fc.string({ minLength: 20, maxLength: 100 }),
+        }),
+        async (data) => {
+          // モックをリセット
+          mockSend.mockClear();
+
+          // Arrange: ExpiresInが未定義のレスポンスを設定
+          const mockResponse = {
+            AuthenticationResult: {
+              AccessToken: 'mock-access-token',
+              IdToken: 'mock-id-token',
+              ExpiresIn: undefined,
+            },
+          };
+          mockSend.mockResolvedValueOnce(mockResponse);
+
+          // Act
+          const result = await service.refreshTokens(data.refreshToken);
+
+          // Assert: デフォルト値900秒が使用されることを確認（要件 5.4）
+          expect(result.expiresIn).toBe(900);
+          expect(typeof result.accessToken).toBe('string');
+          expect(typeof result.idToken).toBe('string');
+
+          return true;
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+});
