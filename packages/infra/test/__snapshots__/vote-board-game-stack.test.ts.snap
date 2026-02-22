@@ -1795,6 +1795,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         "cdk_nag": {
           "rules_to_suppress": [
             {
+              "id": "AwsSolutions-COG1",
+              "is_reason_encoded": true,
+              "reason": "6KaB5Lu2My4xLTMuNDog44OR44K544Ov44O844OJ44Od44Oq44K344O844GvOOaWh+Wtl+S7peS4iuOAgeWkp+aWh+Wtl+ODu+Wwj+aWh+Wtl+ODu+aVsOWtl+OCkuW/hemgiOOBqOOBmeOCi+OBjOOAgeeJueauiuaWh+Wtl+OBr+S4jeimgeOAguODpuODvOOCtuODvOS9k+mok+OCkuWEquWFiOOAgg==",
+            },
+            {
               "id": "AwsSolutions-COG2",
               "is_reason_encoded": true,
               "reason": "TVZQIOOBp+OBryBNRkEg44Gv44Kq44OX44K344On44OK44Or44CC44Om44O844K244O85L2T6aiT44KS5YSq5YWI44GX44CB5bCG5p2l55qE44Gr5b+F6aCI5YyW44KS5qSc6KiO44CC",
@@ -4409,6 +4414,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-COG1",
+              "is_reason_encoded": true,
+              "reason": "6KaB5Lu2My4xLTMuNDog44OR44K544Ov44O844OJ44Od44Oq44K344O844GvOOaWh+Wtl+S7peS4iuOAgeWkp+aWh+Wtl+ODu+Wwj+aWh+Wtl+ODu+aVsOWtl+OCkuW/hemgiOOBqOOBmeOCi+OBjOOAgeeJueauiuaWh+Wtl+OBr+S4jeimgeOAguODpuODvOOCtuODvOS9k+mok+OCkuWEquWFiOOAgg==",
+            },
             {
               "id": "AwsSolutions-COG2",
               "is_reason_encoded": true,
