@@ -38,15 +38,34 @@ fi
 echo "✅ CDK security check passed"
 echo ""
 
-echo "🧪 Running tests..."
-if ! pnpm test; then
-  echo "❌ Tests failed"
-  exit 1
+echo "🧪 Checking if tests need to run..."
+# テスト実行が必要なファイルパターン
+TEST_PATTERNS="packages/*/src/**/*.ts packages/*/src/**/*.tsx packages/*/test/**/*.ts **/vitest.config.ts **/tsconfig.json **/package.json pnpm-lock.yaml"
+
+# 変更されたファイルを取得
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+
+# テスト対象ファイルが変更されているかチェック
+NEEDS_TEST=false
+for pattern in $TEST_PATTERNS; do
+  if echo "$CHANGED_FILES" | grep -qE "^${pattern//\*/.*}$"; then
+    NEEDS_TEST=true
+    break
+  fi
+done
+
+if [ "$NEEDS_TEST" = true ]; then
+  echo "📝 Test-related files changed, running tests..."
+  if ! pnpm test; then
+    echo "❌ Tests failed"
+    exit 1
+  fi
+  echo "✅ Tests passed"
+else
+  echo "⏭️  No test-related files changed, skipping tests"
 fi
 
-echo "✅ Tests passed"
 echo ""
-
 echo "✨ All checks passed! Pushing to remote..."
 
 

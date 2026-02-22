@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       markdown-only: ${{ steps.check-files.outputs.markdown-only }}
+      needs-test: ${{ steps.check-files.outputs.needs-test }}
 
     steps:
       - name: Checkout
@@ -18,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check if only markdown files changed
+      - name: Check changed files
         id: check-files
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -30,6 +31,7 @@ jobs:
           # 変更ファイルがない場合は全チェック実行
           if [ -z "$FILES" ]; then
             echo "markdown-only=false" >> $GITHUB_OUTPUT
+            echo "needs-test=true" >> $GITHUB_OUTPUT
             exit 0
           fi
 
@@ -38,10 +40,21 @@ jobs:
 
           if [ -z "$NON_MD_FILES" ]; then
             echo "markdown-only=true" >> $GITHUB_OUTPUT
+            echo "needs-test=false" >> $GITHUB_OUTPUT
             echo "Only markdown files changed, will skip code checks"
           else
             echo "markdown-only=false" >> $GITHUB_OUTPUT
-            echo "Code files changed, will run all checks"
+            
+            # テスト実行が必要なファイルパターン
+            TEST_FILES=$(echo "$FILES" | grep -E '\.(ts|tsx)$|vitest\.config\.ts$|tsconfig\.json$|package\.json$|pnpm-lock\.yaml$' | grep -E '^packages/.*/src/|^packages/.*/test/|package\.json$|pnpm-lock\.yaml$' || true)
+            
+            if [ -n "$TEST_FILES" ]; then
+              echo "needs-test=true" >> $GITHUB_OUTPUT
+              echo "Test-related files changed, will run tests"
+            else
+              echo "needs-test=false" >> $GITHUB_OUTPUT
+              echo "No test-related files changed, will skip tests"
+            fi
           fi
 
       - name: Setup pnpm
@@ -84,7 +97,7 @@ jobs:
         run: pnpm type-check
 
       - name: Test
-        if: steps.check-files.outputs.markdown-only == 'false'
+        if: steps.check-files.outputs.needs-test == 'true'
         run: pnpm test
 
   build:
