@@ -115,7 +115,7 @@ export class VoteBoardGameStack extends cdk.Stack {
         type: dynamodb.AttributeType.STRING,
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       timeToLiveAttribute: 'expiresAt', // レート制限レコードの自動削除用
@@ -272,6 +272,12 @@ export class VoteBoardGameStack extends cdk.Stack {
       }
     })();
 
+    const apiLogGroup = new logs.LogGroup(this, 'ApiLogGroup', {
+      logGroupName: `/aws/lambda/${appName}-${environment}-lambda-api`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    });
+
     const apiLambda = new lambda.Function(this, 'ApiFunction', {
       functionName: `${appName}-${environment}-lambda-api`,
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -289,38 +295,9 @@ export class VoteBoardGameStack extends cdk.Stack {
         COGNITO_CLIENT_ID: userPoolClient.userPoolClientId,
         ALLOWED_ORIGINS: allowedOrigins,
       },
-      logRetention: logs.RetentionDays.ONE_WEEK,
+      logGroup: apiLogGroup,
       tracing: lambda.Tracing.ACTIVE,
     });
-
-    // cdk-nag suppressions for LogRetention Lambda (auto-created by CDK)
-    // Note: CDK creates a single LogRetention Lambda that handles log retention for all Lambda functions
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'LogRetention Lambda は CDK が自動生成。AWS マネージドポリシーを使用。',
-          appliesTo: [
-            'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-          ],
-        },
-      ]
-    );
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason:
-            'LogRetention Lambda は CDK が自動生成。CloudWatch Logs へのアクセスに wildcard が必要。',
-          appliesTo: ['Resource::*'],
-        },
-      ]
-    );
 
     // Lambda に DynamoDB テーブルへのアクセス権限を付与
     table.grantReadWriteData(apiLambda);
@@ -474,6 +451,12 @@ export class VoteBoardGameStack extends cdk.Stack {
     );
 
     // Batch Lambda 関数
+    const batchLogGroup = new logs.LogGroup(this, 'BatchLogGroup', {
+      logGroupName: `/aws/lambda/${appName}-${environment}-lambda-batch`,
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    });
+
     const batchLambda = new lambda.Function(this, 'BatchFunction', {
       functionName: `${appName}-${environment}-lambda-batch`,
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -486,7 +469,7 @@ export class VoteBoardGameStack extends cdk.Stack {
         NODE_ENV: environment,
         TABLE_NAME: table.tableName,
       },
-      logRetention: logs.RetentionDays.ONE_WEEK,
+      logGroup: batchLogGroup,
       tracing: lambda.Tracing.ACTIVE,
     });
 

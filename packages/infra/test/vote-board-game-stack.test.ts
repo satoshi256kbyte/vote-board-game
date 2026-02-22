@@ -219,9 +219,8 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      // API Lambda + Batch Lambda が作成される
-      // Note: CDK が自動生成する LogRetention Lambda と S3AutoDelete Lambda も含まれる
-      template.resourceCountIs('AWS::Lambda::Function', 4);
+      // API Lambda + Batch Lambda + S3AutoDelete Lambda が作成される
+      template.resourceCountIs('AWS::Lambda::Function', 3);
     });
 
     it('should have exactly 1 API Gateway HTTP API', () => {

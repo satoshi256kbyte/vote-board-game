@@ -223,6 +223,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
         "FunctionName": "vbg-dev-lambda-api",
         "Handler": "lambda.handler",
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "ApiLogGroup1DEDFC07",
+          },
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -237,50 +242,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
       },
       "Type": "AWS::Lambda::Function",
-    },
-    "ApiFunctionLogRetentionDCC3A405": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-L1",
-              "is_reason_encoded": true,
-              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
-            },
-            {
-              "id": "AwsSolutions-IAM4",
-              "is_reason_encoded": true,
-              "reason": "TGFtYmRhIOWun+ihjOODreODvOODq+OBryBBV1Mg44Oe44ON44O844K444OJ44Od44Oq44K344O8IEFXU0xhbWJkYUJhc2ljRXhlY3V0aW9uUm9sZSDjgpLkvb/nlKjjgII=",
-            },
-            {
-              "id": "AwsSolutions-IAM5",
-              "is_reason_encoded": true,
-              "reason": "RHluYW1vREIg44OG44O844OW44Or44G444Gu44Ki44Kv44K744K544Gr44GvIHdpbGRjYXJkIOOBjOW/heimgeOAgkdTSSDjgbjjga7jgqLjgq/jgrvjgrnjgpLlkKvjgoDjgII=",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "ApiFunctionCE271BD4",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::LogRetention",
     },
     "ApiLambdaRole66D0B4CD": {
       "Metadata": {
@@ -459,6 +420,15 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       },
       "Type": "AWS::IAM::Policy",
     },
+    "ApiLogGroup1DEDFC07": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/vbg-dev-lambda-api",
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "BatchFunction768110B6": {
       "DependsOn": [
         "BatchLambdaRoleDefaultPolicy3F25F2CB",
@@ -492,6 +462,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
         "FunctionName": "vbg-dev-lambda-batch",
         "Handler": "batch.handler",
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "BatchLogGroupFA0EEAC1",
+          },
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -506,40 +481,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
       },
       "Type": "AWS::Lambda::Function",
-    },
-    "BatchFunctionLogRetention791C2146": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-L1",
-              "is_reason_encoded": true,
-              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "BatchFunction768110B6",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::LogRetention",
     },
     "BatchLambdaRole6C54EF21": {
       "Metadata": {
@@ -701,6 +642,15 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "BatchLogGroupFA0EEAC1": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/vbg-dev-lambda-batch",
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
       "DependsOn": [
@@ -1592,113 +1542,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
-      "DependsOn": [
-        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
-        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-          },
-          "S3Key": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip",
-        },
-        "Handler": "index.handler",
-        "Role": {
-          "Fn::GetAtt": [
-            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs22.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "applies_to": [
-                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-              "id": "AwsSolutions-IAM4",
-              "is_reason_encoded": true,
-              "reason": "TG9nUmV0ZW50aW9uIExhbWJkYSDjga8gQ0RLIOOBjOiHquWLleeUn+aIkOOAgkFXUyDjg57jg43jg7zjgrjjg4njg53jg6rjgrfjg7zjgpLkvb/nlKjjgII=",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "applies_to": [
-                "Resource::*",
-              ],
-              "id": "AwsSolutions-IAM5",
-              "is_reason_encoded": true,
-              "reason": "TG9nUmV0ZW50aW9uIExhbWJkYSDjga8gQ0RLIOOBjOiHquWLleeUn+aIkOOAgkNsb3VkV2F0Y2ggTG9ncyDjgbjjga7jgqLjgq/jgrvjgrnjgasgd2lsZGNhcmQg44GM5b+F6KaB44CC",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "logs:PutRetentionPolicy",
-                "logs:DeleteRetentionPolicy",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
-        "Roles": [
-          {
-            "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
     "SchedulerRole59E73443": {
       "Metadata": {
         "cdk_nag": {
@@ -2577,6 +2420,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
         "FunctionName": "vbg-prod-lambda-api",
         "Handler": "lambda.handler",
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "ApiLogGroup1DEDFC07",
+          },
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -2591,50 +2439,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
       },
       "Type": "AWS::Lambda::Function",
-    },
-    "ApiFunctionLogRetentionDCC3A405": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-L1",
-              "is_reason_encoded": true,
-              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
-            },
-            {
-              "id": "AwsSolutions-IAM4",
-              "is_reason_encoded": true,
-              "reason": "TGFtYmRhIOWun+ihjOODreODvOODq+OBryBBV1Mg44Oe44ON44O844K444OJ44Od44Oq44K344O8IEFXU0xhbWJkYUJhc2ljRXhlY3V0aW9uUm9sZSDjgpLkvb/nlKjjgII=",
-            },
-            {
-              "id": "AwsSolutions-IAM5",
-              "is_reason_encoded": true,
-              "reason": "RHluYW1vREIg44OG44O844OW44Or44G444Gu44Ki44Kv44K744K544Gr44GvIHdpbGRjYXJkIOOBjOW/heimgeOAgkdTSSDjgbjjga7jgqLjgq/jgrvjgrnjgpLlkKvjgoDjgII=",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "ApiFunctionCE271BD4",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::LogRetention",
     },
     "ApiGateway4xxAlarm7286C098": {
       "Properties": {
@@ -3022,6 +2826,15 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "ApiLogGroup1DEDFC07": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/vbg-prod-lambda-api",
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
     "BatchFunction768110B6": {
       "DependsOn": [
         "BatchLambdaRoleDefaultPolicy3F25F2CB",
@@ -3055,6 +2868,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
         "FunctionName": "vbg-prod-lambda-batch",
         "Handler": "batch.handler",
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "BatchLogGroupFA0EEAC1",
+          },
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -3069,40 +2887,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
       },
       "Type": "AWS::Lambda::Function",
-    },
-    "BatchFunctionLogRetention791C2146": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-L1",
-              "is_reason_encoded": true,
-              "reason": "Tm9kZS5qcyAyMC54IOOBr+ePvuaZgueCueOBp+acgOaWsOOBriBMVFMg44OQ44O844K444On44Oz44CC",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "BatchFunction768110B6",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 7,
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::LogRetention",
     },
     "BatchLambdaDurationAlarm07FF2E2C": {
       "Properties": {
@@ -3320,6 +3104,15 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "BatchLogGroupFA0EEAC1": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/vbg-prod-lambda-batch",
+        "RetentionInDays": 7,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
     },
     "CriticalAlertTopicA6C95D9D": {
       "Properties": {
@@ -4185,113 +3978,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
       },
       "Type": "AWS::S3::BucketPolicy",
-    },
-    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
-      "DependsOn": [
-        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
-        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-          },
-          "S3Key": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip",
-        },
-        "Handler": "index.handler",
-        "Role": {
-          "Fn::GetAtt": [
-            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs22.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "applies_to": [
-                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-              "id": "AwsSolutions-IAM4",
-              "is_reason_encoded": true,
-              "reason": "TG9nUmV0ZW50aW9uIExhbWJkYSDjga8gQ0RLIOOBjOiHquWLleeUn+aIkOOAgkFXUyDjg57jg43jg7zjgrjjg4njg53jg6rjgrfjg7zjgpLkvb/nlKjjgII=",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "applies_to": [
-                "Resource::*",
-              ],
-              "id": "AwsSolutions-IAM5",
-              "is_reason_encoded": true,
-              "reason": "TG9nUmV0ZW50aW9uIExhbWJkYSDjga8gQ0RLIOOBjOiHquWLleeUn+aIkOOAgkNsb3VkV2F0Y2ggTG9ncyDjgbjjga7jgqLjgq/jgrvjgrnjgasgd2lsZGNhcmQg44GM5b+F6KaB44CC",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "logs:PutRetentionPolicy",
-                "logs:DeleteRetentionPolicy",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
-        "Roles": [
-          {
-            "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
     },
     "SchedulerErrorAlarm02DF039E": {
       "Properties": {
