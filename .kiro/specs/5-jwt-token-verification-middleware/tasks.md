@@ -94,7 +94,7 @@
     - JWKS取得失敗（キャッシュなし）→500 INTERNAL_ERROR "Authentication service unavailable"
     - joseとJwksCacheをモック
     - _要件: 1.1, 1.2, 1.3, 1.4, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4, 5.6, 7.1, 7.2, 7.3, 7.4, 8.1, 8.2, 8.3_
-  - [-] 6.2 ルート保護設定のユニットテストを作成
+  - [x] 6.2 ルート保護設定のユニットテストを作成
     - `packages/api/src/index.test.ts`に追加（または新規ファイル）
     - `/api/votes`にAuthorizationヘッダーなしでPOST→401
     - `POST /api/candidates`にAuthorizationヘッダーなし→401
@@ -103,7 +103,7 @@
     - `GET /health`にAuthorizationヘッダーなし→200（公開）
     - `/auth/register`にAuthorizationヘッダーなし→認証不要
     - _要件: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
-  - [-] 6.3 環境変数チェックのユニットテストを作成
+  - [x] 6.3 環境変数チェックのユニットテストを作成
     - COGNITO_USER_POOL_ID未設定時にエラーがスローされることを検証
     - _要件: 8.5_
 
