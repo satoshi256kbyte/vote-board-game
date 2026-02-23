@@ -68,3 +68,32 @@ export interface PasswordResetConfirmRequest {
 export interface PasswordResetConfirmResponse {
   message: string;
 }
+
+/**
+ * 認証コンテキストの状態型
+ */
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
+/**
+ * 拡張された認証コンテキスト型
+ */
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  setUser: (user: User | null) => void;
+  login: (user: User) => void;
+  logout: () => void;
+}
+
+/**
+ * トークンリフレッシュレスポンス型
+ */
+export interface RefreshResponse {
+  accessToken: string;
+  expiresIn: number;
+}
