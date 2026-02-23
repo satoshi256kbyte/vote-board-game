@@ -191,4 +191,45 @@ describe('AuthService - Property-Based Tests', () => {
       );
     });
   });
+
+  /**
+   * Feature: 9-auth-state-management, Property 12: 認証付きリクエストの Bearer トークン付与
+   *
+   * **Validates: Requirements 8.1**
+   *
+   * 任意の URL と AccessToken に対して、authenticatedFetch は
+   * Authorization ヘッダーに Bearer {accessToken} の値を含むリクエストを送信するべきです。
+   */
+  describe('Property 12: 認証付きリクエストの Bearer トークン付与', () => {
+    it('should include Authorization: Bearer {accessToken} header for any URL and token', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.webUrl(),
+          fc.string({ minLength: 10, maxLength: 500 }),
+          async (url: string, accessToken: string) => {
+            // Arrange
+            vi.clearAllMocks();
+            vi.mocked(storageService.getAccessToken).mockReturnValue(accessToken);
+            (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+              ok: true,
+              status: 200,
+            });
+
+            // Act
+            await authService.authenticatedFetch(url);
+
+            // Assert - fetch should be called with the correct Authorization header
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+            const [calledUrl, calledOptions] = (global.fetch as ReturnType<typeof vi.fn>).mock
+              .calls[0] as [string, RequestInit];
+            expect(calledUrl).toBe(url);
+
+            const headers = new Headers(calledOptions.headers);
+            expect(headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+          }
+        ),
+        { numRuns: 20, endOnFailure: true }
+      );
+    });
+  });
 });
