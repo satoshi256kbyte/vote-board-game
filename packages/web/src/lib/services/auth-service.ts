@@ -120,6 +120,59 @@ class AuthService {
     return data;
   }
 
+  async authenticatedFetch(url: string, options?: RequestInit): Promise<Response> {
+    const accessToken = storageService.getAccessToken();
+    if (!accessToken) {
+      throw new Error('No access token available');
+    }
+
+    const headers = new Headers(options?.headers);
+    headers.set('Authorization', `Bearer ${accessToken}`);
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (response.status === 401) {
+      const refreshTokenValue = storageService.getRefreshToken();
+      if (!refreshTokenValue) {
+        this.logout();
+        throw new Error('No refresh token available');
+      }
+
+      try {
+        await this.refreshToken(refreshTokenValue);
+      } catch {
+        this.logout();
+        throw new Error('Token refresh failed');
+      }
+
+      const newAccessToken = storageService.getAccessToken();
+      if (!newAccessToken) {
+        this.logout();
+        throw new Error('No access token available after refresh');
+      }
+
+      const retryHeaders = new Headers(options?.headers);
+      retryHeaders.set('Authorization', `Bearer ${newAccessToken}`);
+
+      const retryResponse = await fetch(url, {
+        ...options,
+        headers: retryHeaders,
+      });
+
+      if (retryResponse.status === 401) {
+        this.logout();
+        throw new Error('Authentication failed after token refresh');
+      }
+
+      return retryResponse;
+    }
+
+    return response;
+  }
+
   async register(email: string, password: string): Promise<RegisterResponse> {
     try {
       // ユーザー名をメールアドレスから生成（一時的な実装）

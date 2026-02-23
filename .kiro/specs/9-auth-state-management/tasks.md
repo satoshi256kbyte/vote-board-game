@@ -44,7 +44,7 @@
     - 成功時に StorageService.setAccessToken で新しいトークンを保存
     - _要件: 3.2, 3.3_
 
-  - [~] 3.2 AuthService に認証付きリクエストメソッドを追加
+  - [x] 3.2 AuthService に認証付きリクエストメソッドを追加
     - packages/web/src/lib/services/auth-service.ts に authenticatedFetch メソッドを追加
     - Authorization ヘッダーに Bearer トークン形式で AccessToken を付与
     - AccessToken 未存在時はエラーをスロー
