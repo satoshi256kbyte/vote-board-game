@@ -14,6 +14,21 @@ interface LoginRequest {
   password: string;
 }
 
+interface RegisterResponse {
+  userId: string;
+  email: string;
+  username: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+interface RegisterRequest {
+  email: string;
+  password: string;
+  username: string;
+}
+
 class AuthService {
   private apiUrl: string;
 
@@ -68,6 +83,51 @@ class AuthService {
   logout(): void {
     storageService.removeAccessToken();
     storageService.removeRefreshToken();
+  }
+
+  async register(email: string, password: string): Promise<RegisterResponse> {
+    try {
+      // ユーザー名をメールアドレスから生成（一時的な実装）
+      const username = email.split('@')[0];
+
+      const response = await fetch(`${this.apiUrl}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, username } as RegisterRequest),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        switch (response.status) {
+          case 409:
+            throw new Error('このメールアドレスは既に登録されています');
+          case 429:
+            throw new Error('登録試行回数が上限に達しました。しばらくしてから再度お試しください');
+          case 500:
+            throw new Error('サーバーエラーが発生しました。しばらくしてから再度お試しください');
+          default:
+            throw new Error(errorData.message || '登録に失敗しました。もう一度お試しください');
+        }
+      }
+
+      const data: RegisterResponse = await response.json();
+
+      // トークンをローカルストレージに保存
+      storageService.setAccessToken(data.accessToken);
+      storageService.setRefreshToken(data.refreshToken);
+
+      return data;
+    } catch (error) {
+      // ネットワークエラーの検出
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+      }
+      // その他のエラーは再スロー
+      throw error;
+    }
   }
 }
 

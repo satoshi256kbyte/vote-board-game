@@ -15,7 +15,7 @@
   - 要件: 1.1, 1.2, 1.3, 1.4, 1.5
 
 - [ ] 2. Auth Serviceの拡張
-  - [~] 2.1 Auth Serviceにregisterメソッドを実装
+  - [x] 2.1 Auth Serviceにregisterメソッドを実装
     - packages/web/src/lib/services/auth-service.tsにregisterメソッドを追加
     - RegisterRequest型とRegisterResponse型を定義
     - POST /auth/registerエンドポイントへのAPI呼び出しを実装
