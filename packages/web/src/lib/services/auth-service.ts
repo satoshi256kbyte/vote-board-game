@@ -1,4 +1,5 @@
 import { storageService } from './storage-service';
+import type { RefreshResponse } from '../types/auth';
 
 interface LoginResponse {
   userId: string;
@@ -93,6 +94,30 @@ class AuthService {
   logout(): void {
     storageService.removeAccessToken();
     storageService.removeRefreshToken();
+  }
+
+  async refreshToken(refreshToken: string): Promise<RefreshResponse> {
+    const response = await fetch(`${this.apiUrl}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('リフレッシュトークンが無効または期限切れです');
+      }
+      throw new Error('トークンリフレッシュに失敗しました');
+    }
+
+    const data: RefreshResponse = await response.json();
+
+    // 新しいアクセストークンをローカルストレージに保存
+    storageService.setAccessToken(data.accessToken);
+
+    return data;
   }
 
   async register(email: string, password: string): Promise<RegisterResponse> {

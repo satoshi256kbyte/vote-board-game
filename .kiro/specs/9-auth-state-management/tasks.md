@@ -6,7 +6,7 @@
 
 ## タスク
 
-- [ ] 1. 型定義の拡張と StorageService の拡張
+- [x] 1. 型定義の拡張と StorageService の拡張
   - [x] 1.1 AuthContextType、AuthState、RefreshResponse の型定義を追加・拡張
     - packages/web/src/lib/types/auth.ts に AuthState、RefreshResponse インターフェースを追加
     - AuthContextType に isLoading、login、logout を追加
@@ -29,15 +29,15 @@
     - **Property 3: 不正 JSON のグレースフルハンドリング**
     - **検証: 要件 2.4**
 
-  - [~] 1.5 StorageService の全データクリアのプロパティベーステストを作成
+  - [x] 1.5 StorageService の全データクリアのプロパティベーステストを作成
     - **Property 4: ログアウトによる全認証データのクリア**
     - **検証: 要件 2.2, 4.1**
 
-- [ ] 2. チェックポイント - StorageService のテストが通ることを確認
+- [x] 2. チェックポイント - StorageService のテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
 - [ ] 3. AuthService の拡張
-  - [~] 3.1 AuthService にトークンリフレッシュメソッドを追加
+  - [x] 3.1 AuthService にトークンリフレッシュメソッドを追加
     - packages/web/src/lib/services/auth-service.ts に refreshToken メソッドを追加
     - POST /auth/refresh エンドポイントへの API 呼び出しを実装
     - RefreshResponse（accessToken, expiresIn）を返す
