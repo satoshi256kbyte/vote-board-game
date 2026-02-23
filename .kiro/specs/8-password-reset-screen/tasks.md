@@ -23,7 +23,7 @@
     - ネットワークエラーの検出と適切なエラーメッセージの返却
     - _要件: 3.1, 5.1, 5.2, 5.3_
 
-  - [~] 2.2 Auth ServiceにconfirmPasswordResetメソッドを実装
+  - [x] 2.2 Auth ServiceにconfirmPasswordResetメソッドを実装
     - packages/web/src/lib/services/auth-service.tsにconfirmPasswordResetメソッドを追加
     - PasswordResetConfirmRequest型とPasswordResetConfirmResponse型を定義
     - POST /auth/password-reset/confirmエンドポイントへのAPI呼び出しを実装
