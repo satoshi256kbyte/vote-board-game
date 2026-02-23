@@ -22,41 +22,47 @@ class AuthService {
   }
 
   async login(email: string, password: string): Promise<LoginResponse> {
-    const response = await fetch(`${this.apiUrl}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password } as LoginRequest),
-    });
+    try {
+      const response = await fetch(`${this.apiUrl}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password } as LoginRequest),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
 
-      switch (response.status) {
-        case 401:
-          throw new Error('メールアドレスまたはパスワードが正しくありません');
-        case 429:
-          throw new Error('ログイン試行回数が上限に達しました。しばらくしてから再度お試しください');
-        case 500:
-          throw new Error('サーバーエラーが発生しました。しばらくしてから再度お試しください');
-        default:
-          if (!navigator.onLine) {
+        switch (response.status) {
+          case 401:
+            throw new Error('メールアドレスまたはパスワードが正しくありません');
+          case 429:
             throw new Error(
-              'ネットワークエラーが発生しました。インターネット接続を確認してください'
+              'ログイン試行回数が上限に達しました。しばらくしてから再度お試しください'
             );
-          }
-          throw new Error(errorData.message || 'ログインに失敗しました');
+          case 500:
+            throw new Error('サーバーエラーが発生しました。しばらくしてから再度お試しください');
+          default:
+            throw new Error(errorData.message || 'ログインに失敗しました');
+        }
       }
+
+      const data: LoginResponse = await response.json();
+
+      // トークンをローカルストレージに保存
+      storageService.setAccessToken(data.accessToken);
+      storageService.setRefreshToken(data.refreshToken);
+
+      return data;
+    } catch (error) {
+      // ネットワークエラーの検出
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+      }
+      // その他のエラーは再スロー
+      throw error;
     }
-
-    const data: LoginResponse = await response.json();
-
-    // トークンをローカルストレージに保存
-    storageService.setAccessToken(data.accessToken);
-    storageService.setRefreshToken(data.refreshToken);
-
-    return data;
   }
 
   logout(): void {

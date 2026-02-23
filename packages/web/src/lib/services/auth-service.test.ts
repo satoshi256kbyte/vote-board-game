@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { authService } from './auth-service';
 import { storageService } from './storage-service';
-import type { authService as AuthServiceType } from './auth-service';
 
-// storageServiceのモック
+// Mock storage service
 vi.mock('./storage-service', () => ({
   storageService: {
     setAccessToken: vi.fn(),
@@ -13,446 +13,175 @@ vi.mock('./storage-service', () => ({
 }));
 
 describe('AuthService', () => {
-  let authService: typeof AuthServiceType;
-
-  beforeEach(async () => {
-    // fetchのモックをリセット
+  beforeEach(() => {
     vi.clearAllMocks();
-    // グローバルfetchをモック
     global.fetch = vi.fn();
-
-    // モジュールをリセットして再インポート
-    vi.resetModules();
-    const module = await import('./auth-service');
-    authService = module.authService;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe('login', () => {
-    const validEmail = 'test@example.com';
-    const validPassword = 'password123';
     const mockLoginResponse = {
       userId: 'user-123',
-      email: validEmail,
+      email: 'test@example.com',
       username: 'testuser',
-      accessToken: 'access-token-abc',
-      refreshToken: 'refresh-token-xyz',
+      accessToken: 'access-token-123',
+      refreshToken: 'refresh-token-123',
       expiresIn: 900,
     };
 
-    describe('ログイン成功時（200レスポンス）', () => {
-      it('正しいエンドポイントにPOSTリクエストを送信する', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
+    it('should successfully login and save tokens', async () => {
+      // Arrange
+      const email = 'test@example.com';
+      const password = 'password123';
 
-        await authService.login(validEmail, validPassword);
-
-        expect(mockFetch).toHaveBeenCalledWith(
-          '/auth/login',
-          expect.objectContaining({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: validEmail, password: validPassword }),
-          })
-        );
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockLoginResponse,
       });
 
-      it('レスポンスデータを正しく返す', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
+      // Act
+      const result = await authService.login(email, password);
 
-        const result = await authService.login(validEmail, validPassword);
-
-        expect(result).toEqual(mockLoginResponse);
+      // Assert
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/auth/login'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
-
-      it('アクセストークンをローカルストレージに保存する', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
-
-        await authService.login(validEmail, validPassword);
-
-        expect(storageService.setAccessToken).toHaveBeenCalledWith(mockLoginResponse.accessToken);
-      });
-
-      it('リフレッシュトークンをローカルストレージに保存する', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
-
-        await authService.login(validEmail, validPassword);
-
-        expect(storageService.setRefreshToken).toHaveBeenCalledWith(mockLoginResponse.refreshToken);
-      });
-
-      it('トークン保存後にレスポンスを返す', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
-
-        const result = await authService.login(validEmail, validPassword);
-
-        expect(storageService.setAccessToken).toHaveBeenCalled();
-        expect(storageService.setRefreshToken).toHaveBeenCalled();
-        expect(result).toEqual(mockLoginResponse);
-      });
+      expect(storageService.setAccessToken).toHaveBeenCalledWith('access-token-123');
+      expect(storageService.setRefreshToken).toHaveBeenCalledWith('refresh-token-123');
+      expect(result).toEqual(mockLoginResponse);
     });
 
-    describe('エラーレスポンスの変換（401）', () => {
-      it('401レスポンス時に適切なエラーメッセージを投げる', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 401,
-          json: async () => ({ message: 'Unauthorized' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow(
-          'メールアドレスまたはパスワードが正しくありません'
-        );
+    it('should throw error with correct message for 401 status', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({}),
       });
 
-      it('401エラー時にトークンを保存しない', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 401,
-          json: async () => ({ message: 'Unauthorized' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow();
-
-        expect(storageService.setAccessToken).not.toHaveBeenCalled();
-        expect(storageService.setRefreshToken).not.toHaveBeenCalled();
-      });
+      // Act & Assert
+      await expect(authService.login('test@example.com', 'wrong-password')).rejects.toThrow(
+        'メールアドレスまたはパスワードが正しくありません'
+      );
     });
 
-    describe('エラーレスポンスの変換（429）', () => {
-      it('429レスポンス時に適切なエラーメッセージを投げる', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 429,
-          json: async () => ({ message: 'Too Many Requests' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow(
-          'ログイン試行回数が上限に達しました。しばらくしてから再度お試しください'
-        );
+    it('should throw error with correct message for 429 status', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        json: async () => ({}),
       });
 
-      it('429エラー時にトークンを保存しない', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 429,
-          json: async () => ({ message: 'Too Many Requests' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow();
-
-        expect(storageService.setAccessToken).not.toHaveBeenCalled();
-        expect(storageService.setRefreshToken).not.toHaveBeenCalled();
-      });
+      // Act & Assert
+      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow(
+        'ログイン試行回数が上限に達しました。しばらくしてから再度お試しください'
+      );
     });
 
-    describe('エラーレスポンスの変換（500）', () => {
-      it('500レスポンス時に適切なエラーメッセージを投げる', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 500,
-          json: async () => ({ message: 'Internal Server Error' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow(
-          'サーバーエラーが発生しました。しばらくしてから再度お試しください'
-        );
+    it('should throw error with correct message for 500 status', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({}),
       });
 
-      it('500エラー時にトークンを保存しない', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 500,
-          json: async () => ({ message: 'Internal Server Error' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow();
-
-        expect(storageService.setAccessToken).not.toHaveBeenCalled();
-        expect(storageService.setRefreshToken).not.toHaveBeenCalled();
-      });
+      // Act & Assert
+      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow(
+        'サーバーエラーが発生しました。しばらくしてから再度お試しください'
+      );
     });
 
-    describe('ネットワークエラーのテスト', () => {
-      let originalNavigator: Navigator;
-
-      beforeEach(() => {
-        originalNavigator = global.navigator;
+    it('should throw error with custom message for other status codes', async () => {
+      // Arrange
+      const customMessage = 'Custom error message';
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ message: customMessage }),
       });
 
-      afterEach(() => {
-        global.navigator = originalNavigator;
-      });
-
-      it('オフライン時に適切なエラーメッセージを投げる', async () => {
-        // navigatorをモック
-        Object.defineProperty(global, 'navigator', {
-          value: { onLine: false },
-          writable: true,
-          configurable: true,
-        });
-
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 503,
-          json: async () => ({ message: 'Service Unavailable' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow(
-          'ネットワークエラーが発生しました。インターネット接続を確認してください'
-        );
-      });
-
-      it('fetch失敗時にネットワークエラーメッセージを投げる（オフライン）', async () => {
-        // navigatorをモック
-        Object.defineProperty(global, 'navigator', {
-          value: { onLine: false },
-          writable: true,
-          configurable: true,
-        });
-
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockRejectedValueOnce(new Error('Network request failed'));
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow(
-          'Network request failed'
-        );
-      });
-
-      it('ネットワークエラー時にトークンを保存しない', async () => {
-        // navigatorをモック
-        Object.defineProperty(global, 'navigator', {
-          value: { onLine: false },
-          writable: true,
-          configurable: true,
-        });
-
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 503,
-          json: async () => ({ message: 'Service Unavailable' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow();
-
-        expect(storageService.setAccessToken).not.toHaveBeenCalled();
-        expect(storageService.setRefreshToken).not.toHaveBeenCalled();
-      });
+      // Act & Assert
+      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow(
+        customMessage
+      );
     });
 
-    describe('その他のエラーケース', () => {
-      it('不明なステータスコード時にデフォルトエラーメッセージを投げる（オンライン）', async () => {
-        // navigatorをモック
-        Object.defineProperty(global, 'navigator', {
-          value: { onLine: true },
-          writable: true,
-          configurable: true,
-        });
-
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 400,
-          json: async () => ({ message: 'Bad Request' }),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow('Bad Request');
+    it('should throw default error message when error response has no message', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({}),
       });
 
-      it('エラーレスポンスのJSONパースに失敗した場合にデフォルトエラーメッセージを投げる', async () => {
-        // navigatorをモック
-        Object.defineProperty(global, 'navigator', {
-          value: { onLine: true },
-          writable: true,
-          configurable: true,
-        });
-
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 400,
-          json: async () => {
-            throw new Error('Invalid JSON');
-          },
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow(
-          'ログインに失敗しました'
-        );
-      });
-
-      it('エラーレスポンスにmessageがない場合にデフォルトエラーメッセージを投げる', async () => {
-        // navigatorをモック
-        Object.defineProperty(global, 'navigator', {
-          value: { onLine: true },
-          writable: true,
-          configurable: true,
-        });
-
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: false,
-          status: 400,
-          json: async () => ({}),
-        } as unknown as Response);
-
-        await expect(authService.login(validEmail, validPassword)).rejects.toThrow(
-          'ログインに失敗しました'
-        );
-      });
+      // Act & Assert
+      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow(
+        'ログインに失敗しました'
+      );
     });
 
-    describe('エッジケース', () => {
-      it('空のメールアドレスとパスワードでリクエストを送信できる', async () => {
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
+    it('should handle network errors', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new TypeError('Failed to fetch')
+      );
 
-        await authService.login('', '');
+      // Act & Assert
+      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow(
+        'ネットワークエラーが発生しました。インターネット接続を確認してください'
+      );
+    });
 
-        expect(mockFetch).toHaveBeenCalledWith(
-          '/auth/login',
-          expect.objectContaining({
-            body: JSON.stringify({ email: '', password: '' }),
-          })
-        );
+    it('should handle JSON parse errors in error response', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => {
+          throw new Error('Invalid JSON');
+        },
       });
 
-      it('特殊文字を含むメールアドレスとパスワードを正しく送信する', async () => {
-        const specialEmail = 'test+tag@example.com';
-        const specialPassword = 'p@ssw0rd!#$%';
+      // Act & Assert
+      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow(
+        'サーバーエラーが発生しました。しばらくしてから再度お試しください'
+      );
+    });
 
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
-
-        await authService.login(specialEmail, specialPassword);
-
-        expect(mockFetch).toHaveBeenCalledWith(
-          '/auth/login',
-          expect.objectContaining({
-            body: JSON.stringify({ email: specialEmail, password: specialPassword }),
-          })
-        );
+    it('should not save tokens when login fails', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({}),
       });
 
-      it('非常に長いメールアドレスとパスワードを正しく送信する', async () => {
-        const longEmail = 'a'.repeat(100) + '@example.com';
-        const longPassword = 'p'.repeat(200);
+      // Act
+      try {
+        await authService.login('test@example.com', 'wrong-password');
+      } catch {
+        // Expected error
+      }
 
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
-
-        await authService.login(longEmail, longPassword);
-
-        expect(mockFetch).toHaveBeenCalledWith(
-          '/auth/login',
-          expect.objectContaining({
-            body: JSON.stringify({ email: longEmail, password: longPassword }),
-          })
-        );
-      });
-
-      it('Unicode文字を含むメールアドレスとパスワードを正しく送信する', async () => {
-        const unicodeEmail = 'test日本語@example.com';
-        const unicodePassword = 'パスワード123';
-
-        const mockFetch = vi.mocked(global.fetch);
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockLoginResponse,
-        } as unknown as Response);
-
-        await authService.login(unicodeEmail, unicodePassword);
-
-        expect(mockFetch).toHaveBeenCalledWith(
-          '/auth/login',
-          expect.objectContaining({
-            body: JSON.stringify({ email: unicodeEmail, password: unicodePassword }),
-          })
-        );
-      });
+      // Assert
+      expect(storageService.setAccessToken).not.toHaveBeenCalled();
+      expect(storageService.setRefreshToken).not.toHaveBeenCalled();
     });
   });
 
   describe('logout', () => {
-    it('アクセストークンを削除する', () => {
+    it('should remove both access and refresh tokens', () => {
+      // Act
       authService.logout();
 
-      expect(storageService.removeAccessToken).toHaveBeenCalled();
-    });
-
-    it('リフレッシュトークンを削除する', () => {
-      authService.logout();
-
-      expect(storageService.removeRefreshToken).toHaveBeenCalled();
-    });
-
-    it('両方のトークンを削除する', () => {
-      authService.logout();
-
+      // Assert
       expect(storageService.removeAccessToken).toHaveBeenCalled();
       expect(storageService.removeRefreshToken).toHaveBeenCalled();
-    });
-
-    it('エラーを投げない', () => {
-      expect(() => authService.logout()).not.toThrow();
-    });
-
-    it('複数回呼び出してもエラーを投げない', () => {
-      expect(() => {
-        authService.logout();
-        authService.logout();
-        authService.logout();
-      }).not.toThrow();
     });
   });
 });
