@@ -58,7 +58,7 @@
     - shadcn/uiのInput、Button、Alertコンポーネントを使用
     - 要件: 1.1, 1.2, 1.3, 1.4, 1.5
 
-  - [~] 4.2 クライアント側バリデーションを実装
+  - [x] 4.2 クライアント側バリデーションを実装
     - メールアドレス形式のバリデーション関数（validateEmail）
     - パスワード要件のバリデーション関数（validatePassword）
     - パスワード確認のバリデーション関数（validatePasswordConfirmation）
