@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { usePasswordReset } from '@/lib/hooks/use-password-reset';
@@ -40,6 +40,16 @@ export function ConfirmResetForm({ email }: ConfirmResetFormProps) {
     passwordConfirmation: false,
   });
   const [isResending, setIsResending] = useState(false);
+
+  // Redirect to login after 3 seconds when password reset succeeds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        router.push('/login');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, router]);
 
   const validateConfirmationCode = (value: string): string | undefined => {
     if (!value.trim()) {
@@ -122,13 +132,7 @@ export function ConfirmResetForm({ email }: ConfirmResetFormProps) {
       return;
     }
 
-    const success = await confirmReset(email, confirmationCode, newPassword);
-    if (success) {
-      // 3秒後にログイン画面にリダイレクト
-      setTimeout(() => {
-        router.push('/login');
-      }, 3000);
-    }
+    await confirmReset(email, confirmationCode, newPassword);
   };
 
   const handleResendCode = async () => {

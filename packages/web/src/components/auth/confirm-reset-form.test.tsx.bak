@@ -1,0 +1,1014 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+import { ConfirmResetForm } from './confirm-reset-form';
+import * as usePasswordResetModule from '@/lib/hooks/use-password-reset';
+import { useRouter } from 'next/navigation';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+// Mock the usePasswordReset hook
+vi.mock('@/lib/hooks/use-password-reset');
+
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
+}));
+
+describe('ConfirmResetForm - Initial Display', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn().mockResolvedValue(true),
+      confirmReset: vi.fn().mockResolvedValue(true),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    vi.mocked(useRouter).mockReturnValue({
+      push: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      refresh: vi.fn(),
+      replace: vi.fn(),
+      prefetch: vi.fn(),
+    } as any);
+  });
+
+  it('should display confirmation code input field (Requirement 6.1)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    expect(codeInput).toBeInTheDocument();
+    expect(codeInput).toHaveAttribute('type', 'text');
+    expect(codeInput).toHaveAttribute('placeholder', '6桁の確認コード');
+  });
+
+  it('should display new password input field (Requirement 6.2)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    expect(passwordInput).toBeInTheDocument();
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(passwordInput).toHaveAttribute('placeholder', '新しいパスワード');
+  });
+
+  it('should display password confirmation input field (Requirement 6.3)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+    expect(confirmInput).toBeInTheDocument();
+    expect(confirmInput).toHaveAttribute('type', 'password');
+    expect(confirmInput).toHaveAttribute('placeholder', '新しいパスワード(確認)');
+  });
+
+  it('should display reset password button (Requirement 6.4)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+    expect(submitButton).toBeInTheDocument();
+  });
+
+  it('should display password requirements text (Requirement 6.8)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const requirementsText = screen.getByText('8文字以上、大文字・小文字・数字を含む');
+    expect(requirementsText).toBeInTheDocument();
+  });
+
+  it('should display resend code link (Requirement 11.1)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const resendLink = screen.getByRole('button', { name: '確認コードを再送信' });
+    expect(resendLink).toBeInTheDocument();
+  });
+
+  it('should display password visibility toggle buttons (Requirements 12.1, 12.2)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const newPasswordToggle = screen.getByLabelText('パスワードを表示');
+    const confirmPasswordToggle = screen.getByLabelText('パスワード確認を表示');
+
+    expect(newPasswordToggle).toBeInTheDocument();
+    expect(confirmPasswordToggle).toBeInTheDocument();
+  });
+});
+
+describe('ConfirmResetForm - Validation Errors', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn().mockResolvedValue(true),
+      confirmReset: vi.fn().mockResolvedValue(true),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    vi.mocked(useRouter).mockReturnValue({
+      push: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      refresh: vi.fn(),
+      replace: vi.fn(),
+      prefetch: vi.fn(),
+    } as any);
+  });
+
+  it('should display error when confirmation code is empty on blur (Requirement 7.1)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    fireEvent.blur(codeInput);
+  it('should display error when confirmation code is empty on blur (Requirement 7.1)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    fireEvent.blur(codeInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('確認コードを入力してください')).toBeInTheDocument();
+    });
+  });
+
+  it('should display error when confirmation code is not 6 digits (Requirement 7.2)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    fireEvent.change(codeInput, { target: { value: '12345' } });
+    fireEvent.blur(codeInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('確認コードは6桁の数字である必要があります')).toBeInTheDocument();
+    });
+  });
+
+  it('should display error when new password is empty (Requirement 7.3)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    fireEvent.blur(passwordInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('新しいパスワードを入力してください')).toBeInTheDocument();
+    });
+  });
+
+  it('should display error when password is less than 8 characters (Requirement 7.4)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    fireEvent.change(passwordInput, { target: { value: 'Pass1' } });
+    fireEvent.blur(passwordInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('パスワードは8文字以上である必要があります')).toBeInTheDocument();
+    });
+  });
+
+  it('should display error when password has no uppercase letter (Requirement 7.5)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.blur(passwordInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('パスワードには大文字を含める必要があります')).toBeInTheDocument();
+    });
+  });
+
+  it('should display error when password has no lowercase letter (Requirement 7.6)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    fireEvent.change(passwordInput, { target: { value: 'PASSWORD123' } });
+    fireEvent.blur(passwordInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('パスワードには小文字を含める必要があります')).toBeInTheDocument();
+    });
+  });
+
+  it('should display error when password has no number (Requirement 7.7)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    fireEvent.change(passwordInput, { target: { value: 'Password' } });
+    fireEvent.blur(passwordInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('パスワードには数字を含める必要があります')).toBeInTheDocument();
+    });
+  });
+
+  it('should display error when password confirmation does not match (Requirement 7.8)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
+    fireEvent.change(confirmInput, { target: { value: 'Password456' } });
+    fireEvent.blur(confirmInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('パスワードが一致しません')).toBeInTheDocument();
+    });
+  });
+
+  it('should not call API when validation errors exist (Requirement 7.9)', async () => {
+    const mockConfirmReset = vi.fn().mockResolvedValue(true);
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: mockConfirmReset,
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('確認コードを入力してください')).toBeInTheDocument();
+    });
+
+    expect(mockConfirmReset).not.toHaveBeenCalled();
+  });
+
+  it('should only accept numeric input for confirmation code', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード') as HTMLInputElement;
+    fireEvent.change(codeInput, { target: { value: 'abc123' } });
+
+    expect(codeInput.value).toBe('123');
+  });
+});
+
+describe('ConfirmResetForm - Loading State', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+  });
+
+  it('should disable button during loading (Requirement 8.2)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const submitButton = screen.getByRole('button', { name: 'リセット中...' });
+    expect(submitButton).toBeDisabled();
+    expect(submitButton).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should show loading indicator during API call (Requirement 8.3)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const loadingButton = screen.getByRole('button', { name: 'リセット中...' });
+    expect(loadingButton).toBeInTheDocument();
+  });
+
+  it('should disable all input fields during loading (Requirement 8.4)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+
+    expect(codeInput).toBeDisabled();
+    expect(passwordInput).toBeDisabled();
+    expect(confirmInput).toBeDisabled();
+  });
+
+  it('should disable password visibility toggle buttons during loading', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const toggleButtons = screen.getAllByLabelText(/パスワードを表示/);
+    toggleButtons.forEach((button) => {
+      expect(button).toBeDisabled();
+    });
+  });
+});
+
+describe('ConfirmResetForm - Password Visibility Toggle', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+  });
+
+  it('should toggle new password visibility when button is clicked (Requirements 12.3, 12.4)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード') as HTMLInputElement;
+    const toggleButton = passwordInput.parentElement?.querySelector('button');
+
+    expect(passwordInput.type).toBe('password');
+
+    if (toggleButton) {
+      fireEvent.click(toggleButton);
+      await waitFor(() => {
+        expect(passwordInput.type).toBe('text');
+      });
+
+      fireEvent.click(toggleButton);
+      await waitFor(() => {
+        expect(passwordInput.type).toBe('password');
+      });
+    }
+  });
+
+  it('should toggle password confirmation visibility when button is clicked (Requirements 12.3, 12.4)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const confirmInput = screen.getByLabelText('新しいパスワード確認') as HTMLInputElement;
+    const toggleButton = confirmInput.parentElement?.querySelector('button');
+
+    expect(confirmInput.type).toBe('password');
+
+    if (toggleButton) {
+      fireEvent.click(toggleButton);
+      await waitFor(() => {
+        expect(confirmInput.type).toBe('text');
+      });
+
+      fireEvent.click(toggleButton);
+      await waitFor(() => {
+        expect(confirmInput.type).toBe('password');
+      });
+    }
+  });
+
+  it('should update aria-label when password visibility is toggled (Requirement 12.5)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const toggleButton = passwordInput.parentElement?.querySelector('button');
+
+    expect(toggleButton).toHaveAttribute('aria-label', 'パスワードを表示');
+
+    if (toggleButton) {
+      fireEvent.click(toggleButton);
+      await waitFor(() => {
+        expect(toggleButton).toHaveAttribute('aria-label', 'パスワードを非表示');
+      });
+    }
+  });
+
+  it('should show Eye icon when password is hidden and EyeOff when visible', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const toggleButton = passwordInput.parentElement?.querySelector('button');
+
+    // Initially should show Eye icon (password hidden)
+    expect(toggleButton?.querySelector('svg')).toBeInTheDocument();
+
+    if (toggleButton) {
+      fireEvent.click(toggleButton);
+      await waitFor(() => {
+        // After click should show EyeOff icon (password visible)
+        expect(toggleButton.querySelector('svg')).toBeInTheDocument();
+      });
+    }
+  });
+});
+
+describe('ConfirmResetForm - Resend Code', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+  });
+
+  it('should call resendCode when resend link is clicked (Requirement 11.2)', async () => {
+    const mockResendCode = vi.fn().mockResolvedValue(true);
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: mockResendCode,
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const resendButton = screen.getByRole('button', { name: '確認コードを再送信' });
+    fireEvent.click(resendButton);
+
+    await waitFor(() => {
+      expect(mockResendCode).toHaveBeenCalledWith('test@example.com');
+    });
+  });
+
+  it('should disable resend link during resend operation (Requirement 11.4)', async () => {
+    const mockResendCode = vi
+      .fn()
+      .mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve(true), 100)));
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: mockResendCode,
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const resendButton = screen.getByRole('button', { name: '確認コードを再送信' });
+    fireEvent.click(resendButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '送信中...' })).toBeDisabled();
+    });
+  });
+
+  it('should disable resend link when form is loading (Requirement 11.4)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const resendButton = screen.getByRole('button', { name: '確認コードを再送信' });
+    expect(resendButton).toBeDisabled();
+  });
+
+  it('should display success message after resend (Requirement 11.3)', async () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: '確認コードを再送信しました',
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    expect(screen.getByText('確認コードを再送信しました')).toBeInTheDocument();
+  });
+});
+
+describe('ConfirmResetForm - Success Flow', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should display success message when reset succeeds (Requirement 9.1)', async () => {
+    const mockConfirmReset = vi.fn().mockResolvedValue(true);
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: mockConfirmReset,
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: 'パスワードがリセットされました。新しいパスワードでログインしてください。',
+    });
+
+    const mockPush = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof useRouter>);
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    expect(
+      screen.getByText('パスワードがリセットされました。新しいパスワードでログインしてください。')
+    ).toBeInTheDocument();
+  });
+
+  it('should redirect to login after 3 seconds on success (Requirement 9.2)', async () => {
+    const mockConfirmReset = vi.fn().mockResolvedValue(true);
+    const mockPush = vi.fn();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: mockConfirmReset,
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof useRouter>);
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+
+    // Fill in valid data
+    fireEvent.change(codeInput, { target: { value: '123456' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
+    fireEvent.change(confirmInput, { target: { value: 'Password123' } });
+
+    // Wait for state to update
+    await waitFor(() => {
+      expect(codeInput).toHaveValue('123456');
+    });
+
+    // Get submit button and verify it's enabled
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+
+    // Wait for button to be enabled (no validation errors)
+    await waitFor(
+      () => {
+        expect(submitButton).not.toBeDisabled();
+      },
+      { timeout: 2000 }
+    );
+
+    // Submit the form
+    fireEvent.click(submitButton);
+
+    // Wait for confirmReset to be called
+    await waitFor(
+      () => {
+        expect(mockConfirmReset).toHaveBeenCalledWith('test@example.com', '123456', 'Password123');
+      },
+      { timeout: 2000 }
+    );
+
+    // Fast-forward 3 seconds
+    vi.advanceTimersByTime(3000);
+
+    // Wait for redirect
+    await waitFor(
+      () => {
+        expect(mockPush).toHaveBeenCalledWith('/login');
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  it('should call confirmReset with correct parameters (Requirement 8.1)', async () => {
+    const mockConfirmReset = vi.fn().mockResolvedValue(true);
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: mockConfirmReset,
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+
+    render(<ConfirmResetForm email="user@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+
+    // Fill in valid data
+    fireEvent.change(codeInput, { target: { value: '654321' } });
+    fireEvent.change(passwordInput, { target: { value: 'NewPass456' } });
+    fireEvent.change(confirmInput, { target: { value: 'NewPass456' } });
+
+    // Wait for state to update
+    await waitFor(() => {
+      expect(codeInput).toHaveValue('654321');
+    });
+
+    // Get submit button and verify it's enabled
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+
+    // Wait for button to be enabled (no validation errors)
+    await waitFor(
+      () => {
+        expect(submitButton).not.toBeDisabled();
+      },
+      { timeout: 2000 }
+    );
+
+    // Submit the form
+    fireEvent.click(submitButton);
+
+    // Wait for confirmReset to be called
+    await waitFor(
+      () => {
+        expect(mockConfirmReset).toHaveBeenCalledWith('user@example.com', '654321', 'NewPass456');
+      },
+      { timeout: 2000 }
+    );
+  });
+});
+
+describe('ConfirmResetForm - Failure Flow', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+  });
+
+  it('should display invalid code error message (Requirement 10.1)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: '確認コードが無効または期限切れです',
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    expect(screen.getByText('確認コードが無効または期限切れです')).toBeInTheDocument();
+  });
+
+  it('should display validation error from API (Requirement 10.2)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: 'バリデーションエラーが発生しました',
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    expect(screen.getByText('バリデーションエラーが発生しました')).toBeInTheDocument();
+  });
+
+  it('should display rate limit error message (Requirement 10.3)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: 'リクエスト回数が上限に達しました。しばらくしてから再度お試しください',
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    expect(
+      screen.getByText('リクエスト回数が上限に達しました。しばらくしてから再度お試しください')
+    ).toBeInTheDocument();
+  });
+
+  it('should display server error message (Requirement 10.4)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: 'サーバーエラーが発生しました。しばらくしてから再度お試しください',
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    expect(
+      screen.getByText('サーバーエラーが発生しました。しばらくしてから再度お試しください')
+    ).toBeInTheDocument();
+  });
+
+  it('should display network error message (Requirement 10.5)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: 'ネットワークエラーが発生しました。インターネット接続を確認してください',
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    expect(
+      screen.getByText('ネットワークエラーが発生しました。インターネット接続を確認してください')
+    ).toBeInTheDocument();
+  });
+
+  it('should set role="alert" on API error messages', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: 'サーバーエラーが発生しました。しばらくしてから再度お試しください',
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent(
+      'サーバーエラーが発生しました。しばらくしてから再度お試しください'
+    );
+  });
+});
+
+describe('ConfirmResetForm - Error Recovery', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+  });
+
+  it('should re-enable button and fields after error (Requirement 10.6)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: 'サーバーエラーが発生しました。しばらくしてから再度お試しください',
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+
+    expect(codeInput).not.toBeDisabled();
+    expect(passwordInput).not.toBeDisabled();
+    expect(confirmInput).not.toBeDisabled();
+    expect(submitButton).not.toBeDisabled();
+  });
+
+  it('should allow user to retry after error', async () => {
+    const mockConfirmReset = vi.fn().mockResolvedValue(true);
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: mockConfirmReset,
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+
+    // Fill form and submit
+    fireEvent.change(codeInput, { target: { value: '123456' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
+    fireEvent.change(confirmInput, { target: { value: 'Password123' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockConfirmReset).toHaveBeenCalled();
+    });
+  });
+});
+
+describe('ConfirmResetForm - Accessibility', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+  });
+
+  it('should have aria-label on confirmation code field (Requirement 14.2)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    expect(codeInput).toHaveAttribute('aria-label', '確認コード');
+  });
+
+  it('should have aria-label on new password field (Requirement 14.3)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    expect(passwordInput).toHaveAttribute('aria-label', '新しいパスワード');
+  });
+
+  it('should have aria-label on password confirmation field (Requirement 14.4)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+    expect(confirmInput).toHaveAttribute('aria-label', '新しいパスワード確認');
+  });
+
+  it('should set role="alert" on validation error messages (Requirement 14.5)', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    fireEvent.blur(codeInput);
+
+    await waitFor(() => {
+      const errorMessage = screen.getByText('確認コードを入力してください');
+      expect(errorMessage).toHaveAttribute('role', 'alert');
+    });
+  });
+
+  it('should set aria-disabled when button is disabled (Requirement 14.6)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const submitButton = screen.getByRole('button', { name: 'リセット中...' });
+    expect(submitButton).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should have aria-label on password visibility toggle buttons (Requirement 14.7)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const newPasswordToggle = screen.getByLabelText('パスワードを表示');
+    const confirmPasswordToggle = screen.getByLabelText('パスワード確認を表示');
+
+    expect(newPasswordToggle).toHaveAttribute('aria-label', 'パスワードを表示');
+    expect(confirmPasswordToggle).toHaveAttribute('aria-label', 'パスワード確認を表示');
+  });
+
+  it('should associate error messages with fields using aria-describedby', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    fireEvent.blur(codeInput);
+
+    await waitFor(() => {
+      expect(codeInput).toHaveAttribute('aria-describedby', 'confirmation-code-error');
+    });
+  });
+
+  it('should dynamically set aria-invalid based on validation state', async () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+
+    // Initially no error
+    expect(codeInput).toHaveAttribute('aria-invalid', 'false');
+
+    // Trigger error
+    fireEvent.blur(codeInput);
+
+    await waitFor(() => {
+      expect(codeInput).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    // Fix error
+    fireEvent.change(codeInput, { target: { value: '123456' } });
+    fireEvent.blur(codeInput);
+
+    await waitFor(() => {
+      expect(codeInput).toHaveAttribute('aria-invalid', 'false');
+    });
+  });
+
+  it('should ensure keyboard navigation is supported', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const codeInput = screen.getByLabelText('確認コード');
+    const passwordInput = screen.getByLabelText('新しいパスワード');
+    const confirmInput = screen.getByLabelText('新しいパスワード確認');
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+    const resendButton = screen.getByRole('button', { name: '確認コードを再送信' });
+
+    // All interactive elements should be focusable
+    expect(codeInput).not.toHaveAttribute('tabindex', '-1');
+    expect(passwordInput).not.toHaveAttribute('tabindex', '-1');
+    expect(confirmInput).not.toHaveAttribute('tabindex', '-1');
+    expect(submitButton).not.toHaveAttribute('tabindex', '-1');
+    expect(resendButton).not.toHaveAttribute('tabindex', '-1');
+  });
+});
+
+describe('ConfirmResetForm - Responsive Layout', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+  });
+
+  it('should render form with responsive classes (Requirements 15.1, 15.2, 15.3)', () => {
+    const { container } = render(<ConfirmResetForm email="test@example.com" />);
+
+    const form = container.querySelector('form');
+    expect(form).toHaveClass('space-y-6');
+  });
+
+  it('should have full-width submit button', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+    expect(submitButton).toHaveClass('w-full');
+  });
+
+  it('should ensure minimum touch target size for interactive elements (Requirement 15.4)', () => {
+    render(<ConfirmResetForm email="test@example.com" />);
+
+    const submitButton = screen.getByRole('button', { name: 'パスワードをリセット' });
+    const resendButton = screen.getByRole('button', { name: '確認コードを再送信' });
+
+    // Buttons should have sufficient size for touch targets
+    const submitRect = submitButton.getBoundingClientRect();
+    const resendRect = resendButton.getBoundingClientRect();
+
+    // Note: In jsdom, getBoundingClientRect returns 0 for dimensions
+    // In real browser tests, these would be >= 44px
+    expect(submitRect).toBeDefined();
+    expect(resendRect).toBeDefined();
+  });
+
+  it('should stack form fields vertically', () => {
+    const { container } = render(<ConfirmResetForm email="test@example.com" />);
+
+    const fieldsContainer = container.querySelector('.space-y-4');
+    expect(fieldsContainer).toBeInTheDocument();
+  });
+});
+
+}

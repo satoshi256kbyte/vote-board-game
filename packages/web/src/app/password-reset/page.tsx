@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RequestCodeForm } from '@/components/auth/request-code-form';
 import { ConfirmResetForm } from '@/components/auth/confirm-reset-form';
 

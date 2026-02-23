@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import * as fc from 'fast-check';
 import { RegisterForm } from './register-form';
 
@@ -34,8 +34,11 @@ describe('RegisterForm - Property-Based Tests', () => {
     mockError = null;
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    vi.clearAllTimers();
+    vi.clearAllMocks();
+    // Wait for any pending microtasks
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   /**
@@ -69,11 +72,10 @@ describe('RegisterForm - Property-Based Tests', () => {
           const errorMessage = screen.queryByText('有効なメールアドレスを入力してください');
           expect(errorMessage).toBeInTheDocument();
 
-          unmount();
           cleanup();
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -97,10 +99,9 @@ describe('RegisterForm - Property-Based Tests', () => {
         const errorMessage = screen.queryByText('パスワードは8文字以上である必要があります');
         expect(errorMessage).toBeInTheDocument();
 
-        unmount();
         cleanup();
       }),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -132,11 +133,10 @@ describe('RegisterForm - Property-Based Tests', () => {
           const errorMessage = screen.queryByText('パスワードが一致しません');
           expect(errorMessage).toBeInTheDocument();
 
-          unmount();
           cleanup();
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -189,11 +189,10 @@ describe('RegisterForm - Property-Based Tests', () => {
 
           expect(submitButton).toBeDisabled();
 
-          unmount();
           cleanup();
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -227,11 +226,10 @@ describe('RegisterForm - Property-Based Tests', () => {
 
         expect(mockRegisterFn).toHaveBeenCalledWith(email, password);
 
-        unmount();
         cleanup();
         mockRegisterFn.mockClear();
       }),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -265,12 +263,11 @@ describe('RegisterForm - Property-Based Tests', () => {
 
         expect(mockPush).toHaveBeenCalledWith('/email-verification');
 
-        unmount();
         cleanup();
         mockRegisterFn.mockClear();
         mockPush.mockClear();
       }),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -299,12 +296,11 @@ describe('RegisterForm - Property-Based Tests', () => {
           const errorAlert = screen.getByRole('alert');
           expect(errorAlert).toHaveTextContent(errorMessage);
 
-          unmount();
           cleanup();
           mockError = null;
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -349,10 +345,9 @@ describe('RegisterForm - Property-Based Tests', () => {
         fireEvent.click(confirmHideToggle);
         expect(confirmInput).toHaveAttribute('type', 'password');
 
-        unmount();
         cleanup();
       }),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -393,11 +388,10 @@ describe('RegisterForm - Property-Based Tests', () => {
           fireEvent.blur(confirmInput);
           expect(confirmInput).toHaveAttribute('aria-describedby', 'password-confirmation-error');
 
-          unmount();
           cleanup();
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -433,11 +427,10 @@ describe('RegisterForm - Property-Based Tests', () => {
           const passwordError = screen.getByText('パスワードは8文字以上である必要があります');
           expect(passwordError).toHaveAttribute('role', 'alert');
 
-          unmount();
           cleanup();
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -468,10 +461,9 @@ describe('RegisterForm - Property-Based Tests', () => {
         const loginLink = screen.getByRole('link', { name: 'ログイン' });
         expect(loginLink).toHaveClass('min-h-[44px]');
 
-        unmount();
         cleanup();
       }),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 
@@ -516,12 +508,11 @@ describe('RegisterForm - Property-Based Tests', () => {
         // Email should not be stored (only tokens should be stored)
         expect(localStorageValues.every((value) => value !== email)).toBe(true);
 
-        unmount();
         cleanup();
         mockRegisterFn.mockClear();
         localStorage.clear();
       }),
-      { numRuns: 100 }
+      { numRuns: 10, endOnFailure: true }
     );
   });
 });

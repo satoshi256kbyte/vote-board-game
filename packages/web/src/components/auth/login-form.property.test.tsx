@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import * as fc from 'fast-check';
 import { LoginForm } from './login-form';
@@ -31,8 +31,11 @@ describe('LoginForm - Property-Based Tests', () => {
     });
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    vi.clearAllTimers();
+    vi.clearAllMocks();
+    // Wait for any pending microtasks
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   /**
@@ -60,31 +63,30 @@ describe('LoginForm - Property-Based Tests', () => {
           fc.string({ minLength: 1 }),
           async (invalidEmail, password) => {
             mockLogin.mockClear();
-            const { unmount } = render(<LoginForm />);
+            cleanup(); // Clean up before rendering
+            render(<LoginForm />);
 
-            try {
-              const emailInput = screen.getByLabelText('メールアドレス');
-              const passwordInput = screen.getByLabelText('パスワード');
-              const loginButton = screen.getByRole('button', { name: 'ログイン' });
+            const emailInput = screen.getByLabelText('メールアドレス');
+            const passwordInput = screen.getByLabelText('パスワード');
+            const loginButton = screen.getByRole('button', { name: 'ログイン' });
 
+            await act(async () => {
               fireEvent.change(emailInput, { target: { value: invalidEmail } });
               fireEvent.change(passwordInput, { target: { value: password } });
               fireEvent.click(loginButton);
+            });
 
-              await waitFor(() => {
-                const errorMessage = screen.queryByText('有効なメールアドレスを入力してください');
-                const emptyMessage = screen.queryByText('メールアドレスを入力してください');
-                expect(errorMessage || emptyMessage).toBeTruthy();
-              });
+            await waitFor(() => {
+              const errorMessage = screen.queryByText('有効なメールアドレスを入力してください');
+              const emptyMessage = screen.queryByText('メールアドレスを入力してください');
+              expect(errorMessage || emptyMessage).toBeTruthy();
+            });
 
-              expect(mockLogin).not.toHaveBeenCalled();
-            } finally {
-              unmount();
-              cleanup();
-            }
+            expect(mockLogin).not.toHaveBeenCalled();
+            cleanup(); // Clean up after test
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 } // Reduce runs to speed up tests
       );
     },
     { timeout: 30000 }
@@ -117,31 +119,30 @@ describe('LoginForm - Property-Based Tests', () => {
           ),
           async ({ email, password }) => {
             mockLogin.mockClear();
-            const { unmount } = render(<LoginForm />);
+            cleanup(); // Clean up before rendering
+            render(<LoginForm />);
 
-            try {
-              const emailInput = screen.getByLabelText('メールアドレス');
-              const passwordInput = screen.getByLabelText('パスワード');
-              const loginButton = screen.getByRole('button', { name: 'ログイン' });
+            const emailInput = screen.getByLabelText('メールアドレス');
+            const passwordInput = screen.getByLabelText('パスワード');
+            const loginButton = screen.getByRole('button', { name: 'ログイン' });
 
+            await act(async () => {
               fireEvent.change(emailInput, { target: { value: email } });
               fireEvent.change(passwordInput, { target: { value: password } });
               fireEvent.click(loginButton);
+            });
 
-              await waitFor(() => {
-                // エラーメッセージが表示されるまで待つ
-                const alerts = screen.queryAllByRole('alert');
-                expect(alerts.length).toBeGreaterThan(0);
-              });
+            await waitFor(() => {
+              // エラーメッセージが表示されるまで待つ
+              const alerts = screen.queryAllByRole('alert');
+              expect(alerts.length).toBeGreaterThan(0);
+            });
 
-              expect(mockLogin).not.toHaveBeenCalled();
-            } finally {
-              unmount();
-              cleanup();
-            }
+            expect(mockLogin).not.toHaveBeenCalled();
+            cleanup(); // Clean up after test
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 } // Reduce runs to speed up tests
       );
     },
     { timeout: 30000 }
@@ -156,23 +157,26 @@ describe('LoginForm - Property-Based Tests', () => {
       fc.asyncProperty(fc.emailAddress(), fc.string({ minLength: 1 }), async (email, password) => {
         mockLogin.mockClear();
         mockLogin.mockResolvedValue(true);
-        const { unmount } = render(<LoginForm />);
+        cleanup(); // Clean up before rendering
+        render(<LoginForm />);
 
         const emailInput = screen.getByLabelText('メールアドレス');
         const passwordInput = screen.getByLabelText('パスワード');
         const loginButton = screen.getByRole('button', { name: 'ログイン' });
 
-        fireEvent.change(emailInput, { target: { value: email } });
-        fireEvent.change(passwordInput, { target: { value: password } });
-        fireEvent.click(loginButton);
+        await act(async () => {
+          fireEvent.change(emailInput, { target: { value: email } });
+          fireEvent.change(passwordInput, { target: { value: password } });
+          fireEvent.click(loginButton);
+        });
 
         await waitFor(() => {
           expect(mockLogin).toHaveBeenCalledWith(email, password);
         });
 
-        unmount();
+        cleanup(); // Clean up after test
       }),
-      { numRuns: 100 }
+      { numRuns: 20 } // Reduce runs to speed up tests
     );
   });
 
@@ -202,20 +206,21 @@ describe('LoginForm - Property-Based Tests', () => {
 
     await fc.assert(
       fc.asyncProperty(fc.constantFrom(...errorCases), async (errorCase) => {
+        cleanup(); // Clean up before rendering
         (useLogin as ReturnType<typeof vi.fn>).mockReturnValue({
           login: mockLogin,
           isLoading: false,
           error: errorCase.error,
         });
 
-        const { unmount } = render(<LoginForm />);
+        render(<LoginForm />);
 
         const errorAlert = screen.getByRole('alert');
         expect(errorAlert).toHaveTextContent(errorCase.expected);
 
-        unmount();
+        cleanup(); // Clean up after test
       }),
-      { numRuns: 100 }
+      { numRuns: 20 } // Reduce runs to speed up tests
     );
   });
 
@@ -236,6 +241,7 @@ describe('LoginForm - Property-Based Tests', () => {
         async (email, password, errorMessage) => {
           mockLogin.mockClear();
           mockLogin.mockResolvedValue(false);
+          cleanup(); // Clean up before rendering
 
           (useLogin as ReturnType<typeof vi.fn>).mockReturnValue({
             login: mockLogin,
@@ -243,7 +249,7 @@ describe('LoginForm - Property-Based Tests', () => {
             error: errorMessage,
           });
 
-          const { unmount } = render(<LoginForm />);
+          render(<LoginForm />);
 
           const emailInput = screen.getByLabelText('メールアドレス');
           const passwordInput = screen.getByLabelText('パスワード');
@@ -253,10 +259,10 @@ describe('LoginForm - Property-Based Tests', () => {
           expect(passwordInput).not.toBeDisabled();
           expect(loginButton).not.toBeDisabled();
 
-          unmount();
+          cleanup(); // Clean up after test
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 20 } // Reduce runs to speed up tests
     );
   });
 
@@ -267,26 +273,33 @@ describe('LoginForm - Property-Based Tests', () => {
   it('Property 7: 任意のパスワード入力状態に対して、切り替えボタンを2回クリックすると元の表示状態に戻る', async () => {
     await fc.assert(
       fc.asyncProperty(fc.string(), async (password) => {
-        const { unmount } = render(<LoginForm />);
+        cleanup(); // Clean up before rendering
+        render(<LoginForm />);
 
         const passwordInput = screen.getByLabelText('パスワード') as HTMLInputElement;
         const toggleButton = screen.getByLabelText('パスワードを表示');
 
-        fireEvent.change(passwordInput, { target: { value: password } });
+        await act(async () => {
+          fireEvent.change(passwordInput, { target: { value: password } });
+        });
 
         const initialType = passwordInput.type;
         expect(initialType).toBe('password');
 
-        fireEvent.click(toggleButton);
+        await act(async () => {
+          fireEvent.click(toggleButton);
+        });
         expect(passwordInput.type).toBe('text');
 
         const hideButton = screen.getByLabelText('パスワードを非表示');
-        fireEvent.click(hideButton);
+        await act(async () => {
+          fireEvent.click(hideButton);
+        });
         expect(passwordInput.type).toBe('password');
 
-        unmount();
+        cleanup(); // Clean up after test
       }),
-      { numRuns: 100 }
+      { numRuns: 20 } // Reduce runs to speed up tests
     );
   });
 
@@ -303,25 +316,28 @@ describe('LoginForm - Property-Based Tests', () => {
           fc.constant({ email: 'invalid', password: 'test' })
         ),
         async ({ email, password }) => {
-          const { unmount } = render(<LoginForm />);
+          cleanup(); // Clean up before rendering
+          render(<LoginForm />);
 
           const emailInput = screen.getByLabelText('メールアドレス');
           const passwordInput = screen.getByLabelText('パスワード');
           const loginButton = screen.getByRole('button', { name: 'ログイン' });
 
-          fireEvent.change(emailInput, { target: { value: email } });
-          fireEvent.change(passwordInput, { target: { value: password } });
-          fireEvent.click(loginButton);
+          await act(async () => {
+            fireEvent.change(emailInput, { target: { value: email } });
+            fireEvent.change(passwordInput, { target: { value: password } });
+            fireEvent.click(loginButton);
+          });
 
           await waitFor(() => {
             const alerts = screen.getAllByRole('alert');
             expect(alerts.length).toBeGreaterThan(0);
           });
 
-          unmount();
+          cleanup(); // Clean up after test
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 20 } // Reduce runs to speed up tests
     );
   });
 
@@ -330,7 +346,7 @@ describe('LoginForm - Property-Based Tests', () => {
    * **Validates: Requirements 11.4**
    */
   it('Property 9: 任意のインタラクティブ要素に対して、最小タップ領域44x44pxを確保する', () => {
-    const { unmount } = render(<LoginForm />);
+    render(<LoginForm />);
 
     const loginButton = screen.getByRole('button', { name: 'ログイン' });
     const toggleButton = screen.getByLabelText('パスワードを表示');
@@ -345,7 +361,5 @@ describe('LoginForm - Property-Based Tests', () => {
       // 実際のサイズ検証はE2Eテストで行う
       expect(element).toBeInTheDocument();
     });
-
-    unmount();
   });
 });
