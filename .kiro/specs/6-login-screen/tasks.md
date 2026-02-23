@@ -42,7 +42,7 @@
     - _要件: 4.3_
 
 - [ ] 4. Auth Serviceの実装
-  - [~] 4.1 Auth Serviceの実装
+  - [x] 4.1 Auth Serviceの実装
     - `packages/web/src/lib/services/auth-service.ts`を作成
     - login関数の実装（メールアドレス、パスワードを受け取り、ログインAPIを呼び出し）
     - エラーレスポンスの変換（401、429、500、ネットワークエラー）
@@ -50,7 +50,7 @@
     - 環境変数`NEXT_PUBLIC_API_URL`の使用
     - _要件: 3.1, 4.1, 4.2, 5.1, 5.2, 5.3, 5.4_
 
-  - [~] 4.2 Auth Serviceのユニットテスト
+  - [x] 4.2 Auth Serviceのユニットテスト
     - `packages/web/src/lib/services/auth-service.test.ts`を作成
     - ログイン成功時のテスト（200レスポンス）
     - エラーレスポンスの変換テスト（401、429、500）
