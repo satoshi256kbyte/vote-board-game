@@ -68,14 +68,14 @@
 - [x] 5. チェックポイント - 基盤サービスの動作確認
   - すべてのテストが通過することを確認し、質問があればユーザーに尋ねる
 
-- [~] 6. useAuthフックの実装
-  - [~] 6.1 useAuthフックの実装
+- [x] 6. useAuthフックの実装
+  - [x] 6.1 useAuthフックの実装
     - `packages/web/src/lib/hooks/use-auth.ts`を作成
     - Auth Contextへのアクセスを提供
     - コンテキスト外での使用時のエラーハンドリング
     - _要件: 4.3_
 
-  - [~] 6.2 useAuthフックのユニットテスト
+  - [x] 6.2 useAuthフックのユニットテスト
     - `packages/web/src/lib/hooks/use-auth.test.tsx`を作成
     - AuthProvider内での使用テスト
     - コンテキスト外での使用時のエラーテスト
