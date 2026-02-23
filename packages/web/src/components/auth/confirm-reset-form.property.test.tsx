@@ -4,7 +4,6 @@ import { render, fireEvent, cleanup, within } from '@testing-library/react';
 import * as fc from 'fast-check';
 import { ConfirmResetForm } from './confirm-reset-form';
 import * as usePasswordResetModule from '@/lib/hooks/use-password-reset';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 // Mock usePasswordReset hook
 vi.mock('@/lib/hooks/use-password-reset');
@@ -394,7 +393,7 @@ describe('ConfirmResetForm - Property-Based Tests', () => {
             successMessage: null,
           });
 
-          const { container, unmount } = render(<ConfirmResetForm email={testEmail} />);
+          const { container } = render(<ConfirmResetForm email={testEmail} />);
           const codeInput = within(container).getByRole('textbox', { name: '確認コード' });
           const passwordInput = within(container).getByLabelText('新しいパスワード');
           const confirmationInput = within(container).getByLabelText('新しいパスワード確認');
@@ -662,7 +661,7 @@ describe('ConfirmResetForm - Property-Based Tests', () => {
             successMessage: null,
           });
 
-          const { container, unmount } = render(<ConfirmResetForm email={testEmail} />);
+          const { container } = render(<ConfirmResetForm email={testEmail} />);
           const codeInput = within(container).getByRole('textbox', { name: '確認コード' });
           const passwordInput = within(container).getByLabelText('新しいパスワード');
           const confirmationInput = within(container).getByLabelText('新しいパスワード確認');

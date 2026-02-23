@@ -221,7 +221,7 @@ describe('PasswordResetPage - Data Cleanup on Unmount (Task 8.2)', () => {
       successMessage: null,
     });
 
-    const { unmount } = render(<PasswordResetPage />);
+    render(<PasswordResetPage />);
 
     // Submit email to transition to confirm step
     const emailInput = screen.getByLabelText('メールアドレス');

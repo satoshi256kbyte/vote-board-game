@@ -15,6 +15,20 @@ vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
 }));
 
+const mockPush = vi.fn();
+
+function createMockRouter(overrides: Partial<AppRouterInstance> = {}): AppRouterInstance {
+  return {
+    push: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    ...overrides,
+  };
+}
+
 describe('ConfirmResetForm - Initial Display', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -254,7 +268,7 @@ describe('ConfirmResetForm - Validation Errors', () => {
 describe('ConfirmResetForm - Loading State', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter());
   });
 
   it('should disable button during loading (Requirement 8.2)', () => {
@@ -343,7 +357,7 @@ describe('ConfirmResetForm - Password Visibility Toggle', () => {
       successMessage: null,
     });
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter());
   });
 
   it('should toggle new password visibility when button is clicked (Requirements 12.3, 12.4)', async () => {
@@ -426,7 +440,7 @@ describe('ConfirmResetForm - Password Visibility Toggle', () => {
 describe('ConfirmResetForm - Resend Code', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter());
   });
 
   it('should call resendCode when resend link is clicked (Requirement 11.2)', async () => {
@@ -529,8 +543,8 @@ describe('ConfirmResetForm - Success Flow', () => {
       successMessage: 'パスワードがリセットされました。新しいパスワードでログインしてください。',
     });
 
-    const mockPush = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof useRouter>);
+    mockPush.mockClear();
+    vi.mocked(useRouter).mockReturnValue(createMockRouter({ push: mockPush }));
 
     render(<ConfirmResetForm email="test@example.com" />);
 
@@ -543,7 +557,7 @@ describe('ConfirmResetForm - Success Flow', () => {
     cleanup(); // Clean up any previous test state
 
     const mockConfirmReset = vi.fn().mockResolvedValue(true);
-    const mockPush = vi.fn();
+    mockPush.mockClear();
 
     vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
       requestCode: vi.fn(),
@@ -554,7 +568,7 @@ describe('ConfirmResetForm - Success Flow', () => {
       successMessage: 'パスワードがリセットされました。新しいパスワードでログインしてください。',
     });
 
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter({ push: mockPush }));
 
     render(<ConfirmResetForm email="test@example.com" />);
 
@@ -587,7 +601,7 @@ describe('ConfirmResetForm - Success Flow', () => {
       successMessage: null,
     });
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter());
 
     render(<ConfirmResetForm email="user@example.com" />);
 
@@ -616,7 +630,7 @@ describe('ConfirmResetForm - Success Flow', () => {
 describe('ConfirmResetForm - Failure Flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter());
   });
 
   it('should display invalid code error message (Requirement 10.1)', () => {
@@ -722,7 +736,7 @@ describe('ConfirmResetForm - Failure Flow', () => {
 describe('ConfirmResetForm - Error Recovery', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter());
   });
 
   it('should re-enable button and fields after error (Requirement 10.6)', () => {
@@ -792,7 +806,7 @@ describe('ConfirmResetForm - Accessibility', () => {
       successMessage: null,
     });
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter());
   });
 
   it('should have aria-label on confirmation code field (Requirement 14.2)', () => {
@@ -920,7 +934,7 @@ describe('ConfirmResetForm - Responsive Layout', () => {
       successMessage: null,
     });
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(createMockRouter());
   });
 
   it('should render form with responsive classes (Requirements 15.1, 15.2, 15.3)', () => {

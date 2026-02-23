@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, fireEvent, cleanup, within } from '@testing-library/react';
+import { render, fireEvent, within } from '@testing-library/react';
 import * as fc from 'fast-check';
 import { RequestCodeForm } from './request-code-form';
 import { usePasswordReset } from '@/lib/hooks/use-password-reset';

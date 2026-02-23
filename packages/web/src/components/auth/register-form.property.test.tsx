@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import * as fc from 'fast-check';
 import { RegisterForm } from './register-form';
 
@@ -63,7 +63,7 @@ describe('RegisterForm - Property-Based Tests', () => {
             .filter((s) => s.trim().length > 0 && s.includes('@') && s.split('@')[1]?.length === 0)
         ),
         (invalidEmail) => {
-          const { unmount } = render(<RegisterForm />);
+          render(<RegisterForm />);
           const emailInput = screen.getByRole('textbox', { name: 'メールアドレス' });
 
           fireEvent.change(emailInput, { target: { value: invalidEmail } });
@@ -90,7 +90,7 @@ describe('RegisterForm - Property-Based Tests', () => {
   it('Property 2: should display error for password shorter than 8 characters', () => {
     fc.assert(
       fc.property(fc.string({ minLength: 1, maxLength: 7 }), (shortPassword) => {
-        const { unmount } = render(<RegisterForm />);
+        render(<RegisterForm />);
         const passwordInput = screen.getByLabelText('パスワード');
 
         fireEvent.change(passwordInput, { target: { value: shortPassword } });
@@ -122,7 +122,7 @@ describe('RegisterForm - Property-Based Tests', () => {
         (password, passwordConfirmation) => {
           fc.pre(password !== passwordConfirmation);
 
-          const { unmount } = render(<RegisterForm />);
+          render(<RegisterForm />);
           const passwordInput = screen.getByLabelText('パスワード');
           const confirmInput = screen.getByLabelText('パスワード確認');
 
@@ -174,7 +174,7 @@ describe('RegisterForm - Property-Based Tests', () => {
             .filter((r) => r.password !== r.passwordConfirmation)
         ),
         (formData) => {
-          const { unmount } = render(<RegisterForm />);
+          render(<RegisterForm />);
           const emailInput = screen.getByLabelText('メールアドレス');
           const passwordInput = screen.getByLabelText('パスワード');
           const confirmInput = screen.getByLabelText('パスワード確認');
@@ -210,7 +210,7 @@ describe('RegisterForm - Property-Based Tests', () => {
       fc.asyncProperty(fc.emailAddress(), fc.string({ minLength: 8 }), async (email, password) => {
         mockRegisterFn.mockResolvedValue(true);
 
-        const { unmount } = render(<RegisterForm />);
+        render(<RegisterForm />);
         const emailInput = screen.getByLabelText('メールアドレス');
         const passwordInput = screen.getByLabelText('パスワード');
         const confirmInput = screen.getByLabelText('パスワード確認');
@@ -247,7 +247,7 @@ describe('RegisterForm - Property-Based Tests', () => {
         mockRegisterFn.mockResolvedValue(true);
         mockPush.mockClear();
 
-        const { unmount } = render(<RegisterForm />);
+        render(<RegisterForm />);
         const emailInput = screen.getByLabelText('メールアドレス');
         const passwordInput = screen.getByLabelText('パスワード');
         const confirmInput = screen.getByLabelText('パスワード確認');
@@ -291,7 +291,7 @@ describe('RegisterForm - Property-Based Tests', () => {
         (errorMessage) => {
           mockError = errorMessage;
 
-          const { unmount } = render(<RegisterForm />);
+          render(<RegisterForm />);
 
           const errorAlert = screen.getByRole('alert');
           expect(errorAlert).toHaveTextContent(errorMessage);
@@ -316,7 +316,7 @@ describe('RegisterForm - Property-Based Tests', () => {
   it('Property 8: should return to masked state after toggling password visibility twice', () => {
     fc.assert(
       fc.property(fc.string({ minLength: 8 }), (password) => {
-        const { unmount } = render(<RegisterForm />);
+        render(<RegisterForm />);
         const passwordInput = screen.getByLabelText('パスワード');
         const confirmInput = screen.getByLabelText('パスワード確認');
 
@@ -368,7 +368,7 @@ describe('RegisterForm - Property-Based Tests', () => {
           passwordConfirmation: fc.string({ minLength: 8 }),
         }),
         (formData) => {
-          const { unmount } = render(<RegisterForm />);
+          render(<RegisterForm />);
           const emailInput = screen.getByRole('textbox', { name: 'メールアドレス' });
           const passwordInput = screen.getByLabelText('パスワード');
           const confirmInput = screen.getByLabelText('パスワード確認');
@@ -411,7 +411,7 @@ describe('RegisterForm - Property-Based Tests', () => {
           password: fc.string({ minLength: 1, maxLength: 7 }).filter((s) => s.trim().length > 0),
         }),
         (formData) => {
-          const { unmount } = render(<RegisterForm />);
+          render(<RegisterForm />);
           const emailInput = screen.getByRole('textbox', { name: 'メールアドレス' });
           const passwordInput = screen.getByLabelText('パスワード');
 
@@ -445,7 +445,7 @@ describe('RegisterForm - Property-Based Tests', () => {
   it('Property 11: should ensure minimum touch target size for interactive elements', () => {
     fc.assert(
       fc.property(fc.constant(null), () => {
-        const { unmount } = render(<RegisterForm />);
+        render(<RegisterForm />);
 
         // Submit button should have min-h-[44px]
         const submitButton = screen.getByRole('button', { name: 'アカウント作成' });
@@ -484,7 +484,7 @@ describe('RegisterForm - Property-Based Tests', () => {
         // Clear local storage before test
         localStorage.clear();
 
-        const { unmount } = render(<RegisterForm />);
+        render(<RegisterForm />);
         const emailInput = screen.getByLabelText('メールアドレス');
         const passwordInput = screen.getByLabelText('パスワード');
         const confirmInput = screen.getByLabelText('パスワード確認');
