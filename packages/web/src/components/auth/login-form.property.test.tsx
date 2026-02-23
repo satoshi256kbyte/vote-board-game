@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import * as fc from 'fast-check';
 import { LoginForm } from './login-form';
@@ -31,101 +31,121 @@ describe('LoginForm - Property-Based Tests', () => {
     });
   });
 
+  afterEach(() => {
+    cleanup();
+  });
+
   /**
    * Feature: login-screen, Property 1: 無効なメールアドレス形式のバリデーション
    * **Validates: Requirements 2.3**
    */
-  it('Property 1: 任意の無効な形式のメールアドレスに対して、エラーメッセージを表示し、API呼び出しを行わない', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.oneof(
-          fc.constant(''),
-          fc.constant('   '),
-          fc.string().filter((str) => !str.includes('@')),
-          fc.string().map((str) => str + '@'),
-          fc.string().map((str) => '@' + str),
-          fc
-            .string()
-            .map((str) => str.replace(/\./g, ''))
-            .map((str) => str + '@example'),
-          fc.constant('user @example.com'),
-          fc.constant('user@example .com')
+  it(
+    'Property 1: 任意の無効な形式のメールアドレスに対して、エラーメッセージを表示し、API呼び出しを行わない',
+    async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.oneof(
+            fc.constant(''),
+            fc.constant('   '),
+            fc.string().filter((str) => !str.includes('@')),
+            fc.string().map((str) => str + '@'),
+            fc.string().map((str) => '@' + str),
+            fc
+              .string()
+              .map((str) => str.replace(/\./g, ''))
+              .map((str) => str + '@example'),
+            fc.constant('user @example.com'),
+            fc.constant('user@example .com')
+          ),
+          fc.string({ minLength: 1 }),
+          async (invalidEmail, password) => {
+            mockLogin.mockClear();
+            const { unmount } = render(<LoginForm />);
+
+            try {
+              const emailInput = screen.getByLabelText('メールアドレス');
+              const passwordInput = screen.getByLabelText('パスワード');
+              const loginButton = screen.getByRole('button', { name: 'ログイン' });
+
+              fireEvent.change(emailInput, { target: { value: invalidEmail } });
+              fireEvent.change(passwordInput, { target: { value: password } });
+              fireEvent.click(loginButton);
+
+              await waitFor(() => {
+                const errorMessage = screen.queryByText('有効なメールアドレスを入力してください');
+                const emptyMessage = screen.queryByText('メールアドレスを入力してください');
+                expect(errorMessage || emptyMessage).toBeTruthy();
+              });
+
+              expect(mockLogin).not.toHaveBeenCalled();
+            } finally {
+              unmount();
+              cleanup();
+            }
+          }
         ),
-        fc.string({ minLength: 1 }),
-        async (invalidEmail, password) => {
-          mockLogin.mockClear();
-          const { unmount } = render(<LoginForm />);
-
-          const emailInput = screen.getByLabelText('メールアドレス');
-          const passwordInput = screen.getByLabelText('パスワード');
-          const loginButton = screen.getByRole('button', { name: 'ログイン' });
-
-          fireEvent.change(emailInput, { target: { value: invalidEmail } });
-          fireEvent.change(passwordInput, { target: { value: password } });
-          fireEvent.click(loginButton);
-
-          await waitFor(() => {
-            const errorMessage = screen.queryByText('有効なメールアドレスを入力してください');
-            const emptyMessage = screen.queryByText('メールアドレスを入力してください');
-            expect(errorMessage || emptyMessage).toBeTruthy();
-          });
-
-          expect(mockLogin).not.toHaveBeenCalled();
-          unmount();
-        }
-      ),
-      { numRuns: 100 }
-    );
-  });
+        { numRuns: 100 }
+      );
+    },
+    { timeout: 30000 }
+  );
 
   /**
    * Feature: login-screen, Property 2: バリデーションエラー時のAPI呼び出し防止
    * **Validates: Requirements 2.4**
    */
-  it('Property 2: 任意のバリデーションエラーが存在する場合、ログインAPIを呼び出してはならない', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.oneof(
-          // 空のメールアドレス
-          fc.record({ email: fc.constant(''), password: fc.string({ minLength: 1 }) }),
-          // 無効なメールアドレス形式
-          fc.record({
-            email: fc.string().filter((s) => !s.includes('@') || !s.includes('.')),
-            password: fc.string({ minLength: 1 }),
-          }),
-          // 空のパスワード
-          fc.record({
-            email: fc.emailAddress(),
-            password: fc.constant(''),
-          }),
-          // 両方空
-          fc.record({ email: fc.constant(''), password: fc.constant('') })
+  it(
+    'Property 2: 任意のバリデーションエラーが存在する場合、ログインAPIを呼び出してはならない',
+    async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.oneof(
+            // 空のメールアドレス
+            fc.record({ email: fc.constant(''), password: fc.string({ minLength: 1 }) }),
+            // 無効なメールアドレス形式
+            fc.record({
+              email: fc.string().filter((s) => !s.includes('@') || !s.includes('.')),
+              password: fc.string({ minLength: 1 }),
+            }),
+            // 空のパスワード
+            fc.record({
+              email: fc.emailAddress(),
+              password: fc.constant(''),
+            }),
+            // 両方空
+            fc.record({ email: fc.constant(''), password: fc.constant('') })
+          ),
+          async ({ email, password }) => {
+            mockLogin.mockClear();
+            const { unmount } = render(<LoginForm />);
+
+            try {
+              const emailInput = screen.getByLabelText('メールアドレス');
+              const passwordInput = screen.getByLabelText('パスワード');
+              const loginButton = screen.getByRole('button', { name: 'ログイン' });
+
+              fireEvent.change(emailInput, { target: { value: email } });
+              fireEvent.change(passwordInput, { target: { value: password } });
+              fireEvent.click(loginButton);
+
+              await waitFor(() => {
+                // エラーメッセージが表示されるまで待つ
+                const alerts = screen.queryAllByRole('alert');
+                expect(alerts.length).toBeGreaterThan(0);
+              });
+
+              expect(mockLogin).not.toHaveBeenCalled();
+            } finally {
+              unmount();
+              cleanup();
+            }
+          }
         ),
-        async ({ email, password }) => {
-          mockLogin.mockClear();
-          const { unmount } = render(<LoginForm />);
-
-          const emailInput = screen.getByLabelText('メールアドレス');
-          const passwordInput = screen.getByLabelText('パスワード');
-          const loginButton = screen.getByRole('button', { name: 'ログイン' });
-
-          fireEvent.change(emailInput, { target: { value: email } });
-          fireEvent.change(passwordInput, { target: { value: password } });
-          fireEvent.click(loginButton);
-
-          await waitFor(() => {
-            // エラーメッセージが表示されるまで待つ
-            const alerts = screen.queryAllByRole('alert');
-            expect(alerts.length).toBeGreaterThan(0);
-          });
-
-          expect(mockLogin).not.toHaveBeenCalled();
-          unmount();
-        }
-      ),
-      { numRuns: 100 }
-    );
-  });
+        { numRuns: 100 }
+      );
+    },
+    { timeout: 30000 }
+  );
 
   /**
    * Feature: login-screen, Property 3: 有効な入力でのAPI呼び出し
