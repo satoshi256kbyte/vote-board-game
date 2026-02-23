@@ -9,6 +9,7 @@ vi.mock('./storage-service', () => ({
     setRefreshToken: vi.fn(),
     removeAccessToken: vi.fn(),
     removeRefreshToken: vi.fn(),
+    clearAll: vi.fn(),
   },
 }));
 
@@ -175,13 +176,12 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('should remove both access and refresh tokens', () => {
+    it('should clear all auth data using clearAll', () => {
       // Act
       authService.logout();
 
       // Assert
-      expect(storageService.removeAccessToken).toHaveBeenCalled();
-      expect(storageService.removeRefreshToken).toHaveBeenCalled();
+      expect(storageService.clearAll).toHaveBeenCalled();
     });
   });
 

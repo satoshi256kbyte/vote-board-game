@@ -92,8 +92,7 @@ class AuthService {
   }
 
   logout(): void {
-    storageService.removeAccessToken();
-    storageService.removeRefreshToken();
+    storageService.clearAll();
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshResponse> {

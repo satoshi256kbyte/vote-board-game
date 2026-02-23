@@ -52,7 +52,7 @@
     - リフレッシュ後の再実行でも 401 の場合はログアウト処理を実行
     - _要件: 8.1, 8.2, 8.3, 8.4_
 
-  - [~] 3.3 AuthService の logout メソッドを StorageService.clearAll を使用するよう変更
+  - [x] 3.3 AuthService の logout メソッドを StorageService.clearAll を使用するよう変更
     - 既存の logout メソッドを clearAll() を使用するよう修正
     - _要件: 4.1_
 
