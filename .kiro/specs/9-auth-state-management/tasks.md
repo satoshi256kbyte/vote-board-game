@@ -20,7 +20,7 @@
     - clearAll: vbg_access_token、vbg_refresh_token、vbg_user を一括削除
     - _要件: 2.1, 2.2, 2.3, 2.4_
 
-  - [~] 1.3 StorageService のプロパティベーステストを作成
+  - [x] 1.3 StorageService のプロパティベーステストを作成
     - packages/web/src/lib/services/storage-service.property.test.ts を作成
     - **Property 2: ユーザー情報シリアライズの往復一貫性**
     - **検証: 要件 2.1, 2.3**
