@@ -98,7 +98,7 @@
     - 単一カラムレイアウト（モバイル）
     - 要件: 6.1, 6.2, 6.3
 
-  - [~] 4.7 RegisterFormコンポーネントのユニットテストを作成
+  - [x] 4.7 RegisterFormコンポーネントのユニットテストを作成
     - packages/web/src/components/auth/register-form.test.tsxを作成
     - 初期表示のテスト（フォーム要素の存在確認）
     - バリデーションエラーの表示テスト
