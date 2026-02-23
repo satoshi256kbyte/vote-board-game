@@ -126,8 +126,8 @@
 - [x] 6. チェックポイント - AuthProvider のテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
-- [ ] 7. ProtectedRoute コンポーネントの実装
-  - [~] 7.1 ProtectedRoute コンポーネントを作成
+- [x] 7. ProtectedRoute コンポーネントの実装
+  - [x] 7.1 ProtectedRoute コンポーネントを作成
     - packages/web/src/components/auth/protected-route.tsx を作成
     - useAuth フックから isAuthenticated、isLoading を取得
     - isLoading 中はローディング表示
@@ -135,16 +135,16 @@
     - 認証済み時は children を表示
     - _要件: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [~] 7.2 ProtectedRoute の未認証リダイレクトのプロパティベーステストを作成
+  - [x] 7.2 ProtectedRoute の未認証リダイレクトのプロパティベーステストを作成
     - packages/web/src/components/auth/protected-route.property.test.tsx を作成
     - **Property 8: ProtectedRoute の未認証ユーザーリダイレクト**
     - **検証: 要件 5.1, 5.2**
 
-  - [~] 7.3 ProtectedRoute の認証済み表示のプロパティベーステストを作成
+  - [x] 7.3 ProtectedRoute の認証済み表示のプロパティベーステストを作成
     - **Property 9: ProtectedRoute の認証済みユーザー表示**
     - **検証: 要件 5.3**
 
-  - [~] 7.4 ProtectedRoute のユニットテストを作成
+  - [x] 7.4 ProtectedRoute のユニットテストを作成
     - packages/web/src/components/auth/protected-route.test.tsx を作成
     - isLoading 中のローディング表示テスト
     - 未認証時のリダイレクトテスト（redirect パラメータ付き）
@@ -172,7 +172,7 @@
     - 未認証時の children 表示テスト
     - _要件: 6.1, 6.2, 6.3_
 
-- [ ] 9. チェックポイント - ProtectedRoute と AuthRedirect のテストが通ることを確認
+- [~] 9. チェックポイント - ProtectedRoute と AuthRedirect のテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
 - [ ] 10. 既存フォームの拡張とリダイレクト対応
