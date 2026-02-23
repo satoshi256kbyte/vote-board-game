@@ -35,4 +35,36 @@ export interface FormErrors {
   email?: string;
   password?: string;
   passwordConfirmation?: string;
+  confirmationCode?: string;
+  newPassword?: string;
+}
+
+/**
+ * パスワードリセット要求リクエストの型定義
+ */
+export interface PasswordResetRequest {
+  email: string;
+}
+
+/**
+ * パスワードリセット要求レスポンスの型定義
+ */
+export interface PasswordResetResponse {
+  message: string;
+}
+
+/**
+ * パスワードリセット確認リクエストの型定義
+ */
+export interface PasswordResetConfirmRequest {
+  email: string;
+  confirmationCode: string;
+  newPassword: string;
+}
+
+/**
+ * パスワードリセット確認レスポンスの型定義
+ */
+export interface PasswordResetConfirmResponse {
+  message: string;
 }
