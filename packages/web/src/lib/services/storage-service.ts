@@ -56,7 +56,22 @@ class StorageService {
         return null;
       }
       try {
-        return JSON.parse(data) as User;
+        const parsed: unknown = JSON.parse(data);
+        if (
+          typeof parsed === 'object' &&
+          parsed !== null &&
+          !Array.isArray(parsed) &&
+          'userId' in parsed &&
+          'email' in parsed &&
+          'username' in parsed &&
+          typeof (parsed as Record<string, unknown>).userId === 'string' &&
+          typeof (parsed as Record<string, unknown>).email === 'string' &&
+          typeof (parsed as Record<string, unknown>).username === 'string'
+        ) {
+          return parsed as User;
+        }
+        localStorage.removeItem(USER_KEY);
+        return null;
       } catch {
         localStorage.removeItem(USER_KEY);
         return null;

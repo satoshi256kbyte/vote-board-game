@@ -43,4 +43,61 @@ describe('StorageService - Property-Based Tests', () => {
       { numRuns: 20, endOnFailure: true }
     );
   });
+
+  /**
+   * Feature: 9-auth-state-management, Property 3: 不正 JSON のグレースフルハンドリング
+   * **Validates: Requirements 2.4**
+   *
+   * For any string that is not valid JSON representing a User object,
+   * if it is stored under the vbg_user key in localStorage,
+   * then getUser() should return null and the vbg_user key should be removed from localStorage.
+   */
+  it('Property 3: 不正 JSON が localStorage に保存されている場合、getUser() は null を返し vbg_user キーを削除する', () => {
+    const invalidJsonArb = fc.oneof(
+      // ランダム文字列（JSON ではない）
+      fc.string({ minLength: 1 }).filter((s) => {
+        try {
+          const parsed = JSON.parse(s);
+          // パースできても User 構造でなければ不正
+          return (
+            typeof parsed !== 'object' ||
+            parsed === null ||
+            typeof parsed.userId !== 'string' ||
+            typeof parsed.email !== 'string' ||
+            typeof parsed.username !== 'string' ||
+            parsed.userId.trim().length === 0 ||
+            parsed.email.trim().length === 0 ||
+            parsed.username.trim().length === 0
+          );
+        } catch {
+          return true; // パース失敗 = 不正 JSON
+        }
+      }),
+      // 壊れた JSON フラグメント
+      fc.constantFrom(
+        '{',
+        '{"userId":}',
+        '{userId: "abc"}',
+        'not json at all',
+        '{"userId": 123, "email": true}',
+        '[]',
+        'null',
+        'undefined',
+        ''
+      )
+    );
+
+    fc.assert(
+      fc.property(invalidJsonArb, (invalidData) => {
+        localStorage.clear();
+        localStorage.setItem('vbg_user', invalidData);
+
+        const result = storageService.getUser();
+
+        expect(result).toBeNull();
+        expect(localStorage.getItem('vbg_user')).toBeNull();
+      }),
+      { numRuns: 20, endOnFailure: true }
+    );
+  });
 });
