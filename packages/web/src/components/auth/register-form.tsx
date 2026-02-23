@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
+import { useRegister } from '@/lib/hooks/use-register';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FormErrors {
   email?: string;
@@ -13,6 +16,9 @@ interface FormErrors {
 }
 
 export function RegisterForm() {
+  const router = useRouter();
+  const { register, isLoading, error: apiError } = useRegister();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
@@ -27,7 +33,7 @@ export function RegisterForm() {
 
   const validateEmail = (value: string): string | undefined => {
     if (!value.trim()) {
-      return undefined;
+      return 'メールアドレスを入力してください';
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
       return '有効なメールアドレスを入力してください';
@@ -37,7 +43,7 @@ export function RegisterForm() {
 
   const validatePassword = (value: string): string | undefined => {
     if (!value) {
-      return undefined;
+      return 'パスワードを入力してください';
     }
     if (value.length < 8) {
       return 'パスワードは8文字以上である必要があります';
@@ -47,7 +53,7 @@ export function RegisterForm() {
 
   const validatePasswordConfirmation = (value: string): string | undefined => {
     if (!value) {
-      return undefined;
+      return 'パスワード確認を入力してください';
     }
     if (value !== password) {
       return 'パスワードが一致しません';
@@ -78,9 +84,37 @@ export function RegisterForm() {
     setErrors({ ...errors, passwordConfirmation: error });
   };
 
+  const validateForm = (): boolean => {
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    const passwordConfirmationError = validatePasswordConfirmation(passwordConfirmation);
+
+    setErrors({
+      email: emailError,
+      password: passwordError,
+      passwordConfirmation: passwordConfirmationError,
+    });
+
+    setTouched({
+      email: true,
+      password: true,
+      passwordConfirmation: true,
+    });
+
+    return !emailError && !passwordError && !passwordConfirmationError;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submission will be implemented in task 4.4
+
+    if (!validateForm()) {
+      return;
+    }
+
+    const success = await register(email, password);
+    if (success) {
+      router.push('/email-verification');
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -92,10 +126,16 @@ export function RegisterForm() {
   };
 
   const hasErrors = !!(errors.email || errors.password || errors.passwordConfirmation);
-  const isSubmitDisabled = hasErrors;
+  const isSubmitDisabled = isLoading || hasErrors;
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 space-y-6" noValidate>
+      {apiError && (
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>{apiError}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-4">
         <div>
           <label htmlFor="email" className="sr-only">
@@ -110,6 +150,7 @@ export function RegisterForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onBlur={handleEmailBlur}
+            disabled={isLoading}
             placeholder="メールアドレス"
             aria-label="メールアドレス"
             aria-invalid={!!(touched.email && errors.email)}
@@ -137,6 +178,7 @@ export function RegisterForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onBlur={handlePasswordBlur}
+              disabled={isLoading}
               placeholder="パスワード（8文字以上）"
               aria-label="パスワード"
               aria-invalid={!!(touched.password && errors.password)}
@@ -146,6 +188,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={togglePasswordVisibility}
+              disabled={isLoading}
               className="absolute inset-y-0 right-0 flex items-center pr-3"
               aria-label={showPassword ? 'パスワードを非表示' : 'パスワードを表示'}
             >
@@ -177,6 +220,7 @@ export function RegisterForm() {
               value={passwordConfirmation}
               onChange={(e) => setPasswordConfirmation(e.target.value)}
               onBlur={handlePasswordConfirmationBlur}
+              disabled={isLoading}
               placeholder="パスワード確認"
               aria-label="パスワード確認"
               aria-invalid={!!(touched.passwordConfirmation && errors.passwordConfirmation)}
@@ -194,6 +238,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={togglePasswordConfirmationVisibility}
+              disabled={isLoading}
               className="absolute inset-y-0 right-0 flex items-center pr-3"
               aria-label={
                 showPasswordConfirmation ? 'パスワード確認を非表示' : 'パスワード確認を表示'
@@ -216,7 +261,7 @@ export function RegisterForm() {
 
       <div>
         <Button type="submit" disabled={isSubmitDisabled} className="w-full">
-          アカウント作成
+          {isLoading ? '登録中...' : 'アカウント作成'}
         </Button>
       </div>
 

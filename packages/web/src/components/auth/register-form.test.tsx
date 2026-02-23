@@ -1,9 +1,30 @@
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { RegisterForm } from './register-form';
 
+// Mock next/navigation
+const mockPush = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
+}));
+
+// Mock useRegister hook
+const mockRegister = vi.fn();
+vi.mock('@/lib/hooks/use-register', () => ({
+  useRegister: () => ({
+    register: mockRegister,
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 describe('RegisterForm - Client-side Validation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   describe('Email validation', () => {
     it('should display error message for invalid email format on blur', () => {
       render(<RegisterForm />);
