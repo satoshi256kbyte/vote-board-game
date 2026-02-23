@@ -29,6 +29,10 @@ interface RegisterRequest {
   username: string;
 }
 
+interface PasswordResetRequest {
+  email: string;
+}
+
 class AuthService {
   private apiUrl: string;
 
@@ -120,6 +124,40 @@ class AuthService {
       storageService.setRefreshToken(data.refreshToken);
 
       return data;
+    } catch (error) {
+      // ネットワークエラーの検出
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+      }
+      // その他のエラーは再スロー
+      throw error;
+    }
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.apiUrl}/auth/password-reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email } as PasswordResetRequest),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        switch (response.status) {
+          case 429:
+            throw new Error('リクエスト回数が上限に達しました。しばらくしてから再度お試しください');
+          case 500:
+            throw new Error('サーバーエラーが発生しました。しばらくしてから再度お試しください');
+          default:
+            throw new Error(errorData.message || '確認コードの送信に失敗しました');
+        }
+      }
+
+      // 成功時は何も返さない
     } catch (error) {
       // ネットワークエラーの検出
       if (error instanceof TypeError && error.message.includes('fetch')) {

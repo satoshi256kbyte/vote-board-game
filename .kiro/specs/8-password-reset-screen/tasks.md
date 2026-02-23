@@ -15,7 +15,7 @@
   - _要件: 1.1, 1.2, 1.3, 1.4, 1.5, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
 
 - [ ] 2. Auth Serviceの拡張
-  - [~] 2.1 Auth ServiceにrequestPasswordResetメソッドを実装
+  - [x] 2.1 Auth ServiceにrequestPasswordResetメソッドを実装
     - packages/web/src/lib/services/auth-service.tsにrequestPasswordResetメソッドを追加
     - PasswordResetRequest型とPasswordResetResponse型を定義
     - POST /auth/password-resetエンドポイントへのAPI呼び出しを実装
