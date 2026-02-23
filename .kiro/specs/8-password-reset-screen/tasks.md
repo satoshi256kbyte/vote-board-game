@@ -42,7 +42,7 @@
     - _要件: 3.1, 5.1, 5.2, 5.3, 8.1, 10.1, 10.2, 10.3, 10.4, 10.5_
 
 - [ ] 3. usePasswordResetフックの実装
-  - [~] 3.1 usePasswordResetカスタムフックを作成
+  - [x] 3.1 usePasswordResetカスタムフックを作成
     - packages/web/src/lib/hooks/use-password-reset.tsを作成
     - isLoading、error、successMessage状態の管理
     - requestCode関数の実装（Auth ServiceのrequestPasswordResetの呼び出し）
