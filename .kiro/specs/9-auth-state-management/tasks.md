@@ -36,7 +36,7 @@
 - [x] 2. チェックポイント - StorageService のテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
-- [ ] 3. AuthService の拡張
+- [x] 3. AuthService の拡張
   - [x] 3.1 AuthService にトークンリフレッシュメソッドを追加
     - packages/web/src/lib/services/auth-service.ts に refreshToken メソッドを追加
     - POST /auth/refresh エンドポイントへの API 呼び出しを実装
@@ -65,7 +65,7 @@
     - **Property 12: 認証付きリクエストの Bearer トークン付与**
     - **検証: 要件 8.1**
 
-  - [~] 3.6 AuthService のユニットテストを拡張
+  - [x] 3.6 AuthService のユニットテストを拡張
     - packages/web/src/lib/services/auth-service.test.ts を拡張
     - refreshToken 成功・失敗のテスト
     - authenticatedFetch の Bearer トークン付与テスト
@@ -75,11 +75,11 @@
     - logout メソッドの clearAll 使用テスト
     - _要件: 3.2, 3.3, 4.1, 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 4. チェックポイント - AuthService のテストが通ることを確認
+- [x] 4. チェックポイント - AuthService のテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
 - [ ] 5. AuthProvider の大幅拡張
-  - [~] 5.1 AuthProvider に認証状態の初期化・復元ロジックを実装
+  - [x] 5.1 AuthProvider に認証状態の初期化・復元ロジックを実装
     - packages/web/src/lib/contexts/auth-context.tsx を拡張
     - マウント時に StorageService から AccessToken とユーザー情報を読み込み
     - 有効なトークン＋ユーザー情報がある場合は isAuthenticated を true、user にユーザー情報を設定
@@ -87,7 +87,7 @@
     - 初期化中は isLoading を true、完了後に false に設定
     - _要件: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-  - [~] 5.2 AuthProvider にトークン自動リフレッシュロジックを実装
+  - [x] 5.2 AuthProvider にトークン自動リフレッシュロジックを実装
     - 認証済み状態でマウント時に AccessToken の有効期限 60 秒前にリフレッシュをスケジュール
     - リフレッシュ成功時に新しいトークンを保存し、次回リフレッシュを再スケジュール
     - リフレッシュ失敗（401）時にログアウト処理を実行しログイン画面にリダイレクト
@@ -95,7 +95,7 @@
     - アンマウント時にスケジュール済みタイマーをクリア
     - _要件: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
 
-  - [~] 5.3 AuthProvider に login メソッドと logout メソッドを実装
+  - [x] 5.3 AuthProvider に login メソッドと logout メソッドを実装
     - login: ユーザー情報を state に設定し、StorageService にユーザー情報を保存、リフレッシュタイマーをスケジュール
     - logout: state をリセット、StorageService.clearAll、タイマークリア、/login にリダイレクト
     - AuthContextType に login、logout を公開

@@ -1,7 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useAuth } from './use-auth';
 import { AuthProvider } from '@/lib/contexts/auth-context';
+
+// Mock next/navigation (required by AuthProvider)
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
 
 describe('useAuth', () => {
   it('should return auth context when used within AuthProvider', () => {
