@@ -33,7 +33,7 @@
     - 要件: 3.1, 3.5, 3.6
 
 - [ ] 3. useRegisterフックの実装
-  - [~] 3.1 useRegisterカスタムフックを作成
+  - [x] 3.1 useRegisterカスタムフックを作成
     - packages/web/src/lib/hooks/use-register.tsを作成
     - isLoading、error状態の管理
     - register関数の実装（Auth Serviceの呼び出し）
@@ -41,7 +41,7 @@
     - エラーハンドリングとエラーメッセージの設定
     - 要件: 3.1, 3.2, 3.3, 3.5, 3.6
 
-  - [~] 3.2 useRegisterフックのユニットテストを作成
+  - [x] 3.2 useRegisterフックのユニットテストを作成
     - packages/web/src/lib/hooks/use-register.test.tsxを作成
     - 登録成功フローのテスト
     - 登録失敗フローのテスト
