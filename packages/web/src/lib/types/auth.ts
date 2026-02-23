@@ -1,0 +1,38 @@
+/**
+ * ユーザー登録リクエストの型定義
+ */
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  username: string;
+}
+
+/**
+ * ユーザー登録レスポンスの型定義
+ */
+export interface RegisterResponse {
+  userId: string;
+  email: string;
+  username: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+/**
+ * ユーザー情報の型定義
+ */
+export interface User {
+  userId: string;
+  email: string;
+  username: string;
+}
+
+/**
+ * フォームエラーの型定義
+ */
+export interface FormErrors {
+  email?: string;
+  password?: string;
+  passwordConfirmation?: string;
+}
