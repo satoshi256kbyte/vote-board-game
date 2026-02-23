@@ -114,7 +114,7 @@
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
 - [ ] 6. ConfirmResetFormコンポーネントの実装
-  - [~] 6.1 ConfirmResetFormコンポーネントの基本構造を作成
+  - [x] 6.1 ConfirmResetFormコンポーネントの基本構造を作成
     - packages/web/src/components/auth/confirm-reset-form.tsxを作成
     - 確認コード、新しいパスワード、新しいパスワード確認の入力フィールドを実装
     - パスワードをリセットボタンを実装
