@@ -78,7 +78,7 @@
 - [x] 4. チェックポイント - AuthService のテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
-- [ ] 5. AuthProvider の大幅拡張
+- [x] 5. AuthProvider の大幅拡張
   - [x] 5.1 AuthProvider に認証状態の初期化・復元ロジックを実装
     - packages/web/src/lib/contexts/auth-context.tsx を拡張
     - マウント時に StorageService から AccessToken とユーザー情報を読み込み
@@ -101,20 +101,20 @@
     - AuthContextType に login、logout を公開
     - _要件: 2.1, 2.2, 4.1, 4.2, 4.3, 4.4_
 
-  - [~] 5.4 AuthProvider の認証状態復元のプロパティベーステストを作成
+  - [x] 5.4 AuthProvider の認証状態復元のプロパティベーステストを作成
     - packages/web/src/lib/contexts/auth-context.property.test.tsx を作成
     - **Property 1: 認証状態復元の往復一貫性**
     - **検証: 要件 1.1, 1.2**
 
-  - [~] 5.5 AuthProvider のログアウト状態リセットのプロパティベーステストを作成
+  - [x] 5.5 AuthProvider のログアウト状態リセットのプロパティベーステストを作成
     - **Property 5: ログアウトによる認証状態リセット**
     - **検証: 要件 4.2**
 
-  - [~] 5.6 AuthProvider のリフレッシュスケジューリングのプロパティベーステストを作成
+  - [x] 5.6 AuthProvider のリフレッシュスケジューリングのプロパティベーステストを作成
     - **Property 6: トークンリフレッシュのスケジューリングタイミング**
     - **検証: 要件 3.1**
 
-  - [~] 5.7 AuthProvider のユニットテストを拡張
+  - [x] 5.7 AuthProvider のユニットテストを拡張
     - packages/web/src/lib/contexts/auth-context.test.tsx を拡張
     - isLoading ライフサイクル（true → false 遷移）のテスト
     - リフレッシュ 401 時のログアウト実行テスト
@@ -123,7 +123,7 @@
     - ログアウト後の /login リダイレクトテスト
     - _要件: 1.4, 1.5, 3.5, 3.6, 3.7, 4.4_
 
-- [ ] 6. チェックポイント - AuthProvider のテストが通ることを確認
+- [x] 6. チェックポイント - AuthProvider のテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
 - [ ] 7. ProtectedRoute コンポーネントの実装

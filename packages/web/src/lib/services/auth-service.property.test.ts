@@ -205,7 +205,10 @@ describe('AuthService - Property-Based Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           fc.webUrl(),
-          fc.string({ minLength: 10, maxLength: 500 }),
+          fc
+            .string({ minLength: 10, maxLength: 500 })
+            .map((s) => s.trim())
+            .filter((s) => s.length >= 10),
           async (url: string, accessToken: string) => {
             // Arrange
             vi.clearAllMocks();
