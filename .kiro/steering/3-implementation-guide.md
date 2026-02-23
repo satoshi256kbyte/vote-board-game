@@ -475,3 +475,54 @@ SK: MOVE#789
 ## ファイル編集
 
 - ヒアドキュメントで大量のコードを置換するのは避けてください。失敗し、動作が止まる可能性が高いです。
+
+## プロパティベーステスト（fast-check）
+
+### 基本ルール
+
+- `numRuns` は 10〜20 に制限（デフォルトの 100 は JSDOM 環境で不安定になる）
+- `endOnFailure: true` を必ず指定
+- テストタイムアウトは 15 秒に設定（`vitest.config.ts` の `testTimeout`）
+
+### asyncProperty の禁止
+
+React コンポーネントのプロパティベーステストでは `fc.asyncProperty` を使用しない。
+
+`asyncProperty` は fast-check が複数イテレーションを非同期で実行するため、React の状態更新やタイマー（`useEffect` 内の `setTimeout` 等）がテスト環境のティアダウン後に実行され、JSDOM 環境を破壊する。結果として後続テストで `<div />` のみがレンダリングされ、`window is not defined` / `document is not defined` エラーが発生する。
+
+代わりに同期の `fc.property` を使い、モック関数の呼び出しを同期的に検証する:
+
+```typescript
+// NG: async leak で後続テストが壊れる
+it('should call API', () => {
+  fc.assert(
+    fc.asyncProperty(fc.emailAddress(), async (email) => {
+      const { container } = render(<MyForm email={email} />);
+      fireEvent.click(getByRole(container, 'button'));
+      await waitFor(() => {
+        expect(mockFn).toHaveBeenCalledWith(email);
+      });
+    }),
+    { numRuns: 10, endOnFailure: true }
+  );
+});
+
+// OK: 同期で検証、環境を汚染しない
+it('should call API', () => {
+  fc.assert(
+    fc.property(fc.emailAddress(), (email) => {
+      mockFn.mockClear();
+      mockFn.mockResolvedValue(true);
+      const { container } = render(<MyForm email={email} />);
+      fireEvent.click(getByRole(container, 'button'));
+      expect(mockFn).toHaveBeenCalledWith(email);
+    }),
+    { numRuns: 10, endOnFailure: true }
+  );
+});
+```
+
+### クリーンアップ
+
+- `afterEach` で `cleanup()`、`vi.clearAllTimers()`、`vi.clearAllMocks()` を実行
+- `vitest.setup.ts` でもグローバルに `vi.clearAllTimers()` と microtask flush を実施
