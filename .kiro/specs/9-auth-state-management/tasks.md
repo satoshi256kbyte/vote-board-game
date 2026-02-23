@@ -151,8 +151,8 @@
     - 認証済み時の children 表示テスト
     - _要件: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 8. AuthRedirect コンポーネントの実装
-  - [~] 8.1 AuthRedirect コンポーネントを作成
+- [x] 8. AuthRedirect コンポーネントの実装
+  - [x] 8.1 AuthRedirect コンポーネントを作成
     - packages/web/src/components/auth/auth-redirect.tsx を作成
     - useAuth フックから isAuthenticated、isLoading を取得
     - isLoading 中はローディング表示
@@ -160,64 +160,64 @@
     - 未認証時は children を表示
     - _要件: 6.1, 6.2, 6.3_
 
-  - [~] 8.2 AuthRedirect の認証済みリダイレクトのプロパティベーステストを作成
+  - [x] 8.2 AuthRedirect の認証済みリダイレクトのプロパティベーステストを作成
     - packages/web/src/components/auth/auth-redirect.property.test.tsx を作成
     - **Property 10: AuthRedirect の認証済みユーザーリダイレクト**
     - **検証: 要件 6.1, 6.2**
 
-  - [~] 8.3 AuthRedirect のユニットテストを作成
+  - [x] 8.3 AuthRedirect のユニットテストを作成
     - packages/web/src/components/auth/auth-redirect.test.tsx を作成
     - isLoading 中のローディング表示テスト
     - 認証済み時の / リダイレクトテスト
     - 未認証時の children 表示テスト
     - _要件: 6.1, 6.2, 6.3_
 
-- [~] 9. チェックポイント - ProtectedRoute と AuthRedirect のテストが通ることを確認
+- [x] 9. チェックポイント - ProtectedRoute と AuthRedirect のテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
-- [ ] 10. 既存フォームの拡張とリダイレクト対応
-  - [~] 10.1 useLogin フックにユーザー情報永続化とリダイレクト対応を追加
+- [x] 10. 既存フォームの拡張とリダイレクト対応
+  - [x] 10.1 useLogin フックにユーザー情報永続化とリダイレクト対応を追加
     - packages/web/src/lib/hooks/use-login.ts を拡張
     - ログイン成功時に AuthProvider の login メソッドを呼び出してユーザー情報を設定
     - ログイン成功時に StorageService にユーザー情報を保存
     - _要件: 2.1, 7.1, 7.2_
 
-  - [~] 10.2 useRegister フックにユーザー情報永続化を追加
+  - [x] 10.2 useRegister フックにユーザー情報永続化を追加
     - packages/web/src/lib/hooks/use-register.ts を拡張
     - 登録成功時に AuthProvider の login メソッドを呼び出してユーザー情報を設定
     - 登録成功時に StorageService にユーザー情報を保存
     - _要件: 2.1, 7.3_
 
-  - [~] 10.3 LoginForm に redirect クエリパラメータ対応を追加
+  - [x] 10.3 LoginForm に redirect クエリパラメータ対応を追加
     - packages/web/src/components/auth/login-form.tsx を拡張
     - useSearchParams で redirect パラメータを取得
     - ログイン成功時に redirect パラメータがあればそのパスに、なければ / にリダイレクト
     - _要件: 7.1, 7.2_
 
-  - [~] 10.4 RegisterForm に登録成功後のリダイレクトを追加
+  - [x] 10.4 RegisterForm に登録成功後のリダイレクトを追加
     - packages/web/src/components/auth/register-form.tsx を拡張
     - 登録成功時に / にリダイレクト
     - _要件: 7.3_
 
-  - [~] 10.5 LoginForm の redirect パラメータのプロパティベーステストを作成
+  - [x] 10.5 LoginForm の redirect パラメータのプロパティベーステストを作成
     - packages/web/src/components/auth/login-form.property.test.tsx を拡張
     - **Property 11: ログイン後の redirect パラメータによるリダイレクト**
     - **検証: 要件 7.1**
 
-  - [~] 10.6 既存フォームのユニットテストを拡張
+  - [x] 10.6 既存フォームのユニットテストを拡張
     - packages/web/src/lib/hooks/use-login.test.tsx を拡張（ユーザー情報永続化テスト）
     - packages/web/src/lib/hooks/use-register.test.tsx を拡張（ユーザー情報永続化テスト）
     - packages/web/src/components/auth/login-form.test.tsx を拡張（redirect パラメータテスト）
     - 登録成功後の / リダイレクトテスト
     - _要件: 2.1, 7.1, 7.2, 7.3_
 
-- [~] 11. useAuth フックの型定義更新に追従
+- [x] 11. useAuth フックの型定義更新に追従
   - packages/web/src/lib/hooks/use-auth.ts を更新
   - 拡張された AuthContextType に追従
   - 既存テストの更新（packages/web/src/lib/hooks/use-auth.test.tsx）
   - _要件: 1.1, 1.2, 4.2_
 
-- [ ] 12. 最終チェックポイント - すべてのテストが通ることを確認
+- [x] 12. 最終チェックポイント - すべてのテストが通ることを確認
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
 ## 注意事項

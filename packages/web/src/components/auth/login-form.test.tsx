@@ -1,13 +1,16 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginForm } from './login-form';
 import { useLogin } from '@/lib/hooks/use-login';
 
 // Mock dependencies
+const mockGet = vi.fn();
+
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
+  useSearchParams: vi.fn(),
 }));
 
 vi.mock('@/lib/hooks/use-login', () => ({
@@ -23,6 +26,10 @@ describe('LoginForm', () => {
     (useRouter as ReturnType<typeof vi.fn>).mockReturnValue({
       push: mockPush,
     });
+    (useSearchParams as ReturnType<typeof vi.fn>).mockReturnValue({
+      get: mockGet,
+    });
+    mockGet.mockReturnValue(null); // Default: no redirect param
     (useLogin as ReturnType<typeof vi.fn>).mockReturnValue({
       login: mockLogin,
       isLoading: false,
@@ -159,6 +166,43 @@ describe('LoginForm', () => {
 
       await waitFor(() => {
         expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+        expect(mockPush).toHaveBeenCalledWith('/');
+      });
+    });
+
+    it('redirect パラメータがある場合、そのパスにリダイレクトする', async () => {
+      mockGet.mockReturnValue('/games/new');
+      mockLogin.mockResolvedValue(true);
+
+      render(<LoginForm />);
+      const emailInput = screen.getByLabelText('メールアドレス');
+      const passwordInput = screen.getByLabelText('パスワード');
+      const loginButton = screen.getByRole('button', { name: 'ログイン' });
+
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      fireEvent.click(loginButton);
+
+      await waitFor(() => {
+        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+        expect(mockPush).toHaveBeenCalledWith('/games/new');
+      });
+    });
+
+    it('redirect パラメータが null の場合、/ にリダイレクトする', async () => {
+      mockGet.mockReturnValue(null);
+      mockLogin.mockResolvedValue(true);
+
+      render(<LoginForm />);
+      const emailInput = screen.getByLabelText('メールアドレス');
+      const passwordInput = screen.getByLabelText('パスワード');
+      const loginButton = screen.getByRole('button', { name: 'ログイン' });
+
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      fireEvent.click(loginButton);
+
+      await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith('/');
       });
     });

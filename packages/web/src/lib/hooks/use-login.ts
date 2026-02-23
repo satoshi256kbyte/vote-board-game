@@ -5,7 +5,7 @@ import { authService } from '@/lib/services/auth-service';
 export function useLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { setUser } = useAuth();
+  const { login: authLogin } = useAuth();
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -14,8 +14,8 @@ export function useLogin() {
     try {
       const response = await authService.login(email, password);
 
-      // ユーザー情報を認証コンテキストに保存
-      setUser({
+      // AuthProvider の login メソッドでユーザー情報を設定・永続化・リフレッシュスケジュール
+      authLogin({
         userId: response.userId,
         email: response.email,
         username: response.username,

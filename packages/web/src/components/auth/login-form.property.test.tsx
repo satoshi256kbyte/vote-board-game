@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import * as fc from 'fast-check';
 import { LoginForm } from './login-form';
 import { useLogin } from '@/lib/hooks/use-login';
@@ -9,6 +9,7 @@ import { useLogin } from '@/lib/hooks/use-login';
 // Mock dependencies
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
+  useSearchParams: vi.fn(),
 }));
 
 vi.mock('@/lib/hooks/use-login', () => ({
@@ -18,12 +19,17 @@ vi.mock('@/lib/hooks/use-login', () => ({
 describe('LoginForm - Property-Based Tests', () => {
   const mockPush = vi.fn();
   const mockLogin = vi.fn();
+  const mockGet = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as ReturnType<typeof vi.fn>).mockReturnValue({
       push: mockPush,
     });
+    (useSearchParams as ReturnType<typeof vi.fn>).mockReturnValue({
+      get: mockGet,
+    });
+    mockGet.mockReturnValue(null);
     (useLogin as ReturnType<typeof vi.fn>).mockReturnValue({
       login: mockLogin,
       isLoading: false,
@@ -361,5 +367,50 @@ describe('LoginForm - Property-Based Tests', () => {
       // 実際のサイズ検証はE2Eテストで行う
       expect(element).toBeInTheDocument();
     });
+  });
+
+  /**
+   * Feature: 9-auth-state-management, Property 11: ログイン後の redirect パラメータによるリダイレクト
+   * **Validates: Requirements 7.1**
+   */
+  it('Property 11: 任意のパスが redirect パラメータに設定されている場合、ログイン成功後にそのパスにリダイレクトされる', async () => {
+    // Path arbitrary: generates valid URL paths
+    const pathArb = fc
+      .array(
+        fc.string({ minLength: 1, maxLength: 20 }).filter((s) => /^[a-z0-9_-]+$/.test(s)),
+        { minLength: 1, maxLength: 4 }
+      )
+      .map((segments) => '/' + segments.join('/'));
+
+    await fc.assert(
+      fc.asyncProperty(pathArb, async (redirectPath) => {
+        mockPush.mockClear();
+        mockLogin.mockClear();
+        mockGet.mockClear();
+        cleanup();
+
+        mockGet.mockReturnValue(redirectPath);
+        mockLogin.mockResolvedValue(true);
+
+        render(<LoginForm />);
+
+        const emailInput = screen.getByLabelText('メールアドレス');
+        const passwordInput = screen.getByLabelText('パスワード');
+        const loginButton = screen.getByRole('button', { name: 'ログイン' });
+
+        await act(async () => {
+          fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+          fireEvent.change(passwordInput, { target: { value: 'password123' } });
+          fireEvent.click(loginButton);
+        });
+
+        await waitFor(() => {
+          expect(mockPush).toHaveBeenCalledWith(redirectPath);
+        });
+
+        cleanup();
+      }),
+      { numRuns: 15 }
+    );
   });
 });

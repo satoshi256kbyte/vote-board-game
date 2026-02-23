@@ -9,13 +9,14 @@ vi.mock('./use-auth');
 vi.mock('@/lib/services/auth-service');
 
 describe('useRegister', () => {
-  const mockSetUser = vi.fn();
+  const mockLogin = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
       user: null,
-      setUser: mockSetUser,
+      setUser: vi.fn(),
+      login: mockLogin,
       isAuthenticated: false,
     });
   });
@@ -50,7 +51,7 @@ describe('useRegister', () => {
       expect(registerResult).toBe(true);
     });
 
-    it('should call setUser with correct user data on success', async () => {
+    it('should call login with correct user data on success', async () => {
       // Arrange
       const email = 'test@example.com';
       const password = 'password123';
@@ -73,12 +74,12 @@ describe('useRegister', () => {
       });
 
       // Assert
-      expect(mockSetUser).toHaveBeenCalledWith({
+      expect(mockLogin).toHaveBeenCalledWith({
         userId: 'user-123',
         email: 'test@example.com',
         username: 'test',
       });
-      expect(mockSetUser).toHaveBeenCalledTimes(1);
+      expect(mockLogin).toHaveBeenCalledTimes(1);
     });
 
     it('should return true on successful registration', async () => {
@@ -177,7 +178,7 @@ describe('useRegister', () => {
       expect(registerResult).toBe(false);
     });
 
-    it('should not call setUser when registration fails', async () => {
+    it('should not call login when registration fails', async () => {
       // Arrange
       (authService.register as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
         new Error('Registration failed')
@@ -191,7 +192,7 @@ describe('useRegister', () => {
       });
 
       // Assert
-      expect(mockSetUser).not.toHaveBeenCalled();
+      expect(mockLogin).not.toHaveBeenCalled();
     });
 
     it('should set default error message when error is not an Error instance', async () => {
@@ -464,7 +465,7 @@ describe('useRegister', () => {
   });
 
   describe('useAuthフックとの統合の検証', () => {
-    it('should call setUser from useAuth hook', async () => {
+    it('should call login from useAuth hook', async () => {
       // Arrange
       const mockResponse = {
         userId: 'user-123',
@@ -485,10 +486,10 @@ describe('useRegister', () => {
       });
 
       // Assert
-      expect(mockSetUser).toHaveBeenCalled();
+      expect(mockLogin).toHaveBeenCalled();
     });
 
-    it('should pass correct user data structure to setUser', async () => {
+    it('should pass correct user data structure to login', async () => {
       // Arrange
       const mockResponse = {
         userId: 'user-456',
@@ -509,14 +510,14 @@ describe('useRegister', () => {
       });
 
       // Assert
-      expect(mockSetUser).toHaveBeenCalledWith({
+      expect(mockLogin).toHaveBeenCalledWith({
         userId: 'user-456',
         email: 'newuser@example.com',
         username: 'newuser',
       });
     });
 
-    it('should only include userId, email, and username in setUser call', async () => {
+    it('should only include userId, email, and username in login call', async () => {
       // Arrange
       const mockResponse = {
         userId: 'user-123',
@@ -537,18 +538,18 @@ describe('useRegister', () => {
       });
 
       // Assert
-      const setUserCall = mockSetUser.mock.calls[0][0];
-      expect(setUserCall).toEqual({
+      const loginCall = mockLogin.mock.calls[0][0];
+      expect(loginCall).toEqual({
         userId: 'user-123',
         email: 'test@example.com',
         username: 'test',
       });
-      expect(setUserCall).not.toHaveProperty('accessToken');
-      expect(setUserCall).not.toHaveProperty('refreshToken');
-      expect(setUserCall).not.toHaveProperty('expiresIn');
+      expect(loginCall).not.toHaveProperty('accessToken');
+      expect(loginCall).not.toHaveProperty('refreshToken');
+      expect(loginCall).not.toHaveProperty('expiresIn');
     });
 
-    it('should call setUser after authService.register completes', async () => {
+    it('should call login after authService.register completes', async () => {
       // Arrange
       const mockResponse = {
         userId: 'user-123',
@@ -571,11 +572,11 @@ describe('useRegister', () => {
 
       // Assert - Verify order of calls
       expect(registerSpy).toHaveBeenCalled();
-      expect(mockSetUser).toHaveBeenCalled();
-      // setUser should be called after register completes
+      expect(mockLogin).toHaveBeenCalled();
+      // login should be called after register completes
       const registerCallOrder = registerSpy.mock.invocationCallOrder[0];
-      const setUserCallOrder = mockSetUser.mock.invocationCallOrder[0];
-      expect(setUserCallOrder).toBeGreaterThan(registerCallOrder);
+      const loginCallOrder = mockLogin.mock.invocationCallOrder[0];
+      expect(loginCallOrder).toBeGreaterThan(registerCallOrder);
     });
   });
 });

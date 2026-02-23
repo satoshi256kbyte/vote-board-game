@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { useLogin } from '@/lib/hooks/use-login';
@@ -16,6 +16,7 @@ interface FormErrors {
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, isLoading, error: apiError } = useLogin();
 
   const [email, setEmail] = useState('');
@@ -49,7 +50,8 @@ export function LoginForm() {
 
     const success = await login(email, password);
     if (success) {
-      router.push('/');
+      const redirect = searchParams.get('redirect');
+      router.push(redirect || '/');
     }
   };
 

@@ -441,7 +441,7 @@ describe('RegisterForm - Client-side Validation', () => {
   });
 
   describe('Registration Success Flow (Task 4.7 - Requirement 3.4)', () => {
-    it('should navigate to email verification page on successful registration', async () => {
+    it('should navigate to home page on successful registration', async () => {
       mockRegisterFn.mockResolvedValue(true);
 
       render(<RegisterForm />);
@@ -462,7 +462,7 @@ describe('RegisterForm - Client-side Validation', () => {
       // Wait for navigation
       await waitFor(() => {
         expect(mockRegisterFn).toHaveBeenCalledWith('test@example.com', 'password123');
-        expect(mockPush).toHaveBeenCalledWith('/email-verification');
+        expect(mockPush).toHaveBeenCalledWith('/');
       });
     });
 
