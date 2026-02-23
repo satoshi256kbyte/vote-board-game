@@ -24,7 +24,7 @@
     - アクセストークンとリフレッシュトークンのローカルストレージへの保存
     - 要件: 3.1, 3.5, 3.6, 7.1, 7.2
 
-  - [~] 2.2 Auth Serviceのregisterメソッドのユニットテストを作成
+  - [x] 2.2 Auth Serviceのregisterメソッドのユニットテストを作成
     - packages/web/src/lib/services/auth-service.test.tsを作成
     - 成功レスポンス（201）のテスト
     - エラーレスポンス（409, 429, 500）のテスト
