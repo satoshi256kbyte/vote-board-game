@@ -165,8 +165,8 @@
 - [x] 10. チェックポイント - すべてのテストが通過することを確認
   - すべてのテストが通過することを確認し、質問があればユーザーに尋ねる
 
-- [~] 11. AuthProviderの統合
-  - [~] 11.1 ルートレイアウトにAuthProviderを追加
+- [x] 11. AuthProviderの統合
+  - [x] 11.1 ルートレイアウトにAuthProviderを追加
     - `packages/web/src/app/layout.tsx`を更新
     - AuthProviderでchildrenをラップ
     - _要件: 4.3_
