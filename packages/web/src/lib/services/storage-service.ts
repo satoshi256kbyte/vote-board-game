@@ -43,7 +43,7 @@ class StorageService {
 
 export const storageService = new StorageService();
 
-// 個別のエクスポート(後方互換性のため)
+// 個別のエクスポート（後方互換性のため）
 export const getAccessToken = () => storageService.getAccessToken();
 export const setAccessToken = (token: string) => storageService.setAccessToken(token);
 export const removeAccessToken = () => storageService.removeAccessToken();
