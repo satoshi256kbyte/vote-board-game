@@ -380,3 +380,384 @@ describe('RequestCodeForm - Accessibility (Task 4.4)', () => {
     expect(loginLink).not.toHaveAttribute('tabindex', '-1');
   });
 });
+
+describe('RequestCodeForm - Initial Display (Task 4.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn().mockResolvedValue(true),
+      confirmReset: vi.fn().mockResolvedValue(true),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+  });
+
+  it('should display email input field (Requirement 1.1)', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    expect(emailInput).toBeInTheDocument();
+    expect(emailInput).toHaveAttribute('type', 'email');
+  });
+
+  it('should display submit button (Requirement 1.2)', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const submitButton = screen.getByRole('button', { name: '確認コードを送信' });
+    expect(submitButton).toBeInTheDocument();
+  });
+
+  it('should display instruction text (Requirement 1.3)', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const instructionText = screen.getByText(
+      '登録されているメールアドレスを入力してください。パスワードリセット用の確認コードを送信します。'
+    );
+    expect(instructionText).toBeInTheDocument();
+  });
+
+  it('should display placeholder text in email field (Requirement 1.4)', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    expect(emailInput).toHaveAttribute('placeholder', 'メールアドレス');
+  });
+
+  it('should display login screen link (Requirement 1.5)', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const loginLink = screen.getByRole('link', { name: 'ログイン画面に戻る' });
+    expect(loginLink).toBeInTheDocument();
+    expect(loginLink).toHaveAttribute('href', '/login');
+  });
+});
+
+describe('RequestCodeForm - Validation Error Display (Task 4.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn().mockResolvedValue(true),
+      confirmReset: vi.fn().mockResolvedValue(true),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+  });
+
+  it('should display error when email is empty on blur (Requirement 2.1)', async () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    fireEvent.blur(emailInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('メールアドレスを入力してください')).toBeInTheDocument();
+    });
+  });
+
+  it('should display error when email format is invalid on blur (Requirement 2.2)', async () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    fireEvent.change(emailInput, { target: { value: 'notanemail' } });
+    fireEvent.blur(emailInput);
+
+    await waitFor(() => {
+      expect(screen.getByText('有効なメールアドレスを入力してください')).toBeInTheDocument();
+    });
+  });
+
+  it('should not call API when validation error exists (Requirement 2.3)', async () => {
+    const mockRequestCode = vi.fn().mockResolvedValue(true);
+    const onCodeSent = vi.fn();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: mockRequestCode,
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const submitButton = screen.getByRole('button', { name: '確認コードを送信' });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('メールアドレスを入力してください')).toBeInTheDocument();
+    });
+
+    expect(mockRequestCode).not.toHaveBeenCalled();
+  });
+});
+
+describe('RequestCodeForm - Loading State UI Changes (Task 4.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should disable button during loading (Requirement 3.2)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const submitButton = screen.getByRole('button', { name: '送信中...' });
+    expect(submitButton).toBeDisabled();
+  });
+
+  it('should show loading indicator during API call (Requirement 3.3)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const loadingButton = screen.getByRole('button', { name: '送信中...' });
+    expect(loadingButton).toBeInTheDocument();
+  });
+
+  it('should disable email input during loading (Requirement 3.4)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    expect(emailInput).toBeDisabled();
+  });
+});
+
+describe('RequestCodeForm - Success Flow (Task 4.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call onCodeSent with email when request succeeds (Requirements 4.1, 4.2, 4.3, 4.4)', async () => {
+    const mockRequestCode = vi.fn().mockResolvedValue(true);
+    const onCodeSent = vi.fn();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: mockRequestCode,
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    const submitButton = screen.getByRole('button', { name: '確認コードを送信' });
+
+    fireEvent.change(emailInput, { target: { value: 'user@example.com' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockRequestCode).toHaveBeenCalledWith('user@example.com');
+      expect(onCodeSent).toHaveBeenCalledWith('user@example.com');
+    });
+  });
+});
+
+describe('RequestCodeForm - Failure Flow (Task 4.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should display rate limit error message (Requirement 5.1)', () => {
+    const errorMessage = 'リクエスト回数が上限に達しました。しばらくしてから再度お試しください';
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: errorMessage,
+      successMessage: null,
+    });
+
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+  });
+
+  it('should display server error message (Requirement 5.2)', () => {
+    const errorMessage = 'サーバーエラーが発生しました。しばらくしてから再度お試しください';
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: errorMessage,
+      successMessage: null,
+    });
+
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+  });
+
+  it('should display network error message (Requirement 5.3)', () => {
+    const errorMessage = 'ネットワークエラーが発生しました。インターネット接続を確認してください';
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: errorMessage,
+      successMessage: null,
+    });
+
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+  });
+});
+
+describe('RequestCodeForm - Error Recovery (Task 4.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should re-enable button and field after error (Requirement 5.4)', async () => {
+    const mockRequestCode = vi.fn().mockResolvedValue(false);
+
+    // First render with error
+    const { rerender } = render(<RequestCodeForm onCodeSent={vi.fn()} />);
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: mockRequestCode,
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: 'サーバーエラーが発生しました。しばらくしてから再度お試しください',
+      successMessage: null,
+    });
+
+    rerender(<RequestCodeForm onCodeSent={vi.fn()} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    const submitButton = screen.getByRole('button', { name: '確認コードを送信' });
+
+    // After error, fields should be enabled
+    expect(emailInput).not.toBeDisabled();
+    expect(submitButton).not.toBeDisabled();
+  });
+});
+
+describe('RequestCodeForm - Login Link Navigation (Task 4.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn().mockResolvedValue(true),
+      confirmReset: vi.fn().mockResolvedValue(true),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+  });
+
+  it('should navigate to login screen when link is clicked (Requirement 13.1)', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const loginLink = screen.getByRole('link', { name: 'ログイン画面に戻る' });
+    expect(loginLink).toHaveAttribute('href', '/login');
+  });
+});
+
+describe('RequestCodeForm - ARIA Attributes (Task 4.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn().mockResolvedValue(true),
+      confirmReset: vi.fn().mockResolvedValue(true),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+  });
+
+  it('should have correct aria-label on email field (Requirement 14.1)', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    expect(emailInput).toHaveAttribute('aria-label', 'メールアドレス');
+  });
+
+  it('should set role="alert" on validation errors (Requirement 14.5)', async () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    fireEvent.blur(emailInput);
+
+    await waitFor(() => {
+      const errorMessage = screen.getByText('メールアドレスを入力してください');
+      expect(errorMessage).toHaveAttribute('role', 'alert');
+    });
+  });
+
+  it('should set aria-disabled when button is disabled (Requirement 14.6)', () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const submitButton = screen.getByRole('button', { name: '送信中...' });
+    expect(submitButton).toHaveAttribute('aria-disabled', 'true');
+  });
+});

@@ -98,7 +98,7 @@
     - キーボードナビゲーションの確保
     - _要件: 14.1, 14.5_
 
-  - [~] 4.5 RequestCodeFormコンポーネントのユニットテストを作成
+  - [x] 4.5 RequestCodeFormコンポーネントのユニットテストを作成
     - packages/web/src/components/auth/request-code-form.test.tsxを作成
     - 初期表示のテスト（フォーム要素の存在確認）
     - バリデーションエラーの表示テスト
