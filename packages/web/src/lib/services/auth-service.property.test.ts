@@ -16,9 +16,15 @@ import { storageService } from './storage-service';
 vi.mock('./storage-service', () => ({
   storageService: {
     setAccessToken: vi.fn(),
-    setRefreshToken: vi.fn(),
+    getAccessToken: vi.fn(),
     removeAccessToken: vi.fn(),
+    setRefreshToken: vi.fn(),
+    getRefreshToken: vi.fn(),
     removeRefreshToken: vi.fn(),
+    setUser: vi.fn(),
+    getUser: vi.fn(),
+    removeUser: vi.fn(),
+    clearAll: vi.fn(),
   },
 }));
 
@@ -136,6 +142,52 @@ describe('AuthService - Property-Based Tests', () => {
           }
         ),
         { numRuns: 100 }
+      );
+    });
+  });
+
+  /**
+   * Feature: 9-auth-state-management, Property 7: リフレッシュ後のトークン永続化
+   *
+   * **Validates: Requirements 3.3**
+   *
+   * 任意の新しい AccessToken がリフレッシュ API から返された場合、
+   * そのトークンは localStorage の vbg_access_token キーに保存され、
+   * getAccessToken() で取得可能であるべきです。
+   */
+  describe('Property 7: リフレッシュ後のトークン永続化', () => {
+    it('should persist new access token to localStorage after successful refresh', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({
+            accessToken: fc.string({ minLength: 10, maxLength: 500 }),
+            expiresIn: fc.integer({ min: 60, max: 3600 }),
+          }),
+          fc.string({ minLength: 10, maxLength: 500 }),
+          async (
+            refreshResponse: { accessToken: string; expiresIn: number },
+            inputRefreshToken: string
+          ) => {
+            // Arrange
+            vi.clearAllMocks();
+            (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+              ok: true,
+              json: async () => refreshResponse,
+            });
+
+            // Act
+            const result = await authService.refreshToken(inputRefreshToken);
+
+            // Assert - New access token should be saved to localStorage
+            expect(storageService.setAccessToken).toHaveBeenCalledWith(refreshResponse.accessToken);
+            expect(storageService.setAccessToken).toHaveBeenCalledTimes(1);
+
+            // Assert - Return value should match the response
+            expect(result.accessToken).toBe(refreshResponse.accessToken);
+            expect(result.expiresIn).toBe(refreshResponse.expiresIn);
+          }
+        ),
+        { numRuns: 20, endOnFailure: true }
       );
     });
   });

@@ -56,7 +56,7 @@
     - 既存の logout メソッドを clearAll() を使用するよう修正
     - _要件: 4.1_
 
-  - [~] 3.4 AuthService のトークンリフレッシュのプロパティベーステストを作成
+  - [x] 3.4 AuthService のトークンリフレッシュのプロパティベーステストを作成
     - packages/web/src/lib/services/auth-service.property.test.ts を拡張
     - **Property 7: リフレッシュ後のトークン永続化**
     - **検証: 要件 3.3**
