@@ -51,7 +51,7 @@
     - 要件: 3.1, 3.2, 3.3, 3.5, 3.6
 
 - [ ] 4. RegisterFormコンポーネントの実装
-  - [~] 4.1 RegisterFormコンポーネントの基本構造を作成
+  - [x] 4.1 RegisterFormコンポーネントの基本構造を作成
     - packages/web/src/components/auth/register-form.tsxを作成
     - メールアドレス、パスワード、パスワード確認の入力フィールドを実装
     - 登録ボタンとログインリンクを実装
