@@ -13,7 +13,7 @@
   - 必要に応じて`npx shadcn-ui@latest add button input alert`を実行
   - _要件: 1.1, 1.2, 1.3_
 
-- [ ] 2. Storage Serviceの実装
+- [x] 2. Storage Serviceの実装
   - [x] 2.1 Storage Serviceの実装
     - `packages/web/src/lib/services/storage-service.ts`を作成
     - アクセストークンとリフレッシュトークンの保存・取得・削除機能を実装
@@ -27,7 +27,7 @@
     - SSR環境でのnullチェックのテスト
     - _要件: 4.2_
 
-- [ ] 3. Auth Contextの実装
+- [-] 3. Auth Contextの実装
   - [x] 3.1 Auth Contextの実装
     - `packages/web/src/lib/contexts/auth-context.tsx`を作成
     - ユーザー情報の状態管理（User型: userId, email, username）
@@ -41,7 +41,7 @@
     - 認証状態の判定テスト
     - _要件: 4.3_
 
-- [ ] 4. Auth Serviceの実装
+- [~] 4. Auth Serviceの実装
   - [x] 4.1 Auth Serviceの実装
     - `packages/web/src/lib/services/auth-service.ts`を作成
     - login関数の実装（メールアドレス、パスワードを受け取り、ログインAPIを呼び出し）
@@ -65,10 +65,10 @@
     - fast-checkを使用して、任意のログイン成功レスポンスに対してトークンが正しく保存されることを検証
     - _要件: 4.2_
 
-- [x] 5. チェックポイント - 基盤サービスの動作確認
+- [~] 5. チェックポイント - 基盤サービスの動作確認
   - すべてのテストが通過することを確認し、質問があればユーザーに尋ねる
 
-- [ ] 6. useAuthフックの実装
+- [~] 6. useAuthフックの実装
   - [~] 6.1 useAuthフックの実装
     - `packages/web/src/lib/hooks/use-auth.ts`を作成
     - Auth Contextへのアクセスを提供
@@ -81,7 +81,7 @@
     - コンテキスト外での使用時のエラーテスト
     - _要件: 4.3_
 
-- [ ] 7. useLoginフックの実装
+- [~] 7. useLoginフックの実装
   - [~] 7.1 useLoginフックの実装
     - `packages/web/src/lib/hooks/use-login.ts`を作成
     - ログインロジックのカプセル化（login関数）
@@ -97,7 +97,7 @@
     - ローディング状態の遷移テスト
     - _要件: 3.1, 3.2, 4.3, 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 8. LoginFormコンポーネントの実装
+- [~] 8. LoginFormコンポーネントの実装
   - [~] 8.1 LoginFormコンポーネントの実装
     - `packages/web/src/components/auth/login-form.tsx`を作成
     - メールアドレスとパスワードの入力フィールド
@@ -145,7 +145,7 @@
     - fast-checkを使用して各プロパティを検証
     - _要件: 2.3, 2.4, 3.1, 5.1, 5.2, 5.3, 5.4, 5.5, 9.3, 10.3, 11.4_
 
-- [ ] 9. Login Pageコンポーネントの実装
+- [~] 9. Login Pageコンポーネントの実装
   - [~] 9.1 Login Pageコンポーネントの実装
     - `packages/web/src/app/login/page.tsx`を作成
     - 'use client'ディレクティブを追加
@@ -165,13 +165,13 @@
 - [~] 10. チェックポイント - すべてのテストが通過することを確認
   - すべてのテストが通過することを確認し、質問があればユーザーに尋ねる
 
-- [ ] 11. AuthProviderの統合
+- [~] 11. AuthProviderの統合
   - [~] 11.1 ルートレイアウトにAuthProviderを追加
     - `packages/web/src/app/layout.tsx`を更新
     - AuthProviderでchildrenをラップ
     - _要件: 4.3_
 
-- [ ] 12. 環境変数の設定
+- [~] 12. 環境変数の設定
   - [~] 12.1 環境変数ファイルの作成
     - `.env.local`ファイルを作成（存在しない場合）
     - `NEXT_PUBLIC_API_URL`を設定
