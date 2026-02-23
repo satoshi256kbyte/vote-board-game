@@ -185,6 +185,303 @@ describe('AuthService', () => {
     });
   });
 
+  describe('requestPasswordReset', () => {
+    it('should successfully request password reset', async () => {
+      // Arrange
+      const email = 'test@example.com';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message: 'Password reset code has been sent' }),
+      });
+
+      // Act
+      await authService.requestPasswordReset(email);
+
+      // Assert
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/auth/password-reset'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+    });
+
+    it('should throw error with correct message for 429 status (rate limit)', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        json: async () => ({}),
+      });
+
+      // Act & Assert
+      await expect(authService.requestPasswordReset('test@example.com')).rejects.toThrow(
+        'リクエスト回数が上限に達しました。しばらくしてから再度お試しください'
+      );
+    });
+
+    it('should throw error with correct message for 500 status (server error)', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({}),
+      });
+
+      // Act & Assert
+      await expect(authService.requestPasswordReset('test@example.com')).rejects.toThrow(
+        'サーバーエラーが発生しました。しばらくしてから再度お試しください'
+      );
+    });
+
+    it('should throw error with custom message for other status codes', async () => {
+      // Arrange
+      const customMessage = 'Custom error message';
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ message: customMessage }),
+      });
+
+      // Act & Assert
+      await expect(authService.requestPasswordReset('test@example.com')).rejects.toThrow(
+        customMessage
+      );
+    });
+
+    it('should throw default error message when error response has no message', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({}),
+      });
+
+      // Act & Assert
+      await expect(authService.requestPasswordReset('test@example.com')).rejects.toThrow(
+        '確認コードの送信に失敗しました'
+      );
+    });
+
+    it('should handle network errors', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new TypeError('Failed to fetch')
+      );
+
+      // Act & Assert
+      await expect(authService.requestPasswordReset('test@example.com')).rejects.toThrow(
+        'ネットワークエラーが発生しました。インターネット接続を確認してください'
+      );
+    });
+
+    it('should handle JSON parse errors in error response', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => {
+          throw new Error('Invalid JSON');
+        },
+      });
+
+      // Act & Assert
+      await expect(authService.requestPasswordReset('test@example.com')).rejects.toThrow(
+        'サーバーエラーが発生しました。しばらくしてから再度お試しください'
+      );
+    });
+  });
+
+  describe('confirmPasswordReset', () => {
+    it('should successfully confirm password reset', async () => {
+      // Arrange
+      const email = 'test@example.com';
+      const confirmationCode = '123456';
+      const newPassword = 'NewPassword123';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ message: 'Password has been reset successfully' }),
+      });
+
+      // Act
+      await authService.confirmPasswordReset(email, confirmationCode, newPassword);
+
+      // Assert
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/password-reset/confirm'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, confirmationCode, newPassword }),
+        }
+      );
+    });
+
+    it('should throw error with correct message for 400 status with INVALID_CODE error', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: 'INVALID_CODE' }),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow('確認コードが無効または期限切れです');
+    });
+
+    it('should throw error with correct message for 400 status with VALIDATION_ERROR error', async () => {
+      // Arrange
+      const validationMessage = 'Password does not meet requirements';
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: 'VALIDATION_ERROR', message: validationMessage }),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'weak')
+      ).rejects.toThrow(validationMessage);
+    });
+
+    it('should throw default validation error message when VALIDATION_ERROR has no message', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: 'VALIDATION_ERROR' }),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'weak')
+      ).rejects.toThrow('バリデーションエラーが発生しました');
+    });
+
+    it('should throw error with custom message for 400 status with other errors', async () => {
+      // Arrange
+      const customMessage = 'Custom 400 error';
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ message: customMessage }),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow(customMessage);
+    });
+
+    it('should throw default error message for 400 status with no error details', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({}),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow('パスワードのリセットに失敗しました');
+    });
+
+    it('should throw error with correct message for 429 status (rate limit)', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        json: async () => ({}),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow('リクエスト回数が上限に達しました。しばらくしてから再度お試しください');
+    });
+
+    it('should throw error with correct message for 500 status (server error)', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({}),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow('サーバーエラーが発生しました。しばらくしてから再度お試しください');
+    });
+
+    it('should throw error with custom message for other status codes', async () => {
+      // Arrange
+      const customMessage = 'Custom error message';
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: async () => ({ message: customMessage }),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow(customMessage);
+    });
+
+    it('should throw default error message when error response has no message', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: async () => ({}),
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow('パスワードのリセットに失敗しました');
+    });
+
+    it('should handle network errors', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new TypeError('Failed to fetch')
+      );
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow('ネットワークエラーが発生しました。インターネット接続を確認してください');
+    });
+
+    it('should handle JSON parse errors in error response', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => {
+          throw new Error('Invalid JSON');
+        },
+      });
+
+      // Act & Assert
+      await expect(
+        authService.confirmPasswordReset('test@example.com', '123456', 'NewPassword123')
+      ).rejects.toThrow('サーバーエラーが発生しました。しばらくしてから再度お試しください');
+    });
+  });
+
   describe('register', () => {
     const mockRegisterResponse = {
       userId: 'user-456',

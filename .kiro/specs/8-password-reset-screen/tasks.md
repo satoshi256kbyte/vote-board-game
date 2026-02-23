@@ -31,7 +31,7 @@
     - ネットワークエラーの検出と適切なエラーメッセージの返却
     - _要件: 8.1, 10.1, 10.2, 10.3, 10.4, 10.5_
 
-  - [~] 2.3 Auth Serviceパスワードリセットメソッドのユニットテストを作成
+  - [x] 2.3 Auth Serviceパスワードリセットメソッドのユニットテストを作成
     - packages/web/src/lib/services/auth-service.test.tsにテストを追加
     - requestPasswordResetメソッドの成功レスポンス（200）のテスト
     - requestPasswordResetメソッドのエラーレスポンス（429, 500）のテスト
