@@ -114,7 +114,7 @@
   - すべてのテストが通ることを確認し、質問があればユーザーに尋ねる
 
 - [ ] 6. RegisterPageコンポーネントの実装
-  - [~] 6.1 RegisterPageコンポーネントを作成
+  - [x] 6.1 RegisterPageコンポーネントを作成
     - packages/web/src/app/register/page.tsxを作成
     - 認証済みユーザーのリダイレクト処理（トークン存在確認）
     - RegisterFormコンポーネントのレンダリング
