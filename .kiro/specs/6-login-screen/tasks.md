@@ -58,7 +58,7 @@
     - トークン保存の検証
     - _要件: 3.1, 4.1, 4.2, 5.1, 5.2, 5.3, 5.4_
 
-  - [~] 4.3 Auth Serviceのプロパティベーステスト
+  - [x] 4.3 Auth Serviceのプロパティベーステスト
     - `packages/web/src/lib/services/auth-service.property.test.ts`を作成
     - **プロパティ4: トークンのローカルストレージ保存**
     - **検証: 要件 4.2**
