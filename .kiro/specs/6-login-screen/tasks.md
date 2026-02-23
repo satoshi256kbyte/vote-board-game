@@ -27,7 +27,7 @@
     - SSR環境でのnullチェックのテスト
     - _要件: 4.2_
 
-- [-] 3. Auth Contextの実装
+- [x] 3. Auth Contextの実装
   - [x] 3.1 Auth Contextの実装
     - `packages/web/src/lib/contexts/auth-context.tsx`を作成
     - ユーザー情報の状態管理（User型: userId, email, username）
@@ -41,7 +41,7 @@
     - 認証状態の判定テスト
     - _要件: 4.3_
 
-- [~] 4. Auth Serviceの実装
+- [x] 4. Auth Serviceの実装
   - [x] 4.1 Auth Serviceの実装
     - `packages/web/src/lib/services/auth-service.ts`を作成
     - login関数の実装（メールアドレス、パスワードを受け取り、ログインAPIを呼び出し）
@@ -65,7 +65,7 @@
     - fast-checkを使用して、任意のログイン成功レスポンスに対してトークンが正しく保存されることを検証
     - _要件: 4.2_
 
-- [~] 5. チェックポイント - 基盤サービスの動作確認
+- [x] 5. チェックポイント - 基盤サービスの動作確認
   - すべてのテストが通過することを確認し、質問があればユーザーに尋ねる
 
 - [~] 6. useAuthフックの実装
