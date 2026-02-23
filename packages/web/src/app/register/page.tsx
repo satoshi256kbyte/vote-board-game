@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RegisterForm } from '@/components/auth/register-form';
 import { getAccessToken } from '@/lib/services/storage-service';
