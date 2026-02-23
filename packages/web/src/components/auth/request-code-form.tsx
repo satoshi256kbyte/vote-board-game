@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePasswordReset } from '@/lib/hooks/use-password-reset';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -11,11 +12,11 @@ interface RequestCodeFormProps {
 }
 
 export function RequestCodeForm({ onCodeSent }: RequestCodeFormProps) {
+  const { requestCode, isLoading, error: apiError } = usePasswordReset();
+
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<{ email?: string }>({});
   const [touched, setTouched] = useState({ email: false });
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
 
   const validateEmail = (value: string): string | undefined => {
     if (!value.trim()) {
@@ -47,16 +48,10 @@ export function RequestCodeForm({ onCodeSent }: RequestCodeFormProps) {
       return;
     }
 
-    // TODO: Implement API call in next task
-    // For now, just simulate the flow
-    setIsLoading(true);
-    setApiError(null);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    const success = await requestCode(email);
+    if (success) {
       onCodeSent(email);
-    }, 1000);
+    }
   };
 
   const isSubmitDisabled = isLoading || !!errors.email;

@@ -1,9 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { RequestCodeForm } from './request-code-form';
+import * as usePasswordResetModule from '@/lib/hooks/use-password-reset';
+
+// Mock the usePasswordReset hook
+vi.mock('@/lib/hooks/use-password-reset');
 
 describe('RequestCodeForm - Validation', () => {
+  beforeEach(() => {
+    // Reset mocks before each test
+    vi.clearAllMocks();
+
+    // Default mock implementation
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn().mockResolvedValue(true),
+      confirmReset: vi.fn().mockResolvedValue(true),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+  });
   it('should display error when email field is empty and blurred', async () => {
     const onCodeSent = vi.fn();
     render(<RequestCodeForm onCodeSent={onCodeSent} />);
@@ -131,5 +149,234 @@ describe('RequestCodeForm - Validation', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(onCodeSent).not.toHaveBeenCalled();
+  });
+});
+
+describe('RequestCodeForm - API Integration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call requestCode and onCodeSent when form is submitted with valid email', async () => {
+    const mockRequestCode = vi.fn().mockResolvedValue(true);
+    const onCodeSent = vi.fn();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: mockRequestCode,
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    const submitButton = screen.getByRole('button', { name: /確認コードを送信/ });
+
+    // Enter valid email
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockRequestCode).toHaveBeenCalledWith('test@example.com');
+      expect(onCodeSent).toHaveBeenCalledWith('test@example.com');
+    });
+  });
+
+  it('should not call onCodeSent when requestCode fails', async () => {
+    const mockRequestCode = vi.fn().mockResolvedValue(false);
+    const onCodeSent = vi.fn();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: mockRequestCode,
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: 'サーバーエラーが発生しました。しばらくしてから再度お試しください',
+      successMessage: null,
+    });
+
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    const submitButton = screen.getByRole('button', { name: /確認コードを送信/ });
+
+    // Enter valid email
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockRequestCode).toHaveBeenCalledWith('test@example.com');
+      expect(onCodeSent).not.toHaveBeenCalled();
+    });
+  });
+
+  it('should display API error message when requestCode fails', async () => {
+    const mockRequestCode = vi.fn().mockResolvedValue(false);
+    const errorMessage = 'サーバーエラーが発生しました。しばらくしてから再度お試しください';
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: mockRequestCode,
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: errorMessage,
+      successMessage: null,
+    });
+
+    render(<RequestCodeForm onCodeSent={vi.fn()} />);
+
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+  });
+
+  it('should disable button and show loading state during API call', async () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<RequestCodeForm onCodeSent={vi.fn()} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    const submitButton = screen.getByRole('button', { name: /送信中/ });
+
+    expect(submitButton).toBeDisabled();
+    expect(submitButton).toHaveAttribute('aria-disabled', 'true');
+    expect(emailInput).toBeDisabled();
+  });
+
+  it('should disable input field during loading', async () => {
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: true,
+      error: null,
+      successMessage: null,
+    });
+
+    render(<RequestCodeForm onCodeSent={vi.fn()} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    expect(emailInput).toBeDisabled();
+  });
+});
+
+describe('RequestCodeForm - Accessibility (Task 4.4)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn().mockResolvedValue(true),
+      confirmReset: vi.fn().mockResolvedValue(true),
+      resendCode: vi.fn().mockResolvedValue(true),
+      isLoading: false,
+      error: null,
+      successMessage: null,
+    });
+  });
+
+  it('should have aria-label attribute on email input field (Requirement 14.1)', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    expect(emailInput).toHaveAttribute('aria-label', 'メールアドレス');
+  });
+
+  it('should associate error message with field using aria-describedby (Requirement 14.1)', async () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+
+    // Trigger validation error
+    fireEvent.change(emailInput, { target: { value: 'invalid' } });
+    fireEvent.blur(emailInput);
+
+    await waitFor(() => {
+      expect(emailInput).toHaveAttribute('aria-describedby', 'email-error');
+    });
+  });
+
+  it('should set role="alert" on validation error messages (Requirement 14.5)', async () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+
+    // Trigger validation error
+    fireEvent.change(emailInput, { target: { value: '' } });
+    fireEvent.blur(emailInput);
+
+    await waitFor(() => {
+      const errorMessage = screen.getByText('メールアドレスを入力してください');
+      expect(errorMessage).toHaveAttribute('role', 'alert');
+    });
+  });
+
+  it('should set role="alert" on API error messages (Requirement 14.5)', () => {
+    const errorMessage = 'サーバーエラーが発生しました。しばらくしてから再度お試しください';
+
+    vi.mocked(usePasswordResetModule.usePasswordReset).mockReturnValue({
+      requestCode: vi.fn(),
+      confirmReset: vi.fn(),
+      resendCode: vi.fn(),
+      isLoading: false,
+      error: errorMessage,
+      successMessage: null,
+    });
+
+    render(<RequestCodeForm onCodeSent={vi.fn()} />);
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent(errorMessage);
+  });
+
+  it('should dynamically set aria-invalid attribute based on validation state (Requirement 14.1)', async () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+
+    // Initially no error
+    expect(emailInput).toHaveAttribute('aria-invalid', 'false');
+
+    // Trigger error
+    fireEvent.change(emailInput, { target: { value: 'invalid' } });
+    fireEvent.blur(emailInput);
+
+    await waitFor(() => {
+      expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    // Fix error
+    fireEvent.change(emailInput, { target: { value: 'valid@example.com' } });
+    fireEvent.blur(emailInput);
+
+    await waitFor(() => {
+      expect(emailInput).toHaveAttribute('aria-invalid', 'false');
+    });
+  });
+
+  it('should ensure keyboard navigation is supported', () => {
+    const onCodeSent = vi.fn();
+    render(<RequestCodeForm onCodeSent={onCodeSent} />);
+
+    const emailInput = screen.getByLabelText('メールアドレス');
+    const submitButton = screen.getByRole('button', { name: /確認コードを送信/ });
+    const loginLink = screen.getByRole('link', { name: 'ログイン画面に戻る' });
+
+    // All interactive elements should be focusable
+    expect(emailInput).not.toHaveAttribute('tabindex', '-1');
+    expect(submitButton).not.toHaveAttribute('tabindex', '-1');
+    expect(loginLink).not.toHaveAttribute('tabindex', '-1');
   });
 });
