@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -15,6 +16,8 @@ export function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState({
     email: false,
@@ -80,6 +83,14 @@ export function RegisterForm() {
     // Form submission will be implemented in task 4.4
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const togglePasswordConfirmationVisibility = () => {
+    setShowPasswordConfirmation(!showPasswordConfirmation);
+  };
+
   const hasErrors = !!(errors.email || errors.password || errors.passwordConfirmation);
   const isSubmitDisabled = hasErrors;
 
@@ -116,21 +127,35 @@ export function RegisterForm() {
           <label htmlFor="password" className="sr-only">
             パスワード
           </label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onBlur={handlePasswordBlur}
-            placeholder="パスワード（8文字以上）"
-            aria-label="パスワード"
-            aria-invalid={!!(touched.password && errors.password)}
-            aria-describedby={touched.password && errors.password ? 'password-error' : undefined}
-            className={touched.password && errors.password ? 'border-red-500' : ''}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onBlur={handlePasswordBlur}
+              placeholder="パスワード（8文字以上）"
+              aria-label="パスワード"
+              aria-invalid={!!(touched.password && errors.password)}
+              aria-describedby={touched.password && errors.password ? 'password-error' : undefined}
+              className={touched.password && errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute inset-y-0 right-0 flex items-center pr-3"
+              aria-label={showPassword ? 'パスワードを非表示' : 'パスワードを表示'}
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              ) : (
+                <Eye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
           {touched.password && errors.password && (
             <p id="password-error" className="mt-1 text-sm text-red-600" role="alert">
               {errors.password}
@@ -142,27 +167,45 @@ export function RegisterForm() {
           <label htmlFor="password-confirmation" className="sr-only">
             パスワード確認
           </label>
-          <Input
-            id="password-confirmation"
-            name="password-confirmation"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={passwordConfirmation}
-            onChange={(e) => setPasswordConfirmation(e.target.value)}
-            onBlur={handlePasswordConfirmationBlur}
-            placeholder="パスワード確認"
-            aria-label="パスワード確認"
-            aria-invalid={!!(touched.passwordConfirmation && errors.passwordConfirmation)}
-            aria-describedby={
-              touched.passwordConfirmation && errors.passwordConfirmation
-                ? 'password-confirmation-error'
-                : undefined
-            }
-            className={
-              touched.passwordConfirmation && errors.passwordConfirmation ? 'border-red-500' : ''
-            }
-          />
+          <div className="relative">
+            <Input
+              id="password-confirmation"
+              name="password-confirmation"
+              type={showPasswordConfirmation ? 'text' : 'password'}
+              autoComplete="new-password"
+              required
+              value={passwordConfirmation}
+              onChange={(e) => setPasswordConfirmation(e.target.value)}
+              onBlur={handlePasswordConfirmationBlur}
+              placeholder="パスワード確認"
+              aria-label="パスワード確認"
+              aria-invalid={!!(touched.passwordConfirmation && errors.passwordConfirmation)}
+              aria-describedby={
+                touched.passwordConfirmation && errors.passwordConfirmation
+                  ? 'password-confirmation-error'
+                  : undefined
+              }
+              className={
+                touched.passwordConfirmation && errors.passwordConfirmation
+                  ? 'border-red-500 pr-10'
+                  : 'pr-10'
+              }
+            />
+            <button
+              type="button"
+              onClick={togglePasswordConfirmationVisibility}
+              className="absolute inset-y-0 right-0 flex items-center pr-3"
+              aria-label={
+                showPasswordConfirmation ? 'パスワード確認を非表示' : 'パスワード確認を表示'
+              }
+            >
+              {showPasswordConfirmation ? (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              ) : (
+                <Eye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
           {touched.passwordConfirmation && errors.passwordConfirmation && (
             <p id="password-confirmation-error" className="mt-1 text-sm text-red-600" role="alert">
               {errors.passwordConfirmation}
