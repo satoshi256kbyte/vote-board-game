@@ -6,7 +6,9 @@ import { storageService } from './storage-service';
 vi.mock('./storage-service', () => ({
   storageService: {
     setAccessToken: vi.fn(),
+    getAccessToken: vi.fn(),
     setRefreshToken: vi.fn(),
+    getRefreshToken: vi.fn(),
     removeAccessToken: vi.fn(),
     removeRefreshToken: vi.fn(),
     clearAll: vi.fn(),
@@ -686,6 +688,205 @@ describe('AuthService', () => {
       expect(storageService.setAccessToken).toHaveBeenCalledWith(expectedAccessToken);
       expect(storageService.setRefreshToken).toHaveBeenCalledTimes(1);
       expect(storageService.setRefreshToken).toHaveBeenCalledWith(expectedRefreshToken);
+    });
+  });
+
+  describe('refreshToken', () => {
+    it('should successfully refresh token and save new access token', async () => {
+      // Arrange
+      const refreshTokenValue = 'refresh-token-123';
+      const mockRefreshResponse = {
+        accessToken: 'new-access-token-456',
+        expiresIn: 900,
+      };
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockRefreshResponse,
+      });
+
+      // Act
+      const result = await authService.refreshToken(refreshTokenValue);
+
+      // Assert
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/auth/refresh'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken: refreshTokenValue }),
+      });
+      expect(storageService.setAccessToken).toHaveBeenCalledWith('new-access-token-456');
+      expect(result).toEqual(mockRefreshResponse);
+    });
+
+    it('should throw error for 401 response (invalid/expired refresh token)', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      // Act & Assert
+      await expect(authService.refreshToken('expired-token')).rejects.toThrow(
+        'リフレッシュトークンが無効または期限切れです'
+      );
+    });
+
+    it('should throw error for non-401 error response', async () => {
+      // Arrange
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+
+      // Act & Assert
+      await expect(authService.refreshToken('some-token')).rejects.toThrow(
+        'トークンリフレッシュに失敗しました'
+      );
+    });
+  });
+
+  describe('authenticatedFetch', () => {
+    it('should add Bearer token to Authorization header', async () => {
+      // Arrange
+      const mockAccessToken = 'access-token-789';
+      vi.mocked(storageService.getAccessToken).mockReturnValue(mockAccessToken);
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+      });
+
+      // Act
+      await authService.authenticatedFetch('https://api.example.com/data');
+
+      // Assert
+      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      const headers = callArgs[1].headers as Headers;
+      expect(headers.get('Authorization')).toBe(`Bearer ${mockAccessToken}`);
+    });
+
+    it('should throw error when no access token available', async () => {
+      // Arrange
+      vi.mocked(storageService.getAccessToken).mockReturnValue(null);
+
+      // Act & Assert
+      await expect(authService.authenticatedFetch('https://api.example.com/data')).rejects.toThrow(
+        'No access token available'
+      );
+    });
+
+    it('should retry request after successful token refresh on 401', async () => {
+      // Arrange
+      const originalToken = 'original-token';
+      const newToken = 'refreshed-token';
+      const refreshTokenValue = 'refresh-token-abc';
+
+      vi.mocked(storageService.getAccessToken)
+        .mockReturnValueOnce(originalToken) // Initial call
+        .mockReturnValueOnce(newToken); // After refresh
+      vi.mocked(storageService.getRefreshToken).mockReturnValue(refreshTokenValue);
+
+      // First call returns 401
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+      });
+      // Refresh call succeeds
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ accessToken: newToken, expiresIn: 900 }),
+      });
+      // Retry call succeeds
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+      });
+
+      // Act
+      const result = await authService.authenticatedFetch('https://api.example.com/data');
+
+      // Assert
+      expect(result.status).toBe(200);
+      expect(global.fetch).toHaveBeenCalledTimes(3); // original + refresh + retry
+    });
+
+    it('should call logout when retry also returns 401', async () => {
+      // Arrange
+      const originalToken = 'original-token';
+      const newToken = 'refreshed-token';
+      const refreshTokenValue = 'refresh-token-abc';
+
+      vi.mocked(storageService.getAccessToken)
+        .mockReturnValueOnce(originalToken)
+        .mockReturnValueOnce(newToken);
+      vi.mocked(storageService.getRefreshToken).mockReturnValue(refreshTokenValue);
+
+      // First call returns 401
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+      });
+      // Refresh call succeeds
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ accessToken: newToken, expiresIn: 900 }),
+      });
+      // Retry also returns 401
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+      });
+
+      // Act & Assert
+      await expect(authService.authenticatedFetch('https://api.example.com/data')).rejects.toThrow(
+        'Authentication failed after token refresh'
+      );
+      expect(storageService.clearAll).toHaveBeenCalled();
+    });
+
+    it('should call logout when token refresh fails', async () => {
+      // Arrange
+      const originalToken = 'original-token';
+      const refreshTokenValue = 'refresh-token-abc';
+
+      vi.mocked(storageService.getAccessToken).mockReturnValue(originalToken);
+      vi.mocked(storageService.getRefreshToken).mockReturnValue(refreshTokenValue);
+
+      // First call returns 401
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+      });
+      // Refresh call fails
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      });
+
+      // Act & Assert
+      await expect(authService.authenticatedFetch('https://api.example.com/data')).rejects.toThrow(
+        'Token refresh failed'
+      );
+      expect(storageService.clearAll).toHaveBeenCalled();
+    });
+
+    it('should pass through non-401 responses', async () => {
+      // Arrange
+      vi.mocked(storageService.getAccessToken).mockReturnValue('valid-token');
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+      });
+
+      // Act
+      const result = await authService.authenticatedFetch('https://api.example.com/data');
+
+      // Assert
+      expect(result.status).toBe(200);
+      expect(global.fetch).toHaveBeenCalledTimes(1); // No retry
     });
   });
 });
