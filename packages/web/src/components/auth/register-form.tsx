@@ -189,7 +189,7 @@ export function RegisterForm() {
               type="button"
               onClick={togglePasswordVisibility}
               disabled={isLoading}
-              className="absolute inset-y-0 right-0 flex items-center pr-3"
+              className="absolute inset-y-0 right-0 flex items-center justify-center w-11 min-h-[44px]"
               aria-label={showPassword ? 'パスワードを非表示' : 'パスワードを表示'}
             >
               {showPassword ? (
@@ -239,7 +239,7 @@ export function RegisterForm() {
               type="button"
               onClick={togglePasswordConfirmationVisibility}
               disabled={isLoading}
-              className="absolute inset-y-0 right-0 flex items-center pr-3"
+              className="absolute inset-y-0 right-0 flex items-center justify-center w-11 min-h-[44px]"
               aria-label={
                 showPasswordConfirmation ? 'パスワード確認を非表示' : 'パスワード確認を表示'
               }
@@ -260,14 +260,22 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <Button type="submit" disabled={isSubmitDisabled} className="w-full">
+        <Button
+          type="submit"
+          disabled={isSubmitDisabled}
+          aria-disabled={isSubmitDisabled}
+          className="w-full min-h-[44px]"
+        >
           {isLoading ? '登録中...' : 'アカウント作成'}
         </Button>
       </div>
 
       <div className="text-center text-sm">
         <span className="text-gray-600">既にアカウントをお持ちの方</span>{' '}
-        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+        <Link
+          href="/login"
+          className="inline-block font-medium text-blue-600 hover:text-blue-500 min-h-[44px] py-2"
+        >
           ログイン
         </Link>
       </div>
