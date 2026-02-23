@@ -1,5 +1,8 @@
+import type { User } from '../types/auth';
+
 const ACCESS_TOKEN_KEY = 'vbg_access_token';
 const REFRESH_TOKEN_KEY = 'vbg_refresh_token';
+const USER_KEY = 'vbg_user';
 
 class StorageService {
   setAccessToken(token: string): void {
@@ -37,6 +40,42 @@ class StorageService {
   removeRefreshToken(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(REFRESH_TOKEN_KEY);
+    }
+  }
+
+  setUser(user: User): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    }
+  }
+
+  getUser(): User | null {
+    if (typeof window !== 'undefined') {
+      const data = localStorage.getItem(USER_KEY);
+      if (data === null) {
+        return null;
+      }
+      try {
+        return JSON.parse(data) as User;
+      } catch {
+        localStorage.removeItem(USER_KEY);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  removeUser(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(USER_KEY);
+    }
+  }
+
+  clearAll(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
     }
   }
 }

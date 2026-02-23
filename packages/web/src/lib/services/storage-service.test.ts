@@ -99,6 +99,55 @@ describe('StorageService', () => {
     });
   });
 
+  describe('User', () => {
+    it('should store and retrieve user', () => {
+      const user = { userId: 'u1', email: 'a@b.com', username: 'player1' };
+      storageService.setUser(user);
+      expect(storageService.getUser()).toEqual(user);
+    });
+
+    it('should return null when user does not exist', () => {
+      expect(storageService.getUser()).toBeNull();
+    });
+
+    it('should remove user', () => {
+      const user = { userId: 'u1', email: 'a@b.com', username: 'player1' };
+      storageService.setUser(user);
+      storageService.removeUser();
+      expect(storageService.getUser()).toBeNull();
+    });
+
+    it('should return null and remove invalid JSON data', () => {
+      localStorage.setItem('vbg_user', 'not-valid-json');
+      expect(storageService.getUser()).toBeNull();
+      expect(localStorage.getItem('vbg_user')).toBeNull();
+    });
+
+    it('should use correct key for user', () => {
+      const user = { userId: 'u1', email: 'a@b.com', username: 'player1' };
+      storageService.setUser(user);
+      expect(localStorage.getItem('vbg_user')).toBe(JSON.stringify(user));
+    });
+  });
+
+  describe('clearAll', () => {
+    it('should remove all auth data', () => {
+      storageService.setAccessToken('at');
+      storageService.setRefreshToken('rt');
+      storageService.setUser({ userId: 'u1', email: 'a@b.com', username: 'p1' });
+
+      storageService.clearAll();
+
+      expect(storageService.getAccessToken()).toBeNull();
+      expect(storageService.getRefreshToken()).toBeNull();
+      expect(storageService.getUser()).toBeNull();
+    });
+
+    it('should not throw when no data exists', () => {
+      expect(() => storageService.clearAll()).not.toThrow();
+    });
+  });
+
   describe('LocalStorage Keys', () => {
     it('should use correct key for access token', () => {
       const token = 'test-access-token';
