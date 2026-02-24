@@ -5,6 +5,7 @@ import type { AuthVariables } from '../lib/auth/types.js';
 import { updateProfileSchema, uploadUrlRequestSchema } from '../lib/validation/profile-schemas.js';
 import { ZodError } from 'zod';
 import { S3Service } from '../lib/s3/s3-service.js';
+import type { ErrorResponse } from './types.js';
 
 const profileRouter = new Hono<{ Variables: AuthVariables }>();
 
@@ -51,13 +52,11 @@ profileRouter.get('/', async (c) => {
         userId,
         timestamp: new Date().toISOString(),
       });
-      return c.json(
-        {
-          error: 'NOT_FOUND',
-          message: 'User not found',
-        },
-        404
-      );
+      const errorResponse: ErrorResponse = {
+        error: 'NOT_FOUND',
+        message: 'User not found',
+      };
+      return c.json(errorResponse, 404);
     }
 
     // プロフィール情報を返却（200 OK）
@@ -74,6 +73,7 @@ profileRouter.get('/', async (c) => {
     );
   } catch (error) {
     // サーバーエラー（500）
+    // 内部エラー詳細（スタックトレース、テーブル名など）は公開しない
     console.error('Profile operation failed', {
       operation: 'GET_PROFILE',
       userId: c.get('userId'),
@@ -83,13 +83,11 @@ profileRouter.get('/', async (c) => {
       timestamp: new Date().toISOString(),
     });
 
-    return c.json(
-      {
-        error: 'INTERNAL_ERROR',
-        message: 'An internal error occurred',
-      },
-      500
-    );
+    const errorResponse: ErrorResponse = {
+      error: 'INTERNAL_ERROR',
+      message: 'An internal error occurred',
+    };
+    return c.json(errorResponse, 500);
   }
 });
 
@@ -122,16 +120,14 @@ profileRouter.put('/', async (c) => {
           timestamp: new Date().toISOString(),
         });
 
-        return c.json(
-          {
-            error: 'VALIDATION_ERROR',
-            message: 'Validation failed',
-            details: {
-              fields: fieldErrors,
-            },
+        const errorResponse: ErrorResponse = {
+          error: 'VALIDATION_ERROR',
+          message: 'Validation failed',
+          details: {
+            fields: fieldErrors,
           },
-          400
-        );
+        };
+        return c.json(errorResponse, 400);
       }
       throw error;
     }
@@ -168,18 +164,17 @@ profileRouter.put('/', async (c) => {
           userId,
           timestamp: new Date().toISOString(),
         });
-        return c.json(
-          {
-            error: 'NOT_FOUND',
-            message: 'User not found',
-          },
-          404
-        );
+        const errorResponse: ErrorResponse = {
+          error: 'NOT_FOUND',
+          message: 'User not found',
+        };
+        return c.json(errorResponse, 404);
       }
       throw error;
     }
   } catch (error) {
     // サーバーエラー（500）
+    // 内部エラー詳細（スタックトレース、テーブル名など）は公開しない
     console.error('Profile operation failed', {
       operation: 'UPDATE_PROFILE',
       userId: c.get('userId'),
@@ -189,13 +184,11 @@ profileRouter.put('/', async (c) => {
       timestamp: new Date().toISOString(),
     });
 
-    return c.json(
-      {
-        error: 'INTERNAL_ERROR',
-        message: 'An internal error occurred',
-      },
-      500
-    );
+    const errorResponse: ErrorResponse = {
+      error: 'INTERNAL_ERROR',
+      message: 'An internal error occurred',
+    };
+    return c.json(errorResponse, 500);
   }
 });
 
@@ -228,16 +221,14 @@ profileRouter.post('/icon/upload-url', async (c) => {
           timestamp: new Date().toISOString(),
         });
 
-        return c.json(
-          {
-            error: 'VALIDATION_ERROR',
-            message: 'Validation failed',
-            details: {
-              fields: fieldErrors,
-            },
+        const errorResponse: ErrorResponse = {
+          error: 'VALIDATION_ERROR',
+          message: 'Validation failed',
+          details: {
+            fields: fieldErrors,
           },
-          400
-        );
+        };
+        return c.json(errorResponse, 400);
       }
       throw error;
     }
@@ -265,6 +256,7 @@ profileRouter.post('/icon/upload-url', async (c) => {
     );
   } catch (error) {
     // サーバーエラー（500）
+    // 内部エラー詳細（スタックトレース、バケット名など）は公開しない
     console.error('Upload URL generation failed', {
       operation: 'GENERATE_UPLOAD_URL',
       userId: c.get('userId'),
@@ -274,13 +266,11 @@ profileRouter.post('/icon/upload-url', async (c) => {
       timestamp: new Date().toISOString(),
     });
 
-    return c.json(
-      {
-        error: 'INTERNAL_ERROR',
-        message: 'An internal error occurred',
-      },
-      500
-    );
+    const errorResponse: ErrorResponse = {
+      error: 'INTERNAL_ERROR',
+      message: 'An internal error occurred',
+    };
+    return c.json(errorResponse, 500);
   }
 });
 
