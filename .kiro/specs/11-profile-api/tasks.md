@@ -14,7 +14,7 @@
     - updateProfileSchema: username (1-50文字), iconUrl (HTTPS URL) のバリデーション
     - uploadUrlRequestSchema: fileExtension (png, jpg, jpeg, gif) のバリデーション
     - _Requirements: 2.2, 2.3, 2.8, 3.2_
-  - [~] 1.3 バリデーションスキーマのユニットテストを作成
+  - [x] 1.3 バリデーションスキーマのユニットテストを作成
     - 有効な入力の受け入れテスト
     - 無効な入力の拒否テスト（長さ、形式、必須フィールド）
     - _Requirements: 2.2, 2.3, 2.8, 3.2_
