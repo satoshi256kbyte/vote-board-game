@@ -54,7 +54,7 @@
     - _Requirements: 1.2, 1.3, 2.5, 3.8, 6.1, 6.2, 6.4_
 
 - [ ] 5. プロフィールAPIルートの実装
-  - [~] 5.1 プロフィールルーターを`packages/api/src/routes/profile.ts`に作成
+  - [x] 5.1 プロフィールルーターを`packages/api/src/routes/profile.ts`に作成
     - Honoルーターの初期化
     - 認証ミドルウェアの適用（すべてのルートに必須）
     - _Requirements: 6.1_
