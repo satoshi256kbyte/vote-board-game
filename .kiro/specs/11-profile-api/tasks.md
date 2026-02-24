@@ -32,7 +32,7 @@
     - _Requirements: 1.1, 2.1, 2.7, 4.2_
 
 - [ ] 3. S3サービスの実装
-  - [~] 3.1 S3Serviceクラスを`packages/api/src/lib/s3/s3-service.ts`に作成
+  - [x] 3.1 S3Serviceクラスを`packages/api/src/lib/s3/s3-service.ts`に作成
     - generateUploadUrl(userId, fileExtension): Presigned URL生成
     - ファイル名パターン: `icons/{userId}/{timestamp}.{extension}`
     - Content-Typeマッピング（png→image/png, jpg/jpeg→image/jpeg, gif→image/gif）

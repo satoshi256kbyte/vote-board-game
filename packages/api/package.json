@@ -13,7 +13,9 @@
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.995.0",
     "@aws-sdk/client-dynamodb": "^3.716.0",
+    "@aws-sdk/client-s3": "^3.996.0",
     "@aws-sdk/lib-dynamodb": "^3.716.0",
+    "@aws-sdk/s3-request-presigner": "^3.996.0",
     "@hono/zod-validator": "^0.4.1",
     "@vote-board-game/shared": "workspace:*",
     "hono": "^4.6.14",
