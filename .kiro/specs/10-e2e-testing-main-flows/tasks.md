@@ -6,7 +6,7 @@
 
 ## Tasks
 
-- [ ] 1. E2Eテストの基盤セットアップ
+- [x] 1. E2Eテストの基盤セットアップ
   - [x] 1.1 Playwrightの設定ファイルを作成
     - `playwright.config.ts` を作成し、baseURL、timeout、retries、headlessモードなどを設定
     - CI環境とローカル環境で異なる設定を適用できるようにする
@@ -23,13 +23,13 @@
     - _Requirements: 4.4, 4.5, 8.2, 10.2_
 
 - [ ] 2. ユーザー登録フローのE2Eテスト実装
-  - [~] 2.1 登録フローのテストファイルを作成
+  - [x] 2.1 登録フローのテストファイルを作成
     - `e2e/auth/registration.spec.ts` を作成
     - 登録ページへのナビゲーション、フォーム入力、送信、リダイレクト検証を実装
     - localStorageのアクセストークン検証を実装
     - エラーメッセージが表示されないことを検証
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
-  - [~] 2.2 登録フローのプロパティテスト
+  - [x] 2.2 登録フローのプロパティテスト
     - **Property 1: User Registration Creates Cognito User**
     - **Property 2: Successful Registration Redirects to Home**
     - **Property 3: Registration Stores Access Token**
