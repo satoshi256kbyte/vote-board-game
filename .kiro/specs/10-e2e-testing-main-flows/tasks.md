@@ -43,7 +43,7 @@
     - localStorageのアクセストークンとリフレッシュトークン検証を実装
     - 事前にテストユーザーを登録してからログインテストを実行
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
-  - [~] 3.2 ログインフローのプロパティテスト
+  - [x] 3.2 ログインフローのプロパティテスト
     - **Property 5: User Login Authenticates with Cognito**
     - **Property 6: Successful Login Redirects to Home**
     - **Property 7: Login Stores Authentication Tokens**
