@@ -47,7 +47,7 @@
     - _Requirements: 3.1, 3.4, 3.5, 3.6, 3.7, 3.9_
 
 - [ ] 4. 認証ミドルウェアの確認と拡張（必要に応じて）
-  - [~] 4.1 既存の認証ミドルウェア（`packages/api/src/lib/auth/auth-middleware.ts`）を確認
+  - [x] 4.1 既存の認証ミドルウェア（`packages/api/src/lib/auth/auth-middleware.ts`）を確認
     - JWT検証機能が実装されているか確認
     - userIdの抽出機能が実装されているか確認
     - 必要に応じて拡張
