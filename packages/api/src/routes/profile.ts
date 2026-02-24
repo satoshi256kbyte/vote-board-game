@@ -2,8 +2,9 @@ import { Hono } from 'hono';
 import { createAuthMiddleware } from '../lib/auth/auth-middleware.js';
 import { ProfileRepository } from '../lib/dynamodb/repositories/profile.js';
 import type { AuthVariables } from '../lib/auth/types.js';
-import { updateProfileSchema } from '../lib/validation/profile-schemas.js';
+import { updateProfileSchema, uploadUrlRequestSchema } from '../lib/validation/profile-schemas.js';
 import { ZodError } from 'zod';
+import { S3Service } from '../lib/s3/s3-service.js';
 
 const profileRouter = new Hono<{ Variables: AuthVariables }>();
 
@@ -18,6 +19,13 @@ profileRouter.use('/*', authMiddleware);
 
 // ProfileRepositoryのインスタンス作成
 const profileRepository = new ProfileRepository();
+
+// S3Serviceのインスタンス作成
+const s3Service = new S3Service(
+  process.env.ICON_BUCKET_NAME!,
+  process.env.CDN_DOMAIN!,
+  process.env.AWS_REGION!
+);
 
 // GET /api/profile - プロフィール情報の取得
 profileRouter.get('/', async (c) => {
@@ -193,8 +201,87 @@ profileRouter.put('/', async (c) => {
 
 // POST /api/profile/icon/upload-url - アイコンアップロード用Presigned URL生成
 profileRouter.post('/icon/upload-url', async (c) => {
-  // TODO: 実装予定（Task 5.4）
-  return c.json({ message: 'Generate upload URL endpoint' }, 200);
+  try {
+    // JWT TokenからuserIdを抽出（認証ミドルウェアで設定済み）
+    const userId = c.get('userId');
+
+    // リクエストボディを取得
+    const body = await c.req.json();
+
+    // リクエストボディのバリデーション（uploadUrlRequestSchema）
+    let validatedData;
+    try {
+      validatedData = uploadUrlRequestSchema.parse(body);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        // バリデーションエラー（400）
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          const path = err.path.join('.');
+          fieldErrors[path || 'root'] = err.message;
+        });
+
+        console.warn('Upload URL generation validation failed', {
+          operation: 'GENERATE_UPLOAD_URL',
+          userId,
+          errors: fieldErrors,
+          timestamp: new Date().toISOString(),
+        });
+
+        return c.json(
+          {
+            error: 'VALIDATION_ERROR',
+            message: 'Validation failed',
+            details: {
+              fields: fieldErrors,
+            },
+          },
+          400
+        );
+      }
+      throw error;
+    }
+
+    console.log('Upload URL generation request', {
+      operation: 'GENERATE_UPLOAD_URL',
+      userId,
+      endpoint: '/api/profile/icon/upload-url',
+      method: 'POST',
+      fileExtension: validatedData.fileExtension,
+      timestamp: new Date().toISOString(),
+    });
+
+    // S3Service.generateUploadUrl()を呼び出し
+    const result = await s3Service.generateUploadUrl(userId, validatedData.fileExtension);
+
+    // uploadUrl, iconUrl, expiresInを返却（200 OK）
+    return c.json(
+      {
+        uploadUrl: result.uploadUrl,
+        iconUrl: result.iconUrl,
+        expiresIn: result.expiresIn,
+      },
+      200
+    );
+  } catch (error) {
+    // サーバーエラー（500）
+    console.error('Upload URL generation failed', {
+      operation: 'GENERATE_UPLOAD_URL',
+      userId: c.get('userId'),
+      endpoint: '/api/profile/icon/upload-url',
+      method: 'POST',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    });
+
+    return c.json(
+      {
+        error: 'INTERNAL_ERROR',
+        message: 'An internal error occurred',
+      },
+      500
+    );
+  }
 });
 
 export { profileRouter };

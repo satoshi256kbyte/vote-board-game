@@ -72,7 +72,7 @@
     - 更新されたプロフィール情報を返却（200 OK）
     - エラーハンドリング（400, 401, 403, 404, 500）
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
-  - [~] 5.4 POST /api/profile/icon/upload-urlエンドポイントを実装
+  - [x] 5.4 POST /api/profile/icon/upload-urlエンドポイントを実装
     - リクエストボディのバリデーション（uploadUrlRequestSchema）
     - JWT TokenからuserIdを抽出
     - S3Service.generateUploadUrl()を呼び出し
