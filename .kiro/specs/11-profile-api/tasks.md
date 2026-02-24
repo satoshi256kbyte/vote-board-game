@@ -20,12 +20,12 @@
     - _Requirements: 2.2, 2.3, 2.8, 3.2_
 
 - [ ] 2. DynamoDBリポジトリの実装
-  - [~] 2.1 ProfileRepositoryクラスを`packages/api/src/lib/dynamodb/profile-repository.ts`に作成
+  - [x] 2.1 ProfileRepositoryクラスを`packages/api/src/lib/dynamodb/profile-repository.ts`に作成
     - getById(userId): ユーザープロフィールの取得（GetCommand）
     - update(userId, updates): プロフィールの更新（UpdateCommand with conditional expression）
     - BaseRepositoryを継承
     - _Requirements: 1.1, 2.1, 4.2, 7.1, 7.2_
-  - [~] 2.2 ProfileRepositoryのユニットテストを作成
+  - [x] 2.2 ProfileRepositoryのユニットテストを作成
     - getByIdの正常系・異常系テスト（存在するユーザー、存在しないユーザー）
     - updateの正常系・異常系テスト（条件付き更新、updatedAtの更新）
     - DynamoDBクライアントのモックを使用
