@@ -9,11 +9,7 @@ export default defineConfig({
     testTimeout: 15000, // 15 seconds per test
     hookTimeout: 15000, // 15 seconds for hooks
     teardownTimeout: 5000, // 5 seconds for teardown
-    exclude: [
-      '**/node_modules/**',
-      '**/e2e/**',
-      '**/playwright.config.test.ts', // Task 1.1 - not yet implemented
-    ],
+    exclude: ['**/node_modules/**', '**/e2e/**'],
   },
   resolve: {
     alias: {
