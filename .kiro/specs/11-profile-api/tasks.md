@@ -38,7 +38,7 @@
     - Content-Typeマッピング（png→image/png, jpg/jpeg→image/jpeg, gif→image/gif）
     - 有効期限: 5分、最大ファイルサイズ: 5MB
     - _Requirements: 3.1, 3.4, 3.5, 3.6, 3.7, 3.9_
-  - [~] 3.2 S3Serviceのユニットテストを作成
+  - [x] 3.2 S3Serviceのユニットテストを作成
     - Presigned URL生成の正常系テスト（各ファイル拡張子）
     - iconUrlのパターン検証
     - Content-Typeマッピングの検証
