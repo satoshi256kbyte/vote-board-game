@@ -1,93 +1,127 @@
 # Authentication E2E Tests
 
-このディレクトリには、認証フローのE2Eテストが含まれています。
+このディレクトリには認証フローのE2Eテストが含まれています。
 
-## テストの種類
+## テストファイル
 
-### 1. 通常のE2Eテスト (`.spec.ts`)
+### ✅ registration.spec.ts
 
-特定のシナリオをテストする従来のE2Eテストです。
+ユーザー登録フローのテスト。完全に動作します。
 
-- `registration.spec.ts`: ユーザー登録フローのテスト
+### ✅ login.spec.ts
 
-### 2. プロパティベーステスト (`.property.spec.ts`)
+ログインフローのテスト。完全に動作します。
 
-fast-checkを使用して、任意の有効な入力データに対してプロパティが成立することを検証します。
+### ⚠️ password-reset.spec.ts
 
-- `registration.property.spec.ts`: ユーザー登録フローのプロパティテスト
-  - Property 1: User Registration Creates Cognito User
-  - Property 2: Successful Registration Redirects to Home
-  - Property 3: Registration Stores Access Token
-  - Property 4: Successful Registration Shows No Errors
+パスワードリセットフローのテスト。**現在スキップされています。**
+
+## パスワードリセットテストについて
+
+パスワードリセットテストは、Cognitoから送信される確認コードを取得する必要があるため、現在スキップされています。
+
+### 問題点
+
+Cognitoはパスワードリセット時に確認コードをメールで送信しますが、E2Eテスト環境でこのコードを取得する標準的な方法がありません。
+
+### 実装オプション
+
+このテストを有効にするには、以下のいずれかのアプローチを実装する必要があります:
+
+#### 1. AWS SDK AdminGetUser API を使用
+
+- **メリット**: Cognitoから直接コードを取得できる
+- **デメリット**: 管理者IAM権限が必要、セキュリティリスク
+- **実装**: `e2e/helpers/cognito-code.ts` を更新
+
+```typescript
+import {
+  CognitoIdentityProviderClient,
+  AdminGetUserCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
+
+export async function getPasswordResetCode(email: string): Promise<string> {
+  const client = new CognitoIdentityProviderClient({ region: 'ap-northeast-1' });
+  const command = new AdminGetUserCommand({
+    UserPoolId: process.env.USER_POOL_ID,
+    Username: email,
+  });
+  const response = await client.send(command);
+  // Extract confirmation code from user attributes
+  // Note: This may not work as Cognito doesn't expose codes via API
+  return code;
+}
+```
+
+#### 2. テストメールサービスを使用
+
+- **メリット**: 実際のメールフローをテストできる
+- **デメリット**: 外部サービスへの依存、追加コスト
+- **推奨サービス**: Mailhog (ローカル), MailSlurp (CI/CD)
+
+```typescript
+export async function getPasswordResetCode(email: string): Promise<string> {
+  // Fetch email from test email service
+  const emails = await mailService.getEmails(email);
+  const resetEmail = emails.find((e) => e.subject.includes('パスワードリセット'));
+  const code = extractCodeFromEmail(resetEmail.body);
+  return code;
+}
+```
+
+#### 3. テスト専用バックエンドエンドポイント
+
+- **メリット**: シンプル、制御しやすい
+- **デメリット**: 本番環境に影響しないよう注意が必要
+- **実装**: Lambda関数に `/test/confirmation-codes/:email` エンドポイントを追加
+
+```typescript
+export async function getPasswordResetCode(email: string): Promise<string> {
+  const response = await fetch(`${process.env.API_URL}/test/confirmation-codes/${email}`);
+  const data = await response.json();
+  return data.code;
+}
+```
+
+#### 4. Cognitoサービスをモック
+
+- **メリット**: 外部依存なし、高速
+- **デメリット**: 実際のCognitoフローをテストできない
+- **実装**: MSW (Mock Service Worker) を使用
+
+### 現在の実装
+
+`e2e/helpers/cognito-code.ts` には、ハードコードされた確認コード `123456` を返すモック実装があります。これは実際のCognitoでは動作しません。
+
+### 推奨アプローチ
+
+MVP段階では、**オプション3 (テスト専用エンドポイント)** を推奨します:
+
+1. 環境変数 `TEST_MODE=true` の場合のみ有効
+2. テストユーザーの確認コードをDynamoDBに保存
+3. テスト専用エンドポイントで取得可能にする
+4. 本番環境では無効化
 
 ## テストの実行
 
-### 前提条件
+```bash
+# すべての認証テストを実行 (パスワードリセットはスキップされます)
+pnpm test:e2e
 
-1. アプリケーションがデプロイされているか、ローカルで実行されている必要があります
-2. `BASE_URL` 環境変数を設定する必要があります
-3. `USER_POOL_ID` 環境変数を設定する必要があります（テストユーザーのクリーンアップ用）
-4. AWS認証情報が設定されている必要があります
+# 特定のテストのみ実行
+pnpm test:e2e registration.spec.ts
+pnpm test:e2e login.spec.ts
 
-### ローカルでの実行
+# パスワードリセットテストを強制実行 (失敗します)
+pnpm test:e2e password-reset.spec.ts
+```
+
+## 環境変数
+
+E2Eテストには以下の環境変数が必要です:
 
 ```bash
-# 開発サーバーを起動
-pnpm --filter @vote-board-game/web dev
-
-# 別のターミナルでE2Eテストを実行
-BASE_URL=http://localhost:3000 USER_POOL_ID=your-user-pool-id pnpm --filter @vote-board-game/web test:e2e
-
-# 特定のテストファイルのみ実行
-BASE_URL=http://localhost:3000 USER_POOL_ID=your-user-pool-id pnpm --filter @vote-board-game/web exec playwright test registration.property.spec.ts
-
-# UIモードでデバッグ
-BASE_URL=http://localhost:3000 USER_POOL_ID=your-user-pool-id pnpm --filter @vote-board-game/web test:e2e:ui
+BASE_URL=http://localhost:3000  # テスト対象のURL
+USER_POOL_ID=ap-northeast-1_xxx  # Cognito User Pool ID (クリーンアップ用)
+AWS_REGION=ap-northeast-1  # AWSリージョン
 ```
-
-### CI/CDでの実行
-
-GitHub Actionsでは、デプロイ後に自動的にE2Eテストが実行されます。
-CloudFront URLとCognito User Pool IDが自動的に設定されます。
-
-## プロパティベーステストについて
-
-プロパティベーステストは、fast-checkライブラリを使用して、ランダムに生成された入力データに対してテストを実行します。
-
-### 設定
-
-- `numRuns`: 15回のランダムな入力でテストを実行
-- `endOnFailure`: 最初の失敗で停止
-
-### 注意事項
-
-1. **E2E環境での実行**: これらのテストは実際のブラウザとCognitoサービスを使用します
-2. **テストユーザーのクリーンアップ**: 各テスト後、生成されたテストユーザーは自動的に削除されます
-3. **実行時間**: プロパティベーステストは通常のテストよりも時間がかかります（15回の反復）
-4. **リソース使用**: 複数のユーザーを作成・削除するため、Cognitoのレート制限に注意してください
-
-## トラブルシューティング
-
-### BASE_URL環境変数が設定されていない
-
-```
-Error: BASE_URL environment variable is required for E2E tests
-```
-
-解決方法: `BASE_URL` 環境変数を設定してください。
-
-### USER_POOL_ID環境変数が設定されていない
-
-テストユーザーのクリーンアップがスキップされますが、テストは続行されます。
-警告メッセージが表示されます。
-
-### AWS認証情報が設定されていない
-
-テストユーザーのクリーンアップが失敗しますが、テストは続行されます。
-エラーメッセージがログに出力されます。
-
-### テストがタイムアウトする
-
-- ネットワーク接続を確認してください
-- アプリケーションが正しく起動しているか確認してください
-- Cognitoサービスが利用可能か確認してください
