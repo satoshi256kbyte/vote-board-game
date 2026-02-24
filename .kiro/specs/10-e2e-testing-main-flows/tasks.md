@@ -7,11 +7,11 @@
 ## Tasks
 
 - [ ] 1. E2Eテストの基盤セットアップ
-  - [~] 1.1 Playwrightの設定ファイルを作成
+  - [x] 1.1 Playwrightの設定ファイルを作成
     - `playwright.config.ts` を作成し、baseURL、timeout、retries、headlessモードなどを設定
     - CI環境とローカル環境で異なる設定を適用できるようにする
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
-  - [~] 1.2 テストヘルパー関数を実装
+  - [x] 1.2 テストヘルパー関数を実装
     - `e2e/helpers/test-user.ts` を作成し、`generateTestUser()` 関数を実装
     - タイムスタンプを使用した一意のメールアドレス生成
     - セキュリティ要件を満たすパスワード生成
