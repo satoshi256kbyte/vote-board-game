@@ -57,7 +57,7 @@
     - 新しいパスワードでのログイン検証を実装
     - 古いパスワードでログインできないことを検証
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
-  - [~] 4.2 パスワードリセットフローのプロパティテスト
+  - [x] 4.2 パスワードリセットフローのプロパティテスト
     - **Property 8: Password Reset Sends Confirmation Code**
     - **Property 9: Confirmation Code Shows Input Field**
     - **Property 10: Valid Code Updates Password**
