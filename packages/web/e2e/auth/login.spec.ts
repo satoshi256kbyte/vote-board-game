@@ -12,8 +12,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { generateTestUser } from '../helpers/test-user';
-import { cleanupTestUser } from '../helpers/cleanup';
+import { generateTestUser, cleanupTestUser, navigateWithErrorHandling } from '../helpers';
 
 test.describe('User Login Flow', () => {
   test('should successfully login with registered user', async ({ page }) => {
@@ -22,7 +21,7 @@ test.describe('User Login Flow', () => {
 
     try {
       // Step 1: Pre-register the test user
-      await page.goto('/register');
+      await navigateWithErrorHandling(page, '/register');
       await page.fill('input[name="username"]', testUser.username);
       await page.fill('input[name="email"]', testUser.email);
       await page.fill('input[name="password"]', testUser.password);
@@ -31,7 +30,7 @@ test.describe('User Login Flow', () => {
       await page.waitForURL('/');
 
       // Step 2: Requirement 2.1: Navigate to login page
-      await page.goto('/login');
+      await navigateWithErrorHandling(page, '/login');
 
       // Requirement 2.2: Verify page title contains "ログイン"
       await expect(page.locator('h1')).toContainText('ログイン');

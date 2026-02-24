@@ -24,7 +24,7 @@
 
 import { test, expect } from '@playwright/test';
 import * as fc from 'fast-check';
-import { cleanupTestUser } from '../helpers/cleanup';
+import { cleanupTestUser, navigateWithErrorHandling } from '../helpers';
 import { getPasswordResetCode } from '../helpers/cognito-code';
 
 // Arbitrary for generating valid test user data
@@ -73,7 +73,7 @@ test.describe('Password Reset Flow - Property Tests', () => {
           testEmails.push(email);
 
           // Pre-register the test user
-          await page.goto('/register');
+          await navigateWithErrorHandling(page, '/register');
           await expect(page.locator('h1')).toContainText('アカウント作成', { timeout: 10000 });
           await page.fill('input[name="username"]', username);
           await page.fill('input[name="email"]', email);
@@ -86,7 +86,7 @@ test.describe('Password Reset Flow - Property Tests', () => {
           await page.evaluate(() => localStorage.clear());
 
           // Navigate to password reset page
-          await page.goto('/password-reset');
+          await navigateWithErrorHandling(page, '/password-reset');
           await expect(page.locator('h1')).toContainText('パスワードリセット', {
             timeout: 10000,
           });
@@ -117,7 +117,7 @@ test.describe('Password Reset Flow - Property Tests', () => {
           });
 
           // Property 12: New Password Enables Login
-          await page.goto('/login');
+          await navigateWithErrorHandling(page, '/login');
           await page.fill('input[name="email"]', email);
           await page.fill('input[name="password"]', newPassword);
           await page.click('button[type="submit"]');
@@ -132,7 +132,7 @@ test.describe('Password Reset Flow - Property Tests', () => {
           await page.evaluate(() => localStorage.clear());
 
           // Property 13: Old Password Becomes Invalid
-          await page.goto('/login');
+          await navigateWithErrorHandling(page, '/login');
           await page.fill('input[name="email"]', email);
           await page.fill('input[name="password"]', oldPassword);
           await page.click('button[type="submit"]');

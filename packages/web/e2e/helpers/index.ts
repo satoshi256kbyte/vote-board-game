@@ -5,3 +5,4 @@
 
 export { generateTestUser, type TestUser } from './test-user';
 export { cleanupTestUser } from './cleanup';
+export { isNetworkError, formatNetworkError, navigateWithErrorHandling } from './network-error';

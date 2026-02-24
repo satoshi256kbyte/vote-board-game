@@ -11,7 +11,7 @@
 
 import { test, expect } from '@playwright/test';
 import * as fc from 'fast-check';
-import { cleanupTestUser } from '../helpers/cleanup';
+import { cleanupTestUser, navigateWithErrorHandling } from '../helpers';
 
 // Arbitrary for generating valid test user data
 const testUserArbitrary = fc.record({
@@ -49,7 +49,7 @@ test.describe('User Login Flow - Property Tests', () => {
           testEmails.push(email);
 
           // Step 1: Pre-register the test user
-          await page.goto('/register');
+          await navigateWithErrorHandling(page, '/register');
           await expect(page.locator('h1')).toContainText('アカウント作成', { timeout: 10000 });
 
           await page.fill('input[name="username"]', username);
@@ -63,7 +63,7 @@ test.describe('User Login Flow - Property Tests', () => {
           await page.evaluate(() => localStorage.clear());
 
           // Step 2: Navigate to login page
-          await page.goto('/login');
+          await navigateWithErrorHandling(page, '/login');
           await expect(page.locator('h1')).toContainText('ログイン', { timeout: 10000 });
 
           // Step 3: Fill login form with valid credentials

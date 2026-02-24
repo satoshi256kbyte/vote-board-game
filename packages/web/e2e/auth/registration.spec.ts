@@ -12,8 +12,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { generateTestUser } from '../helpers/test-user';
-import { cleanupTestUser } from '../helpers/cleanup';
+import { generateTestUser, cleanupTestUser, navigateWithErrorHandling } from '../helpers';
 
 test.describe('User Registration Flow', () => {
   test('should successfully register a new user', async ({ page }) => {
@@ -22,7 +21,7 @@ test.describe('User Registration Flow', () => {
 
     try {
       // Requirement 1.1: Navigate to registration page
-      await page.goto('/register');
+      await navigateWithErrorHandling(page, '/register');
 
       // Requirement 1.2: Verify page title contains "アカウント作成"
       await expect(page.locator('h1')).toContainText('アカウント作成');

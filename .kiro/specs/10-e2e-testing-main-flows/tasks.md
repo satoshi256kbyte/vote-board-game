@@ -49,7 +49,7 @@
     - **Property 7: Login Stores Authentication Tokens**
     - **Validates: Requirements 2.4, 2.5, 2.6, 2.7**
 
-- [ ] 4. パスワードリセットフローのE2Eテスト実装
+- [x] 4. パスワードリセットフローのE2Eテスト実装
   - [x] 4.1 パスワードリセットフローのテストファイルを作成
     - `e2e/auth/password-reset.spec.ts` を作成
     - パスワードリセットページへのナビゲーション、メール送信、確認コード入力フィールドの表示検証を実装
@@ -66,11 +66,11 @@
     - **Property 13: Old Password Becomes Invalid**
     - **Validates: Requirements 3.3, 3.4, 3.5, 3.6, 3.7, 3.8**
 
-- [~] 5. Checkpoint - 基本的なE2Eテストの動作確認
+- [x] 5. Checkpoint - 基本的なE2Eテストの動作確認
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. エラーハンドリングとリトライロジックの実装
-  - [~] 6.1 ネットワークエラーハンドリングを実装
+  - [x] 6.1 ネットワークエラーハンドリングを実装
     - アプリケーションが到達不可能な場合のエラーメッセージを実装
     - タイムアウト時のスクリーンショット保存を実装
     - _Requirements: 7.1, 7.4_
