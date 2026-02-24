@@ -139,7 +139,7 @@
 - [x] 10. Checkpoint - セキュリティとパフォーマンスの確認
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. CI/CDパイプライン統合
+- [x] 11. CI/CDパイプライン統合
   - [x] 11.1 GitHub ActionsワークフローにE2Eテストジョブを追加
     - `.github/workflows/deploy.yml` にE2Eテストジョブを追加
     - デプロイジョブの完了後にE2Eテストジョブをトリガー
@@ -160,7 +160,7 @@
     - すべてのE2Eテストが成功した場合にビルドを成功とマークする設定を追加
     - _Requirements: 5.6_
 
-- [~] 12. 最終チェックポイント - すべてのテストとCI/CD統合の確認
+- [x] 12. 最終チェックポイント - すべてのテストとCI/CD統合の確認
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
