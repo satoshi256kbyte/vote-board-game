@@ -101,18 +101,18 @@
     - 環境変数の設定確認（ICON_BUCKET_NAME, CDN_DOMAIN）
     - _Requirements: すべて_
 
-- [ ] 7. Checkpoint - 基本実装の完了確認
+- [x] 7. Checkpoint - 基本実装の完了確認
   - 基本的なAPI実装が完了したことを確認
   - ユーザーに質問があれば確認
 
 - [ ] 8. ユニットテストの実装
-  - [~] 8.1 GET /api/profileのユニットテストを作成（`packages/api/src/routes/profile.test.ts`）
+  - [x] 8.1 GET /api/profileのユニットテストを作成（`packages/api/src/routes/profile.test.ts`）
     - 有効なJWT Tokenでプロフィール取得成功（200 OK）
     - JWT Token不正で401エラー
     - ユーザーが存在しない場合に404エラー
     - レスポンスに全フィールドが含まれることを確認
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
-  - [~] 8.2 PUT /api/profileのユニットテストを作成
+  - [x] 8.2 PUT /api/profileのユニットテストを作成
     - usernameのみ更新成功（200 OK）
     - iconUrlのみ更新成功（200 OK）
     - username + iconUrl同時更新成功（200 OK）
