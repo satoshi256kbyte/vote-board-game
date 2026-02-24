@@ -177,6 +177,9 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.19(yaml@2.8.2))
     devDependencies:
+      '@aws-sdk/client-cognito-identity-provider':
+        specifier: ^3.995.0
+        version: 3.995.0
       '@eslint/eslintrc':
         specifier: ^3.2.0
         version: 3.3.3
