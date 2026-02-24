@@ -11,3 +11,4 @@ export {
   formatCognitoUnavailableWarning,
   skipIfCognitoUnavailable,
 } from './cognito-availability';
+export { isUserAlreadyExistsError, registerWithRetry } from './existing-user';

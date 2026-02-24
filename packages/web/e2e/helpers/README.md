@@ -1,98 +1,118 @@
 # E2E Test Helpers
 
-E2Eテスト用のヘルパー関数群
+このディレクトリには、E2Eテストで使用する共通ヘルパー関数が含まれています。
 
-## 使用方法
+## ファイル一覧
 
-### テストユーザーの生成
+### test-user.ts
+
+テストユーザーの生成機能を提供します。
+
+- `generateTestUser()`: 一意のメールアドレス、セキュアなパスワード、ユーザー名を持つテストユーザーを生成
+
+### cleanup.ts
+
+テストユーザーのクリーンアップ機能を提供します。
+
+- `cleanupTestUser(email)`: Cognitoからテストユーザーを削除
+
+### network-error.ts
+
+ネットワークエラーのハンドリング機能を提供します。
+
+- `isNetworkError(error)`: エラーがネットワークエラーかどうかを判定
+- `formatNetworkError(error)`: ネットワークエラーをフォーマット
+- `navigateWithErrorHandling(page, url)`: エラーハンドリング付きでページ遷移
+
+### cognito-availability.ts
+
+Cognitoサービスの可用性チェック機能を提供します。
+
+- `isCognitoAvailable()`: Cognitoサービスが利用可能かチェック
+- `skipIfCognitoUnavailable(testInfo)`: Cognitoが利用不可の場合テストをスキップ
+
+### existing-user.ts
+
+既存ユーザーエラーのハンドリング機能を提供します。
+
+- `isUserAlreadyExistsError(error)`: エラーがユーザー既存エラーかどうかを判定
+- `registerWithRetry(page, testUser, maxRetries)`: ユーザーが既に存在する場合、削除してリトライする登録機能
+
+## 使用例
+
+### 基本的なテストユーザーの生成とクリーンアップ
 
 ```typescript
-import { generateTestUser } from './helpers';
+import { generateTestUser, cleanupTestUser } from '../helpers';
 
-const testUser = generateTestUser();
-// {
-//   email: 'test-1234567890-1234@example.com',
-//   password: 'TestPass1234567890',
-//   username: 'testuser1234567890'
-// }
-```
+test('should register user', async ({ page }) => {
+  const testUser = generateTestUser();
 
-### テストユーザーのクリーンアップ
-
-```typescript
-import { cleanupTestUser } from './helpers';
-
-// テスト後のクリーンアップ
-test.afterEach(async () => {
-  await cleanupTestUser(testUser.email);
+  try {
+    // テスト実行
+    await page.goto('/register');
+    await page.fill('input[name="email"]', testUser.email);
+    // ...
+  } finally {
+    await cleanupTestUser(testUser.email);
+  }
 });
 ```
 
-### Cognitoサービスの可用性チェック
+### 既存ユーザーエラーのハンドリング
 
 ```typescript
-import { skipIfCognitoUnavailable } from './helpers';
+import { generateTestUser, registerWithRetry, cleanupTestUser } from '../helpers';
 
-test('should register user', async ({ page }, testInfo) => {
-  // Cognitoが利用不可の場合はテストをスキップ
+test('should handle existing user', async ({ page }) => {
+  const testUser = generateTestUser();
+
+  try {
+    await page.goto('/register');
+
+    // ユーザーが既に存在する場合、自動的に削除してリトライ
+    await registerWithRetry(page, testUser, 1);
+
+    // 登録成功を確認
+    await page.waitForURL('/');
+  } finally {
+    await cleanupTestUser(testUser.email);
+  }
+});
+```
+
+### Cognitoの可用性チェック
+
+```typescript
+import { skipIfCognitoUnavailable } from '../helpers';
+
+test('should test cognito feature', async ({ page }, testInfo) => {
+  // Cognitoが利用不可の場合、テストをスキップ
   await skipIfCognitoUnavailable(testInfo);
 
-  // テストの実装...
+  // Cognitoを使用するテスト
+  // ...
 });
 ```
 
 ### ネットワークエラーハンドリング
 
 ```typescript
-import { navigateWithErrorHandling } from './helpers';
+import { navigateWithErrorHandling } from '../helpers';
 
-test('should navigate to login page', async ({ page }) => {
-  // ネットワークエラー時に詳細なエラーメッセージを表示
+test('should navigate with error handling', async ({ page }) => {
+  // ネットワークエラーを適切にハンドリングしてページ遷移
   await navigateWithErrorHandling(page, '/login');
+
+  // テスト続行
+  // ...
 });
 ```
 
-## 環境変数
+## 要件との対応
 
-クリーンアップ機能を使用するには、以下の環境変数が必要です:
-
-- `USER_POOL_ID`: Cognito User Pool ID（必須）
-- `AWS_REGION`: AWSリージョン（デフォルト: `ap-northeast-1`）
-
-## 要件
-
-- Requirements 4.1-4.5: テストユーザー管理
-- Requirements 7.1: ネットワークエラーハンドリング
-- Requirements 7.2: Cognitoサービスエラーハンドリング
-- Requirements 8.2: テストデータのクリーンアップ
-- Requirements 10.2: Cognitoからのテストユーザー削除
-
-## エラーハンドリング
-
-### クリーンアップ
-
-クリーンアップ関数は以下のエラーを適切に処理します:
-
-- `USER_POOL_ID`が設定されていない場合: 警告を出力してスキップ
-- ユーザーが見つからない場合: ログを出力して正常終了
-- その他のエラー: エラーログを出力して正常終了（テストを失敗させない）
-
-### Cognito可用性チェック
-
-Cognitoサービスが利用できない場合、テストは自動的にスキップされます:
-
-- グローバルセットアップで可用性をチェック
-- 警告メッセージを表示
-- 個別のテストで `skipIfCognitoUnavailable()` を使用してスキップ
-
-詳細は [COGNITO_ERROR_HANDLING.md](./COGNITO_ERROR_HANDLING.md) を参照してください。
-
-### ネットワークエラー
-
-アプリケーションが到達不可能な場合、詳細なエラーメッセージを表示します:
-
-- ネットワークエラーの検出
-- トラブルシューティング情報の提供
-- スクリーンショットの自動保存
-
-詳細は [NETWORK_ERROR_HANDLING.md](./NETWORK_ERROR_HANDLING.md) を参照してください。
+- **Requirements 4.1-4.3**: `generateTestUser()` - テストユーザー生成
+- **Requirements 4.4-4.5, 8.2, 10.2**: `cleanupTestUser()` - テストユーザークリーンアップ
+- **Requirements 7.1, 7.4**: `navigateWithErrorHandling()` - ネットワークエラーハンドリング
+- **Requirements 7.2**: `skipIfCognitoUnavailable()` - Cognito可用性チェック
+- **Requirements 7.3**: `registerWithRetry()` - 既存ユーザーエラーハンドリング
