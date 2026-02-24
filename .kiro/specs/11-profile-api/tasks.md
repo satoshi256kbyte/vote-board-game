@@ -58,13 +58,13 @@
     - Honoルーターの初期化
     - 認証ミドルウェアの適用（すべてのルートに必須）
     - _Requirements: 6.1_
-  - [~] 5.2 GET /api/profileエンドポイントを実装
+  - [x] 5.2 GET /api/profileエンドポイントを実装
     - JWT TokenからuserIdを抽出
     - ProfileRepository.getById()を呼び出し
     - プロフィール情報を返却（200 OK）
     - エラーハンドリング（401, 404, 500）
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
-  - [~] 5.3 PUT /api/profileエンドポイントを実装
+  - [x] 5.3 PUT /api/profileエンドポイントを実装
     - リクエストボディのバリデーション（updateProfileSchema）
     - JWT TokenからuserIdを抽出
     - 認可チェック（自分のプロフィールのみ更新可能）
