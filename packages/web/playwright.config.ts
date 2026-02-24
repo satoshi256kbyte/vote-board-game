@@ -11,6 +11,9 @@ export function createPlaywrightConfig(
   return {
     testDir: './e2e',
 
+    // グローバルセットアップ（サービス可用性チェック）
+    globalSetup: './e2e/global-setup.ts',
+
     // 各テストのタイムアウト
     timeout: 30 * 1000,
 

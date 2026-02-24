@@ -6,3 +6,8 @@
 export { generateTestUser, type TestUser } from './test-user';
 export { cleanupTestUser } from './cleanup';
 export { isNetworkError, formatNetworkError, navigateWithErrorHandling } from './network-error';
+export {
+  isCognitoAvailable,
+  formatCognitoUnavailableWarning,
+  skipIfCognitoUnavailable,
+} from './cognito-availability';
