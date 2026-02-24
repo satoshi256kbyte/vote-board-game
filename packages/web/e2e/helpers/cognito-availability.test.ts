@@ -39,10 +39,8 @@ describe('Cognito Availability Checker', () => {
       const { CognitoIdentityProviderClient } =
         await import('@aws-sdk/client-cognito-identity-provider');
       const mockSend = vi.fn().mockRejectedValue(new Error('Service unavailable'));
-      vi.mocked(CognitoIdentityProviderClient).mockImplementation(
-        () => ({ send: mockSend }) as unknown as CognitoIdentityProviderClient
-      );
-
+      // @ts-expect-error - Mocking constructor
+      vi.mocked(CognitoIdentityProviderClient).mockImplementation(() => ({ send: mockSend }));
       const result = await isCognitoAvailable();
 
       expect(result).toBe(false);
