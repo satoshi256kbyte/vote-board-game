@@ -1,0 +1,267 @@
+# Implementation Plan: Profile API
+
+## Overview
+
+このタスクリストは、投票ボードゲームアプリケーションにおけるプロフィール関連APIの実装を段階的に進めるためのものです。実装は、バックエンドAPI（Hono + Lambda）、データレイヤー（DynamoDB）、S3サービス（Presigned URL生成）、バリデーション（Zod）、テスト（ユニットテスト + プロパティベーステスト）、インフラ（CDK）の順に進めます。
+
+## Tasks
+
+- [ ] 1. データモデルとバリデーションスキーマの作成
+  - [x] 1.1 UserEntityインターフェースを`packages/shared/src/types/`に作成
+    - userId, email, username, iconUrl, createdAt, updatedAt, entityTypeフィールドを定義
+    - _Requirements: 1.1, 2.1_
+  - [x] 1.2 プロフィールAPIのバリデーションスキーマを`packages/api/src/lib/validation/profile-schemas.ts`に作成
+    - updateProfileSchema: username (1-50文字), iconUrl (HTTPS URL) のバリデーション
+    - uploadUrlRequestSchema: fileExtension (png, jpg, jpeg, gif) のバリデーション
+    - _Requirements: 2.2, 2.3, 2.8, 3.2_
+  - [~] 1.3 バリデーションスキーマのユニットテストを作成
+    - 有効な入力の受け入れテスト
+    - 無効な入力の拒否テスト（長さ、形式、必須フィールド）
+    - _Requirements: 2.2, 2.3, 2.8, 3.2_
+
+- [ ] 2. DynamoDBリポジトリの実装
+  - [~] 2.1 ProfileRepositoryクラスを`packages/api/src/lib/dynamodb/profile-repository.ts`に作成
+    - getById(userId): ユーザープロフィールの取得（GetCommand）
+    - update(userId, updates): プロフィールの更新（UpdateCommand with conditional expression）
+    - BaseRepositoryを継承
+    - _Requirements: 1.1, 2.1, 4.2, 7.1, 7.2_
+  - [~] 2.2 ProfileRepositoryのユニットテストを作成
+    - getByIdの正常系・異常系テスト（存在するユーザー、存在しないユーザー）
+    - updateの正常系・異常系テスト（条件付き更新、updatedAtの更新）
+    - DynamoDBクライアントのモックを使用
+    - _Requirements: 1.1, 2.1, 2.7, 4.2_
+
+- [ ] 3. S3サービスの実装
+  - [~] 3.1 S3Serviceクラスを`packages/api/src/lib/s3/s3-service.ts`に作成
+    - generateUploadUrl(userId, fileExtension): Presigned URL生成
+    - ファイル名パターン: `icons/{userId}/{timestamp}.{extension}`
+    - Content-Typeマッピング（png→image/png, jpg/jpeg→image/jpeg, gif→image/gif）
+    - 有効期限: 5分、最大ファイルサイズ: 5MB
+    - _Requirements: 3.1, 3.4, 3.5, 3.6, 3.7, 3.9_
+  - [~] 3.2 S3Serviceのユニットテストを作成
+    - Presigned URL生成の正常系テスト（各ファイル拡張子）
+    - iconUrlのパターン検証
+    - Content-Typeマッピングの検証
+    - 有効期限とファイルサイズ制限の検証
+    - AWS SDK v3のモックを使用
+    - _Requirements: 3.1, 3.4, 3.5, 3.6, 3.7, 3.9_
+
+- [ ] 4. 認証ミドルウェアの確認と拡張（必要に応じて）
+  - [~] 4.1 既存の認証ミドルウェア（`packages/api/src/lib/auth/auth-middleware.ts`）を確認
+    - JWT検証機能が実装されているか確認
+    - userIdの抽出機能が実装されているか確認
+    - 必要に応じて拡張
+    - _Requirements: 1.2, 1.3, 2.5, 3.8, 6.1, 6.2, 6.4_
+
+- [ ] 5. プロフィールAPIルートの実装
+  - [~] 5.1 プロフィールルーターを`packages/api/src/routes/profile.ts`に作成
+    - Honoルーターの初期化
+    - 認証ミドルウェアの適用（すべてのルートに必須）
+    - _Requirements: 6.1_
+  - [~] 5.2 GET /api/profileエンドポイントを実装
+    - JWT TokenからuserIdを抽出
+    - ProfileRepository.getById()を呼び出し
+    - プロフィール情報を返却（200 OK）
+    - エラーハンドリング（401, 404, 500）
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+  - [~] 5.3 PUT /api/profileエンドポイントを実装
+    - リクエストボディのバリデーション（updateProfileSchema）
+    - JWT TokenからuserIdを抽出
+    - 認可チェック（自分のプロフィールのみ更新可能）
+    - ProfileRepository.update()を呼び出し
+    - 更新されたプロフィール情報を返却（200 OK）
+    - エラーハンドリング（400, 401, 403, 404, 500）
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
+  - [~] 5.4 POST /api/profile/icon/upload-urlエンドポイントを実装
+    - リクエストボディのバリデーション（uploadUrlRequestSchema）
+    - JWT TokenからuserIdを抽出
+    - S3Service.generateUploadUrl()を呼び出し
+    - uploadUrl, iconUrl, expiresInを返却（200 OK）
+    - エラーハンドリング（400, 401, 500）
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9_
+  - [~] 5.5 エラーレスポンス形式の統一
+    - ErrorResponseインターフェースの実装
+    - すべてのエラーで統一された形式を返却（error, message, details）
+    - バリデーションエラーにはフィールドレベルの詳細を含める
+    - 内部エラー詳細を公開しない
+    - _Requirements: 5.1, 5.3, 5.5_
+  - [~] 5.6 ロギングの実装
+    - すべてのAPIリクエストをCloudWatchにログ出力
+    - ログ内容: userId, endpoint, method, timestamp
+    - エラー発生時は詳細をログ出力
+    - _Requirements: 5.2, 5.4_
+  - [~] 5.7 CORSヘッダーの設定
+    - 許可されたドメインからのリクエストのみ受け入れ
+    - Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headersを設定
+    - _Requirements: 6.6_
+
+- [ ] 6. メインAPIへのルーター統合
+  - [~] 6.1 プロフィールルーターを`packages/api/src/index.ts`に統合
+    - `/api/profile`パスでプロフィールルーターをマウント
+    - 環境変数の設定確認（ICON_BUCKET_NAME, CDN_DOMAIN）
+    - _Requirements: すべて_
+
+- [ ] 7. Checkpoint - 基本実装の完了確認
+  - 基本的なAPI実装が完了したことを確認
+  - ユーザーに質問があれば確認
+
+- [ ] 8. ユニットテストの実装
+  - [~] 8.1 GET /api/profileのユニットテストを作成（`packages/api/src/routes/profile.test.ts`）
+    - 有効なJWT Tokenでプロフィール取得成功（200 OK）
+    - JWT Token不正で401エラー
+    - ユーザーが存在しない場合に404エラー
+    - レスポンスに全フィールドが含まれることを確認
+    - _Requirements: 1.1, 1.2, 1.3, 1.4_
+  - [~] 8.2 PUT /api/profileのユニットテストを作成
+    - usernameのみ更新成功（200 OK）
+    - iconUrlのみ更新成功（200 OK）
+    - username + iconUrl同時更新成功（200 OK）
+    - フィールドなしで400エラー
+    - username長さ不正で400エラー
+    - iconUrl形式不正で400エラー
+    - 他のユーザーのプロフィール更新で403エラー
+    - updatedAtが更新されることを確認
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8_
+  - [~] 8.3 POST /api/profile/icon/upload-urlのユニットテストを作成
+    - 各ファイル拡張子（png, jpg, jpeg, gif）でPresigned URL生成成功（200 OK）
+    - サポートされていない拡張子で400エラー
+    - レスポンスにuploadUrl, iconUrl, expiresInが含まれることを確認
+    - iconUrlのパターン検証（`icons/{userId}/{timestamp}.{extension}`）
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.7_
+  - [~] 8.4 エラーハンドリングのユニットテストを作成
+    - エラーレスポンス形式の検証（error, message, details）
+    - バリデーションエラーのフィールドレベル詳細検証
+    - DynamoDBエラー時の500エラーと内部詳細の非公開を確認
+    - _Requirements: 5.1, 5.3, 5.4, 5.5_
+
+- [ ] 9. プロパティベーステストの実装
+  - [~] 9.1 Property 1のテストを作成（`packages/api/src/routes/profile.property.test.ts`）
+    - **Property 1: Profile Retrieval Returns Complete Data**
+    - **Validates: Requirements 1.1**
+    - 任意の有効なJWT Tokenと既存ユーザーに対して、プロフィール取得時にすべての必須フィールド（userId, email, username, iconUrl, createdAt, updatedAt）が含まれることを検証
+  - [~] 9.2 Property 2のテストを作成
+    - **Property 2: Authentication Required for All Operations**
+    - **Validates: Requirements 1.2, 1.3, 2.5, 3.8, 6.1**
+    - 任意のプロフィールAPIエンドポイントに対して、JWT Tokenが欠落・無効・不正形式・期限切れの場合に401エラーを返すことを検証
+  - [~] 9.3 Property 3のテストを作成
+    - **Property 3: Profile Update Reflects Changes**
+    - **Validates: Requirements 2.1, 2.7**
+    - 任意の有効な更新リクエスト（username/iconUrl）に対して、更新後のレスポンスに更新値が含まれ、updatedAtが以前より新しいことを検証
+  - [~] 9.4 Property 4のテストを作成
+    - **Property 4: Username Length Validation**
+    - **Validates: Requirements 2.2**
+    - 任意のusername文字列に対して、1〜50文字は受け入れ、0文字または51文字以上は400エラーで拒否することを検証
+  - [~] 9.5 Property 5のテストを作成
+    - **Property 5: IconUrl HTTPS Validation**
+    - **Validates: Requirements 2.3**
+    - 任意のiconUrl文字列に対して、"https://"で始まる有効なURLのみ受け入れ、それ以外は400エラーで拒否することを検証
+  - [~] 9.6 Property 6のテストを作成
+    - **Property 6: Username Character Validation**
+    - **Validates: Requirements 2.4**
+    - 任意の無効な文字を含むusernameに対して、400エラーとフィールドレベルの詳細を返すことを検証
+  - [~] 9.7 Property 7のテストを作成
+    - **Property 7: Authorization Enforcement**
+    - **Validates: Requirements 2.6, 4.4, 6.3**
+    - 任意の有効なJWT Tokenを持つユーザーに対して、自分のプロフィールのみアクセス・更新可能で、他のuserIdには403エラーを返すことを検証
+  - [~] 9.8 Property 8のテストを作成
+    - **Property 8: File Extension Validation**
+    - **Validates: Requirements 3.2, 3.3**
+    - 任意のファイル拡張子文字列に対して、['png', 'jpg', 'jpeg', 'gif']のみ受け入れ、それ以外は400エラーとサポート形式リストを返すことを検証
+  - [~] 9.9 Property 9のテストを作成
+    - **Property 9: Presigned URL Generation Completeness**
+    - **Validates: Requirements 3.1, 3.4, 3.7**
+    - 任意の有効なファイル拡張子に対して、Presigned URL生成時にuploadUrlとiconUrlの両方が含まれ、iconUrlが`icons/{userId}/{timestamp}.{extension}`パターンに従うことを検証
+  - [~] 9.10 Property 10のテストを作成
+    - **Property 10: Content-Type Mapping**
+    - **Validates: Requirements 3.6**
+    - 任意のサポートされたファイル拡張子（png, jpg, jpeg, gif）に対して、正しいContent-Typeヘッダー（image/png, image/jpeg, image/gif）が設定されることを検証
+  - [~] 9.11 Property 11のテストを作成
+    - **Property 11: Update Atomicity**
+    - **Validates: Requirements 4.1**
+    - 任意のプロフィール更新操作でエラーが発生した場合、部分的な変更がDynamoDBに永続化されず、プロフィールが元の状態を保つことを検証
+  - [~] 9.12 Property 12のテストを作成
+    - **Property 12: Error Response Structure**
+    - **Validates: Requirements 5.1, 5.3**
+    - 任意のエラー条件（バリデーション、認証、認可、サーバーエラー）に対して、{ error: string, message: string, details?: object }構造のレスポンスを返し、バリデーションエラーにはdetails.fieldsが含まれることを検証
+  - [~] 9.13 Property 13のテストを作成
+    - **Property 13: Database Error Handling**
+    - **Validates: Requirements 5.4, 5.5**
+    - 任意のDynamoDB操作失敗に対して、500エラーを返し、テーブル名・接続文字列・スタックトレースなどの内部詳細を公開しないことを検証
+  - [~] 9.14 Property 14のテストを作成
+    - **Property 14: Presigned URL Key Restriction**
+    - **Validates: Requirements 6.5**
+    - 任意の生成されたPresigned URLに対して、特定のオブジェクトキー`icons/{userId}/{timestamp}.{extension}`へのPUT権限のみを付与し、他のS3オブジェクトへのアクセスを許可しないことを検証
+  - [~] 9.15 Property 15のテストを作成
+    - **Property 15: CORS Headers Present**
+    - **Validates: Requirements 6.6**
+    - 任意のAPIレスポンス（成功・エラー）に対して、適切なCORSヘッダー（Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers）が含まれることを検証
+
+- [ ] 10. Checkpoint - テストの完了確認
+  - すべてのテストが実装され、パスすることを確認
+  - ユーザーに質問があれば確認
+
+- [ ] 11. インフラストラクチャの更新（CDK）
+  - [~] 11.1 S3バケットをCDKスタック（`packages/infra/lib/vote-board-game-stack.ts`）に追加
+    - バケット名: `vbg-{env}-s3-icons`
+    - 暗号化: 有効
+    - パブリックアクセス: ブロック
+    - CORS設定: フロントエンドドメインからのPUTリクエストを許可
+    - _Requirements: 3.1, 6.5_
+  - [~] 11.2 CloudFront DistributionをS3バケット用に追加
+    - オリジン: S3バケット
+    - キャッシュポリシー: 画像用に最適化
+    - カスタムドメイン設定（オプション）
+    - _Requirements: 3.7_
+  - [~] 11.3 Lambda関数の環境変数を更新
+    - ICON_BUCKET_NAME: S3バケット名
+    - CDN_DOMAIN: CloudFrontドメイン
+    - _Requirements: 3.7_
+  - [~] 11.4 Lambda関数のIAM権限を更新
+    - S3 PutObject権限（Presigned URL生成用）
+    - DynamoDB GetItem/UpdateItem権限（プロフィール操作用）
+    - _Requirements: 3.1, 6.5, 7.1, 7.2_
+  - [~] 11.5 CDKスタックのスナップショットテストを更新（`packages/infra/test/vote-board-game-stack.test.ts`）
+    - S3バケットの存在確認
+    - CloudFront Distributionの存在確認
+    - Lambda環境変数の確認
+    - IAM権限の確認
+    - _Requirements: すべて_
+  - [~] 11.6 cdk-nagによるセキュリティチェック
+    - デプロイ前にcdk-nagを実行
+    - 警告に対応
+    - _Requirements: 6.5_
+
+- [ ] 12. CloudWatchモニタリングとアラートの設定
+  - [~] 12.1 CloudWatchメトリクスの設定
+    - APIレイテンシ（p50, p95, p99）
+    - エラー率（4xx, 5xx）
+    - DynamoDBスロットリング
+    - Lambda エラーとタイムアウト
+    - _Requirements: 1.5, 7.3_
+  - [~] 12.2 CloudWatchアラートの設定
+    - エラー率が5%を超えた場合
+    - p95レイテンシが500msを超えた場合
+    - DynamoDBスロットリングが発生した場合
+    - _Requirements: 1.5, 7.3_
+
+- [ ] 13. 統合テストの実装（オプション）
+  - [ ] 13.1 プロフィールAPIの統合テストを作成（`packages/api/src/routes/profile.integration.test.ts`）
+    - 実際のDynamoDB Local環境を使用
+    - プロフィール取得→更新→再取得のフロー検証
+    - アイコンアップロードURL生成→プロフィール更新のフロー検証
+    - 認証・認可の統合検証
+    - _Requirements: すべて_
+
+- [ ] 14. 最終チェックポイント - すべてのテストがパスすることを確認
+  - すべてのユニットテスト、プロパティベーステスト、統合テストがパスすることを確認
+  - CDKスタックがデプロイ可能であることを確認
+  - ユーザーに質問があれば確認
+
+## Notes
+
+- `*`マークのタスクはオプションで、より速いMVPのためにスキップ可能です
+- 各タスクは特定の要件を参照しており、トレーサビリティを確保しています
+- チェックポイントタスクは段階的な検証を保証します
+- プロパティテストは普遍的な正確性プロパティを検証します
+- ユニットテストは特定の例とエッジケースを検証します
+- fast-checkライブラリを使用したプロパティベーステストでは、`numRuns`を10〜20に制限し、`endOnFailure: true`を指定してください
