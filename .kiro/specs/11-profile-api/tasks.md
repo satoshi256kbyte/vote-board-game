@@ -90,7 +90,7 @@
     - ログ内容: userId, endpoint, method, timestamp
     - エラー発生時は詳細をログ出力
     - _Requirements: 5.2, 5.4_
-  - [~] 5.7 CORSヘッダーの設定
+  - [x] 5.7 CORSヘッダーの設定
     - 許可されたドメインからのリクエストのみ受け入れ
     - Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headersを設定
     - _Requirements: 6.6_
