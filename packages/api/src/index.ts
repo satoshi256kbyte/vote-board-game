@@ -12,10 +12,22 @@ import type { AuthVariables } from './lib/auth/types.js';
 // 環境変数チェック（起動時にフェイルファスト）
 const userPoolId = process.env.COGNITO_USER_POOL_ID;
 const region = process.env.AWS_REGION || 'ap-northeast-1';
+const iconBucketName = process.env.ICON_BUCKET_NAME;
+const cdnDomain = process.env.CDN_DOMAIN;
 
 if (!userPoolId) {
   console.error('COGNITO_USER_POOL_ID environment variable is not set');
   throw new Error('COGNITO_USER_POOL_ID is required');
+}
+
+if (!iconBucketName) {
+  console.error('ICON_BUCKET_NAME environment variable is not set');
+  throw new Error('ICON_BUCKET_NAME is required');
+}
+
+if (!cdnDomain) {
+  console.error('CDN_DOMAIN environment variable is not set');
+  throw new Error('CDN_DOMAIN is required');
 }
 
 const authMiddleware = createAuthMiddleware({ userPoolId, region });

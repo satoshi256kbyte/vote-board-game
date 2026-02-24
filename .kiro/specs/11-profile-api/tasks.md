@@ -96,7 +96,7 @@
     - _Requirements: 6.6_
 
 - [ ] 6. メインAPIへのルーター統合
-  - [~] 6.1 プロフィールルーターを`packages/api/src/index.ts`に統合
+  - [x] 6.1 プロフィールルーターを`packages/api/src/index.ts`に統合
     - `/api/profile`パスでプロフィールルーターをマウント
     - 環境変数の設定確認（ICON_BUCKET_NAME, CDN_DOMAIN）
     - _Requirements: すべて_

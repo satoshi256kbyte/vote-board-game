@@ -28,6 +28,12 @@ Hono + AWS Lambda によるバックエンド API
 - `POST /api/votes` - 投票
 - `GET /api/votes/my?gameId=xxx` - 自分の投票取得
 
+### プロフィール
+
+- `GET /api/profile` - プロフィール情報取得（認証必須）
+- `PUT /api/profile` - プロフィール情報更新（認証必須）
+- `POST /api/profile/icon/upload-url` - アイコンアップロード用 Presigned URL 生成（認証必須）
+
 ## 開発
 
 ```bash
@@ -52,6 +58,15 @@ AWS_REGION=ap-northeast-1
 
 # CORS 許可オリジン（カンマ区切り）
 ALLOWED_ORIGINS=http://localhost:3000,https://example.com
+
+# Cognito ユーザープール ID
+COGNITO_USER_POOL_ID=ap-northeast-1_xxxxxxxxx
+
+# S3 アイコンバケット名
+ICON_BUCKET_NAME=vbg-dev-s3-icons
+
+# CDN ドメイン（CloudFront）
+CDN_DOMAIN=cdn.vote-board-game.example.com
 
 # 環境
 NODE_ENV=development

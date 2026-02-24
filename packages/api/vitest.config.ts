@@ -6,6 +6,8 @@ export default defineConfig({
     environment: 'node',
     env: {
       COGNITO_USER_POOL_ID: 'ap-northeast-1_TestPool',
+      ICON_BUCKET_NAME: 'test-icon-bucket',
+      CDN_DOMAIN: 'test-cdn.example.com',
     },
     testTimeout: 15000,
     coverage: {

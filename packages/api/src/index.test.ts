@@ -1,5 +1,7 @@
-// COGNITO_USER_POOL_IDが必要なため、モジュールインポート前に設定
+// 環境変数が必要なため、モジュールインポート前に設定
 process.env.COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || 'ap-northeast-1_TestPool';
+process.env.ICON_BUCKET_NAME = process.env.ICON_BUCKET_NAME || 'test-icon-bucket';
+process.env.CDN_DOMAIN = process.env.CDN_DOMAIN || 'test-cdn.example.com';
 
 import { describe, it, expect } from 'vitest';
 import app from './index.js';
