@@ -42,6 +42,8 @@ export function ProfileEditForm() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const isLoading = profileLoading || updateLoading || uploadLoading;
 
@@ -152,11 +154,35 @@ export function ProfileEditForm() {
       });
 
       if (success) {
-        router.push('/profile');
+        // 成功メッセージを表示
+        setSuccessMessage('プロフィールを更新しました');
+        // 少し待ってからリダイレクト
+        setTimeout(() => {
+          router.push('/profile');
+        }, 1000);
       }
     } catch {
       // エラーはフックで処理済み
     }
+  };
+
+  /**
+   * キャンセルボタンハンドラー
+   * 未保存の変更がある場合は確認ダイアログを表示
+   */
+  const handleCancel = () => {
+    if (hasChanges) {
+      setShowCancelDialog(true);
+    } else {
+      router.push('/profile');
+    }
+  };
+
+  /**
+   * キャンセル確認ダイアログで「はい」を選択した場合
+   */
+  const confirmCancel = () => {
+    router.push('/profile');
   };
 
   // ローディング中の表示
@@ -169,123 +195,154 @@ export function ProfileEditForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6" noValidate>
-      {/* エラー表示 */}
-      {(updateError || uploadError) && (
-        <Alert variant="destructive" role="alert">
-          <AlertDescription>{updateError || uploadError}</AlertDescription>
-        </Alert>
-      )}
+    <>
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6" noValidate>
+        {/* 成功メッセージ */}
+        {successMessage && (
+          <Alert className="bg-green-50 border-green-200" role="alert">
+            <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* アイコン画像プレビュー */}
-      <div className="space-y-4">
-        <label className="block text-sm font-medium text-gray-700">プロフィールアイコン</label>
-        <div className="flex items-center space-x-6">
-          <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gray-200">
-            {previewUrl ? (
-              <Image
-                src={previewUrl}
-                alt="プロフィールアイコン"
-                width={128}
-                height={128}
-                className="object-cover"
+        {/* エラー表示 */}
+        {(updateError || uploadError) && (
+          <Alert variant="destructive" role="alert">
+            <AlertDescription>{updateError || uploadError}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* アイコン画像プレビュー */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-700">プロフィールアイコン</label>
+          <div className="flex items-center space-x-6">
+            <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gray-200">
+              {previewUrl ? (
+                <Image
+                  src={previewUrl}
+                  alt="プロフィールアイコン"
+                  width={128}
+                  height={128}
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <User className="w-16 h-16 text-gray-400" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <input
+                type="file"
+                id="icon-upload"
+                accept="image/png,image/jpeg,image/gif"
+                onChange={handleFileSelect}
+                disabled={isLoading}
+                className="hidden"
+                aria-label="アイコン画像を選択"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <User className="w-16 h-16 text-gray-400" />
-              </div>
-            )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('icon-upload')?.click()}
+                disabled={isLoading}
+                className="w-full"
+              >
+                画像を選択
+              </Button>
+              <p className="mt-2 text-sm text-gray-500">PNG、JPEG、GIF形式（最大5MB）</p>
+            </div>
           </div>
-          <div className="flex-1">
-            <input
-              type="file"
-              id="icon-upload"
-              accept="image/png,image/jpeg,image/gif"
-              onChange={handleFileSelect}
-              disabled={isLoading}
-              className="hidden"
-              aria-label="アイコン画像を選択"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => document.getElementById('icon-upload')?.click()}
-              disabled={isLoading}
-              className="w-full"
-            >
-              画像を選択
-            </Button>
-            <p className="mt-2 text-sm text-gray-500">PNG、JPEG、GIF形式（最大5MB）</p>
+          {errors.image && (
+            <p className="text-sm text-red-600" role="alert">
+              {errors.image}
+            </p>
+          )}
+        </div>
+
+        {/* ユーザー名入力フィールド */}
+        <div className="space-y-2">
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+            ユーザー名
+          </label>
+          <Input
+            id="username"
+            name="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            disabled={isLoading}
+            placeholder="ユーザー名"
+            aria-label="ユーザー名"
+            aria-invalid={!!errors.username}
+            aria-describedby={errors.username ? 'username-error' : undefined}
+            className={errors.username ? 'border-red-500' : ''}
+          />
+          {errors.username && (
+            <p id="username-error" className="text-sm text-red-600" role="alert">
+              {errors.username}
+            </p>
+          )}
+        </div>
+
+        {/* メールアドレス（読み取り専用） */}
+        <div className="space-y-2">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            メールアドレス
+          </label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={profile?.email || ''}
+            disabled
+            className="bg-gray-50"
+          />
+          <p className="text-sm text-gray-500">メールアドレスは変更できません</p>
+        </div>
+
+        {/* ボタン */}
+        <div className="flex space-x-4">
+          <Button
+            type="submit"
+            disabled={isLoading || !hasChanges}
+            aria-disabled={isLoading || !hasChanges}
+            className="flex-1"
+          >
+            {isLoading ? '保存中...' : '保存'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isLoading}
+            className="flex-1"
+          >
+            キャンセル
+          </Button>
+        </div>
+      </form>
+
+      {/* キャンセル確認ダイアログ */}
+      {showCancelDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4">確認</h2>
+            <p className="mb-6">変更内容が保存されていません。破棄してもよろしいですか？</p>
+            <div className="flex space-x-4">
+              <Button onClick={confirmCancel} variant="destructive" className="flex-1">
+                はい
+              </Button>
+              <Button
+                onClick={() => setShowCancelDialog(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                いいえ
+              </Button>
+            </div>
           </div>
         </div>
-        {errors.image && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.image}
-          </p>
-        )}
-      </div>
-
-      {/* ユーザー名入力フィールド */}
-      <div className="space-y-2">
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-          ユーザー名
-        </label>
-        <Input
-          id="username"
-          name="username"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          disabled={isLoading}
-          placeholder="ユーザー名"
-          aria-label="ユーザー名"
-          aria-invalid={!!errors.username}
-          aria-describedby={errors.username ? 'username-error' : undefined}
-          className={errors.username ? 'border-red-500' : ''}
-        />
-        {errors.username && (
-          <p id="username-error" className="text-sm text-red-600" role="alert">
-            {errors.username}
-          </p>
-        )}
-      </div>
-
-      {/* メールアドレス（読み取り専用） */}
-      <div className="space-y-2">
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          メールアドレス
-        </label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          value={profile?.email || ''}
-          disabled
-          className="bg-gray-50"
-        />
-        <p className="text-sm text-gray-500">メールアドレスは変更できません</p>
-      </div>
-
-      {/* ボタン */}
-      <div className="flex space-x-4">
-        <Button
-          type="submit"
-          disabled={isLoading || !hasChanges}
-          aria-disabled={isLoading || !hasChanges}
-          className="flex-1"
-        >
-          {isLoading ? '保存中...' : '保存'}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push('/profile')}
-          disabled={isLoading}
-          className="flex-1"
-        >
-          キャンセル
-        </Button>
-      </div>
-    </form>
+      )}
+    </>
   );
 }

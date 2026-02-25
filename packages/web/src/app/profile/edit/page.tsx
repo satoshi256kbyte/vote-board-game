@@ -1,3 +1,4 @@
+import React from 'react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { ProfileEditForm } from '@/components/profile/profile-edit-form';
 

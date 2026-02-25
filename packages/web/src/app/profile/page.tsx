@@ -1,3 +1,4 @@
+import React from 'react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { ProfileView } from '@/components/profile/profile-view';
 
