@@ -71,13 +71,13 @@
     - React Testing Libraryを使用
     - _要件: 1.1, 1.2, 1.3, 1.4, 1.5, 11.1, 17.1_
 
-  - [~] 3.3 プロフィール表示ページを作成
+  - [x] 3.3 プロフィール表示ページを作成
     - `packages/web/src/app/profile/page.tsx`を作成
     - ProtectedRouteでラップしてProfileViewコンポーネントを表示
     - _要件: 1.1, 12.1, 12.2_
 
 - [ ] 4. プロフィール編集画面の実装
-  - [~] 4.1 ProfileEditFormコンポーネントを実装（基本構造）
+  - [x] 4.1 ProfileEditFormコンポーネントを実装（基本構造）
     - `packages/web/src/components/profile/profile-edit-form.tsx`を作成
     - useProfile、useProfileUpdate、useImageUploadフックを統合
     - フォーム状態管理（username、selectedFile、previewUrl、errors、hasChanges）を実装
