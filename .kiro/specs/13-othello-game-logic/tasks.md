@@ -41,7 +41,7 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
     - Write `getLegalMoves()` and `hasLegalMoves()` for move detection
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 4.1, 4.2, 4.3, 4.4_
 
-  - [~] 3.2 Write unit tests for validation module (validation.test.ts)
+  - [x] 3.2 Write unit tests for validation module (validation.test.ts)
     - Test occupied cell rejection
     - Test moves without flips are invalid
     - Test moves with flips in various directions
