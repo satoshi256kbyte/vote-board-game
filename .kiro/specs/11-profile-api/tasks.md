@@ -6,7 +6,7 @@
 
 ## Tasks
 
-- [ ] 1. データモデルとバリデーションスキーマの作成
+- [x] 1. データモデルとバリデーションスキーマの作成
   - [x] 1.1 UserEntityインターフェースを`packages/shared/src/types/`に作成
     - userId, email, username, iconUrl, createdAt, updatedAt, entityTypeフィールドを定義
     - _Requirements: 1.1, 2.1_
@@ -19,7 +19,7 @@
     - 無効な入力の拒否テスト（長さ、形式、必須フィールド）
     - _Requirements: 2.2, 2.3, 2.8, 3.2_
 
-- [ ] 2. DynamoDBリポジトリの実装
+- [x] 2. DynamoDBリポジトリの実装
   - [x] 2.1 ProfileRepositoryクラスを`packages/api/src/lib/dynamodb/profile-repository.ts`に作成
     - getById(userId): ユーザープロフィールの取得（GetCommand）
     - update(userId, updates): プロフィールの更新（UpdateCommand with conditional expression）
@@ -31,7 +31,7 @@
     - DynamoDBクライアントのモックを使用
     - _Requirements: 1.1, 2.1, 2.7, 4.2_
 
-- [ ] 3. S3サービスの実装
+- [x] 3. S3サービスの実装
   - [x] 3.1 S3Serviceクラスを`packages/api/src/lib/s3/s3-service.ts`に作成
     - generateUploadUrl(userId, fileExtension): Presigned URL生成
     - ファイル名パターン: `icons/{userId}/{timestamp}.{extension}`
@@ -46,14 +46,14 @@
     - AWS SDK v3のモックを使用
     - _Requirements: 3.1, 3.4, 3.5, 3.6, 3.7, 3.9_
 
-- [ ] 4. 認証ミドルウェアの確認と拡張（必要に応じて）
+- [x] 4. 認証ミドルウェアの確認と拡張（必要に応じて）
   - [x] 4.1 既存の認証ミドルウェア（`packages/api/src/lib/auth/auth-middleware.ts`）を確認
     - JWT検証機能が実装されているか確認
     - userIdの抽出機能が実装されているか確認
     - 必要に応じて拡張
     - _Requirements: 1.2, 1.3, 2.5, 3.8, 6.1, 6.2, 6.4_
 
-- [ ] 5. プロフィールAPIルートの実装
+- [x] 5. プロフィールAPIルートの実装
   - [x] 5.1 プロフィールルーターを`packages/api/src/routes/profile.ts`に作成
     - Honoルーターの初期化
     - 認証ミドルウェアの適用（すべてのルートに必須）
@@ -95,7 +95,7 @@
     - Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headersを設定
     - _Requirements: 6.6_
 
-- [ ] 6. メインAPIへのルーター統合
+- [x] 6. メインAPIへのルーター統合
   - [x] 6.1 プロフィールルーターを`packages/api/src/index.ts`に統合
     - `/api/profile`パスでプロフィールルーターをマウント
     - 環境変数の設定確認（ICON_BUCKET_NAME, CDN_DOMAIN）
@@ -105,7 +105,7 @@
   - 基本的なAPI実装が完了したことを確認
   - ユーザーに質問があれば確認
 
-- [ ] 8. ユニットテストの実装
+- [x] 8. ユニットテストの実装
   - [x] 8.1 GET /api/profileのユニットテストを作成（`packages/api/src/routes/profile.test.ts`）
     - 有効なJWT Tokenでプロフィール取得成功（200 OK）
     - JWT Token不正で401エラー
@@ -134,7 +134,7 @@
     - DynamoDBエラー時の500エラーと内部詳細の非公開を確認
     - _Requirements: 5.1, 5.3, 5.4, 5.5_
 
-- [ ] 9. プロパティベーステストの実装
+- [x] 9. プロパティベーステストの実装
   - [x] 9.1 Property 1のテストを作成（`packages/api/src/routes/profile.property.test.ts`）
     - **Property 1: Profile Retrieval Returns Complete Data**
     - **Validates: Requirements 1.1**
@@ -200,7 +200,7 @@
   - すべてのテストが実装され、パスすることを確認
   - ユーザーに質問があれば確認
 
-- [ ] 11. インフラストラクチャの更新（CDK）
+- [x] 11. インフラストラクチャの更新（CDK）
   - [x] 11.1 S3バケットをCDKスタック（`packages/infra/lib/vote-board-game-stack.ts`）に追加
     - バケット名: `vbg-{env}-s3-icons`
     - 暗号化: 有効
@@ -231,7 +231,7 @@
     - 警告に対応
     - _Requirements: 6.5_
 
-- [ ] 12. CloudWatchモニタリングとアラートの設定
+- [x] 12. CloudWatchモニタリングとアラートの設定
   - [x] 12.1 CloudWatchメトリクスの設定
     - APIレイテンシ（p50, p95, p99）
     - エラー率（4xx, 5xx）
@@ -244,8 +244,8 @@
     - DynamoDBスロットリングが発生した場合
     - _Requirements: 1.5, 7.3_
 
-- [ ] 13. 統合テストの実装（オプション）
-  - [ ] 13.1 プロフィールAPIの統合テストを作成（`packages/api/src/routes/profile.integration.test.ts`）
+- [x] 13. 統合テストの実装（オプション）
+  - [x] 13.1 プロフィールAPIの統合テストを作成（`packages/api/src/routes/profile.integration.test.ts`）
     - 実際のDynamoDB Local環境を使用
     - プロフィール取得→更新→再取得のフロー検証
     - アイコンアップロードURL生成→プロフィール更新のフロー検証
