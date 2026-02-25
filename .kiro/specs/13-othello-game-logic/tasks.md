@@ -49,7 +49,7 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
     - Test legal moves detection for known board positions
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 4.1, 4.2, 4.3, 4.4_
 
-  - [~] 3.3 Write property tests for validation rules (validation.property.test.ts)
+  - [x] 3.3 Write property tests for validation rules (validation.property.test.ts)
     - **Property 2: Occupied cells reject moves**
     - **Validates: Requirements 2.1**
     - **Property 3: Moves without flips are invalid**
@@ -69,7 +69,7 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
     - Use fast-check with numRuns: 100, custom board and position generators
 
 - [~] 4. Implement move execution and board updates
-  - [~] 4.1 Implement moves module (moves.ts)
+  - [x] 4.1 Implement moves module (moves.ts)
     - Write `flipDiscs()` to flip discs at specified positions
     - Write `executeMove()` to place disc and flip opponents
     - Write `createMove()` to create move records
