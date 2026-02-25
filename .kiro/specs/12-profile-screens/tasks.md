@@ -51,7 +51,7 @@
     - 画像アップロード、Presigned URL取得、S3アップロード、リトライ機能を実装
     - _要件: 6.1, 6.2, 6.3, 6.4, 16.3, 17.3, 17.4_
 
-  - [~] 2.6 useImageUploadフックのユニットテストを作成
+  - [x] 2.6 useImageUploadフックのユニットテストを作成
     - `packages/web/src/lib/hooks/use-image-upload.test.ts`を作成
     - アップロード成功時、失敗時、リトライ時の挙動をテスト
     - _要件: 6.1, 6.2, 6.3, 6.4, 17.3_
