@@ -33,17 +33,13 @@ interface FormErrors {
 export function ProfileEditForm() {
   const router = useRouter();
   const { profile, isLoading: profileLoading } = useProfile();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { updateProfile, isLoading: updateLoading, error: updateError } = useProfileUpdate();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { uploadImage, isLoading: uploadLoading, error: uploadError } = useImageUpload();
 
   // フォーム状態管理
   const [username, setUsername] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errors, setErrors] = useState<FormErrors>({});
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -66,6 +62,103 @@ export function ProfileEditForm() {
     }
   }, [username, selectedFile, profile]);
 
+  /**
+   * フォームバリデーション
+   * ユーザー名の必須チェックと文字数制限を実施
+   * @returns バリデーションが通過した場合はtrue
+   */
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    // ユーザー名の必須チェック
+    if (!username.trim()) {
+      newErrors.username = 'ユーザー名を入力してください';
+    }
+    // ユーザー名の文字数制限（50文字）
+    else if (username.length > 50) {
+      newErrors.username = 'ユーザー名は50文字以内で入力してください';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  /**
+   * ファイル選択ハンドラー
+   * 画像ファイルのサイズと形式をバリデーション
+   */
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const newErrors: FormErrors = { ...errors };
+
+    // ファイルサイズチェック（5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      newErrors.image = '画像サイズは5MB以下にしてください';
+      setErrors(newErrors);
+      return;
+    }
+
+    // ファイル形式チェック（PNG、JPEG、GIF）
+    const validTypes = ['image/png', 'image/jpeg', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      newErrors.image = 'PNG、JPEG、GIF形式の画像を選択してください';
+      setErrors(newErrors);
+      return;
+    }
+
+    // バリデーション通過
+    delete newErrors.image;
+    setErrors(newErrors);
+    setSelectedFile(file);
+
+    // プレビュー生成
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /**
+   * フォーム送信ハンドラー
+   * バリデーション後、画像アップロードとプロフィール更新を実行
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // バリデーション実行
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      let iconUrl = profile?.iconUrl;
+
+      // 画像がある場合はアップロード
+      if (selectedFile) {
+        const uploadResult = await uploadImage(selectedFile);
+        if (!uploadResult) {
+          return; // エラーはuseImageUploadで処理済み
+        }
+        iconUrl = uploadResult.iconUrl;
+      }
+
+      // プロフィール更新
+      const success = await updateProfile({
+        username: username.trim(),
+        iconUrl,
+      });
+
+      if (success) {
+        router.push('/profile');
+      }
+    } catch {
+      // エラーはフックで処理済み
+    }
+  };
+
   // ローディング中の表示
   if (profileLoading) {
     return (
@@ -76,7 +169,7 @@ export function ProfileEditForm() {
   }
 
   return (
-    <form className="bg-white rounded-lg shadow p-6 space-y-6" noValidate>
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6" noValidate>
       {/* エラー表示 */}
       {(updateError || uploadError) && (
         <Alert variant="destructive" role="alert">
@@ -102,6 +195,27 @@ export function ProfileEditForm() {
                 <User className="w-16 h-16 text-gray-400" />
               </div>
             )}
+          </div>
+          <div className="flex-1">
+            <input
+              type="file"
+              id="icon-upload"
+              accept="image/png,image/jpeg,image/gif"
+              onChange={handleFileSelect}
+              disabled={isLoading}
+              className="hidden"
+              aria-label="アイコン画像を選択"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('icon-upload')?.click()}
+              disabled={isLoading}
+              className="w-full"
+            >
+              画像を選択
+            </Button>
+            <p className="mt-2 text-sm text-gray-500">PNG、JPEG、GIF形式（最大5MB）</p>
           </div>
         </div>
         {errors.image && (

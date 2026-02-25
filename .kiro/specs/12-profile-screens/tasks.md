@@ -83,7 +83,7 @@
     - フォーム状態管理（username、selectedFile、previewUrl、errors、hasChanges）を実装
     - _要件: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 11.2, 11.4_
 
-  - [~] 4.2 ProfileEditFormコンポーネントにバリデーション機能を追加
+  - [x] 4.2 ProfileEditFormコンポーネントにバリデーション機能を追加
     - ユーザー名の必須チェック、文字数制限（50文字）を実装
     - 画像ファイルのサイズチェック（5MB）、形式チェック（PNG、JPEG、GIF）を実装
     - エラーメッセージ表示を実装
