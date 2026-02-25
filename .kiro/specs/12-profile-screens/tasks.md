@@ -41,12 +41,12 @@
     - プロフィール更新、ローディング状態、エラー状態を実装
     - _要件: 7.1, 7.2, 7.3, 7.4, 8.1, 9.1, 9.2, 9.3, 9.4, 9.5_
 
-  - [~] 2.4 useProfileUpdateフックのユニットテストを作成
+  - [x] 2.4 useProfileUpdateフックのユニットテストを作成
     - `packages/web/src/lib/hooks/use-profile-update.test.ts`を作成
     - 更新成功時、バリデーションエラー時、サーバーエラー時の挙動をテスト
     - _要件: 7.1, 9.1, 9.2, 9.3_
 
-  - [~] 2.5 useImageUploadフックを実装
+  - [x] 2.5 useImageUploadフックを実装
     - `packages/web/src/lib/hooks/use-image-upload.ts`を作成
     - 画像アップロード、Presigned URL取得、S3アップロード、リトライ機能を実装
     - _要件: 6.1, 6.2, 6.3, 6.4, 16.3, 17.3, 17.4_
