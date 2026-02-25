@@ -91,6 +91,45 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       "Description": "デプロイ環境",
       "Value": "dev",
     },
+    "IconBucketName": {
+      "Description": "アイコン画像用 S3 バケット名",
+      "Export": {
+        "Name": "VoteBoardGameIconBucketName-dev",
+      },
+      "Value": {
+        "Ref": "IconBucketB9D7CB87",
+      },
+    },
+    "IconDistributionDomainName": {
+      "Description": "Icon CloudFront ドメイン名",
+      "Export": {
+        "Name": "VoteBoardGameIconDistributionDomain-dev",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "IconDistribution6DC53514",
+          "DomainName",
+        ],
+      },
+    },
+    "IconDistributionId": {
+      "Description": "Icon CloudFront ディストリビューション ID",
+      "Export": {
+        "Name": "VoteBoardGameIconDistributionId-dev",
+      },
+      "Value": {
+        "Ref": "IconDistribution6DC53514",
+      },
+    },
+    "ProfileApiDashboardName": {
+      "Description": "Profile API CloudWatch Dashboard 名",
+      "Export": {
+        "Name": "VoteBoardGameProfileApiDashboardName-dev",
+      },
+      "Value": {
+        "Ref": "ProfileApiDashboard5942C4E6",
+      },
+    },
     "ScheduleName": {
       "Description": "EventBridge Scheduler 名",
       "Export": {
@@ -198,16 +237,25 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "fd125382c8746bf1a8f17bf01f424d80534176b59e7c53f1ed7ca6e87d43564a.zip",
+          "S3Key": "e7cb8863a56f5e8618dda1b71084928f4296089c69d971d46fdf6879f6414067.zip",
         },
         "Environment": {
           "Variables": {
             "ALLOWED_ORIGINS": "http://localhost:3000",
+            "CDN_DOMAIN": {
+              "Fn::GetAtt": [
+                "IconDistribution6DC53514",
+                "DomainName",
+              ],
+            },
             "COGNITO_CLIENT_ID": {
               "Ref": "UserPoolClient2F5918F7",
             },
             "COGNITO_USER_POOL_ID": {
               "Ref": "UserPool6BA7E5F2",
+            },
+            "ICON_BUCKET_NAME": {
+              "Ref": "IconBucketB9D7CB87",
             },
             "NODE_ENV": "dev",
             "TABLE_NAME": {
@@ -257,13 +305,17 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             {
               "applies_to": [
                 "Action::cognito-idp:*",
+                "Action::s3:Abort*",
                 {
                   "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                {
+                  "regex": "/^Resource::<IconBucket.*\\.Arn>/\\*$/g",
                 },
                 "Resource::*",
               ],
               "id": "AwsSolutions-IAM5",
-              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations, S3 PutObject requires wildcard for object keys",
             },
           ],
         },
@@ -306,13 +358,17 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             {
               "applies_to": [
                 "Action::cognito-idp:*",
+                "Action::s3:Abort*",
                 {
                   "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                {
+                  "regex": "/^Resource::<IconBucket.*\\.Arn>/\\*$/g",
                 },
                 "Resource::*",
               ],
               "id": "AwsSolutions-IAM5",
-              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations, S3 PutObject requires wildcard for object keys",
             },
           ],
         },
@@ -408,6 +464,31 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
                 ],
               },
             },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "IconBucketB9D7CB87",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -450,7 +531,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "fd125382c8746bf1a8f17bf01f424d80534176b59e7c53f1ed7ca6e87d43564a.zip",
+          "S3Key": "e7cb8863a56f5e8618dda1b71084928f4296089c69d971d46fdf6879f6414067.zip",
         },
         "Environment": {
           "Variables": {
@@ -1390,6 +1471,335 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       },
       "Type": "AWS::Lambda::Permission",
     },
+    "IconBucketAutoDeleteObjectsCustomResource58F90D4E": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "IconBucketPolicy6459E7E7",
+      ],
+      "Properties": {
+        "BucketName": {
+          "Ref": "IconBucketB9D7CB87",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::S3AutoDeleteObjects",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "IconBucketB9D7CB87": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": {
+          "Fn::Join": [
+            "",
+            [
+              "vbg-dev-s3-icons-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+            ],
+          ],
+        },
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "*",
+              ],
+              "AllowedMethods": [
+                "PUT",
+              ],
+              "AllowedOrigins": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://",
+                      {
+                        "Fn::GetAtt": [
+                          "WebDistribution59C46482",
+                          "DomainName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
+              ],
+              "MaxAge": 3000,
+            },
+          ],
+        },
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Ref": "LogBucketCC3B17E8",
+          },
+          "LogFilePrefix": "icon-bucket-logs/",
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-delete-objects",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "IconBucketPolicy6459E7E7": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "IconBucketB9D7CB87",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "IconBucketB9D7CB87",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "IconBucketB9D7CB87",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:PutBucketPolicy",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                    "Arn",
+                  ],
+                },
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "IconBucketB9D7CB87",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "IconBucketB9D7CB87",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "s3:GetObject",
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":cloudfront::",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":distribution/",
+                        {
+                          "Ref": "IconDistribution6DC53514",
+                        },
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudfront.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "IconBucketB9D7CB87",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "IconDistribution6DC53514": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CFR1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR4",
+              "is_reason_encoded": true,
+              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "DistributionConfig": {
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+            ],
+            "CachePolicyId": "b2884449-e4de-46a7-ac36-70bc7f1ddd6d",
+            "CachedMethods": [
+              "GET",
+              "HEAD",
+            ],
+            "Compress": true,
+            "TargetOriginId": "TestStackIconDistributionOrigin16D39ADBB",
+            "ViewerProtocolPolicy": "redirect-to-https",
+          },
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Logging": {
+            "Bucket": {
+              "Fn::GetAtt": [
+                "LogBucketCC3B17E8",
+                "RegionalDomainName",
+              ],
+            },
+            "Prefix": "icon-cloudfront-logs/",
+          },
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "IconBucketB9D7CB87",
+                  "RegionalDomainName",
+                ],
+              },
+              "Id": "TestStackIconDistributionOrigin16D39ADBB",
+              "OriginAccessControlId": {
+                "Fn::GetAtt": [
+                  "IconDistributionOrigin1S3OriginAccessControlF92E262D",
+                  "Id",
+                ],
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": "",
+              },
+            },
+          ],
+        },
+      },
+      "Type": "AWS::CloudFront::Distribution",
+    },
+    "IconDistributionOrigin1S3OriginAccessControlF92E262D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CFR1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR4",
+              "is_reason_encoded": true,
+              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": "TestStackIconDistributionOrigin1S3OriginAccessControlE34D5ADE",
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4",
+        },
+      },
+      "Type": "AWS::CloudFront::OriginAccessControl",
+    },
     "LogBucketAutoDeleteObjectsCustomResource7762F42C": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -1541,6 +1951,76 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
       },
       "Type": "AWS::S3::BucketPolicy",
+    },
+    "ProfileApiDashboard5942C4E6": {
+      "Properties": {
+        "DashboardBody": {
+          "Fn::Join": [
+            "",
+            [
+              "{"widgets":[{"type":"metric","width":12,"height":6,"x":0,"y":0,"properties":{"view":"timeSeries","title":"Profile API Latency (p50, p95, p99)","region":"",
+              {
+                "Ref": "AWS::Region",
+              },
+              "","metrics":[["AWS/Lambda","Duration","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"p50 Latency","stat":"p50"}],["AWS/Lambda","Duration","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"p95 Latency","stat":"p95"}],["AWS/Lambda","Duration","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"p99 Latency","stat":"p99"}]],"yAxis":{}}},{"type":"metric","width":12,"height":6,"x":12,"y":0,"properties":{"view":"timeSeries","title":"Profile API Error Rates (4xx, 5xx)","region":"",
+              {
+                "Ref": "AWS::Region",
+              },
+              "","metrics":[["AWS/ApiGateway","4XXError","ApiId","",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "",{"label":"4XX Errors","stat":"Sum"}],["AWS/ApiGateway","5XXError","ApiId","",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "",{"label":"5XX Errors","stat":"Sum"}]],"yAxis":{}}},{"type":"metric","width":12,"height":6,"x":0,"y":6,"properties":{"view":"timeSeries","title":"DynamoDB Throttling Events","region":"",
+              {
+                "Ref": "AWS::Region",
+              },
+              "","metrics":[["AWS/DynamoDB","UserErrors","TableName","",
+              {
+                "Ref": "VoteBoardGameTable4368E79C",
+              },
+              "",{"label":"User Errors (Throttling)","stat":"Sum"}],["AWS/DynamoDB","SystemErrors","TableName","",
+              {
+                "Ref": "VoteBoardGameTable4368E79C",
+              },
+              "",{"label":"System Errors","stat":"Sum"}]],"yAxis":{}}},{"type":"metric","width":12,"height":6,"x":12,"y":6,"properties":{"view":"timeSeries","title":"Lambda Errors and Timeouts","region":"",
+              {
+                "Ref": "AWS::Region",
+              },
+              "","metrics":[["AWS/Lambda","Errors","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"Lambda Errors","stat":"Sum"}],["AWS/Lambda","Throttles","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"Lambda Throttles","stat":"Sum"}],["AWS/Lambda","ConcurrentExecutions","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"Concurrent Executions","stat":"Maximum","yAxis":"right"}]],"yAxis":{}}}]}",
+            ],
+          ],
+        },
+        "DashboardName": "vbg-dev-profile-api-dashboard",
+      },
+      "Type": "AWS::CloudWatch::Dashboard",
     },
     "SchedulerRole59E73443": {
       "Metadata": {
@@ -2279,6 +2759,45 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       "Description": "デプロイ環境",
       "Value": "prod",
     },
+    "IconBucketName": {
+      "Description": "アイコン画像用 S3 バケット名",
+      "Export": {
+        "Name": "VoteBoardGameIconBucketName-prod",
+      },
+      "Value": {
+        "Ref": "IconBucketB9D7CB87",
+      },
+    },
+    "IconDistributionDomainName": {
+      "Description": "Icon CloudFront ドメイン名",
+      "Export": {
+        "Name": "VoteBoardGameIconDistributionDomain-prod",
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "IconDistribution6DC53514",
+          "DomainName",
+        ],
+      },
+    },
+    "IconDistributionId": {
+      "Description": "Icon CloudFront ディストリビューション ID",
+      "Export": {
+        "Name": "VoteBoardGameIconDistributionId-prod",
+      },
+      "Value": {
+        "Ref": "IconDistribution6DC53514",
+      },
+    },
+    "ProfileApiDashboardName": {
+      "Description": "Profile API CloudWatch Dashboard 名",
+      "Export": {
+        "Name": "VoteBoardGameProfileApiDashboardName-prod",
+      },
+      "Value": {
+        "Ref": "ProfileApiDashboard5942C4E6",
+      },
+    },
     "ScheduleName": {
       "Description": "EventBridge Scheduler 名",
       "Export": {
@@ -2395,16 +2914,25 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "fd125382c8746bf1a8f17bf01f424d80534176b59e7c53f1ed7ca6e87d43564a.zip",
+          "S3Key": "e7cb8863a56f5e8618dda1b71084928f4296089c69d971d46fdf6879f6414067.zip",
         },
         "Environment": {
           "Variables": {
             "ALLOWED_ORIGINS": "https://vote-board-game.example.com",
+            "CDN_DOMAIN": {
+              "Fn::GetAtt": [
+                "IconDistribution6DC53514",
+                "DomainName",
+              ],
+            },
             "COGNITO_CLIENT_ID": {
               "Ref": "UserPoolClient2F5918F7",
             },
             "COGNITO_USER_POOL_ID": {
               "Ref": "UserPool6BA7E5F2",
+            },
+            "ICON_BUCKET_NAME": {
+              "Ref": "IconBucketB9D7CB87",
             },
             "NODE_ENV": "prod",
             "TABLE_NAME": {
@@ -2634,13 +3162,17 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             {
               "applies_to": [
                 "Action::cognito-idp:*",
+                "Action::s3:Abort*",
                 {
                   "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                {
+                  "regex": "/^Resource::<IconBucket.*\\.Arn>/\\*$/g",
                 },
                 "Resource::*",
               ],
               "id": "AwsSolutions-IAM5",
-              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations, S3 PutObject requires wildcard for object keys",
             },
           ],
         },
@@ -2683,13 +3215,17 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             {
               "applies_to": [
                 "Action::cognito-idp:*",
+                "Action::s3:Abort*",
                 {
                   "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
+                },
+                {
+                  "regex": "/^Resource::<IconBucket.*\\.Arn>/\\*$/g",
                 },
                 "Resource::*",
               ],
               "id": "AwsSolutions-IAM5",
-              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations",
+              "reason": "DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations, S3 PutObject requires wildcard for object keys",
             },
           ],
         },
@@ -2785,6 +3321,31 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
                 ],
               },
             },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "IconBucketB9D7CB87",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -2856,7 +3417,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "fd125382c8746bf1a8f17bf01f424d80534176b59e7c53f1ed7ca6e87d43564a.zip",
+          "S3Key": "e7cb8863a56f5e8618dda1b71084928f4296089c69d971d46fdf6879f6414067.zip",
         },
         "Environment": {
           "Variables": {
@@ -3891,6 +4452,271 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       },
       "Type": "AWS::Lambda::Permission",
     },
+    "IconBucketB9D7CB87": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": {
+          "Fn::Join": [
+            "",
+            [
+              "vbg-prod-s3-icons-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+            ],
+          ],
+        },
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "*",
+              ],
+              "AllowedMethods": [
+                "PUT",
+              ],
+              "AllowedOrigins": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://",
+                      {
+                        "Fn::GetAtt": [
+                          "WebDistribution59C46482",
+                          "DomainName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
+              ],
+              "MaxAge": 3000,
+            },
+          ],
+        },
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Ref": "LogBucketCC3B17E8",
+          },
+          "LogFilePrefix": "icon-bucket-logs/",
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "IconBucketPolicy6459E7E7": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "IconBucketB9D7CB87",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "IconBucketB9D7CB87",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "IconBucketB9D7CB87",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "s3:GetObject",
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":cloudfront::",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":distribution/",
+                        {
+                          "Ref": "IconDistribution6DC53514",
+                        },
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudfront.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "IconBucketB9D7CB87",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "IconDistribution6DC53514": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CFR1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR4",
+              "is_reason_encoded": true,
+              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "DistributionConfig": {
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+            ],
+            "CachePolicyId": "b2884449-e4de-46a7-ac36-70bc7f1ddd6d",
+            "CachedMethods": [
+              "GET",
+              "HEAD",
+            ],
+            "Compress": true,
+            "TargetOriginId": "TestStackIconDistributionOrigin16D39ADBB",
+            "ViewerProtocolPolicy": "redirect-to-https",
+          },
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Logging": {
+            "Bucket": {
+              "Fn::GetAtt": [
+                "LogBucketCC3B17E8",
+                "RegionalDomainName",
+              ],
+            },
+            "Prefix": "icon-cloudfront-logs/",
+          },
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "IconBucketB9D7CB87",
+                  "RegionalDomainName",
+                ],
+              },
+              "Id": "TestStackIconDistributionOrigin16D39ADBB",
+              "OriginAccessControlId": {
+                "Fn::GetAtt": [
+                  "IconDistributionOrigin1S3OriginAccessControlF92E262D",
+                  "Id",
+                ],
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": "",
+              },
+            },
+          ],
+        },
+      },
+      "Type": "AWS::CloudFront::Distribution",
+    },
+    "IconDistributionOrigin1S3OriginAccessControlF92E262D": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-CFR1",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR2",
+              "is_reason_encoded": true,
+              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
+            },
+            {
+              "id": "AwsSolutions-CFR4",
+              "is_reason_encoded": true,
+              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": "TestStackIconDistributionOrigin1S3OriginAccessControlE34D5ADE",
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4",
+        },
+      },
+      "Type": "AWS::CloudFront::OriginAccessControl",
+    },
     "LogBucketCC3B17E8": {
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -3978,6 +4804,206 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
       },
       "Type": "AWS::S3::BucketPolicy",
+    },
+    "ProfileApiDashboard5942C4E6": {
+      "Properties": {
+        "DashboardBody": {
+          "Fn::Join": [
+            "",
+            [
+              "{"widgets":[{"type":"metric","width":12,"height":6,"x":0,"y":0,"properties":{"view":"timeSeries","title":"Profile API Latency (p50, p95, p99)","region":"",
+              {
+                "Ref": "AWS::Region",
+              },
+              "","metrics":[["AWS/Lambda","Duration","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"p50 Latency","stat":"p50"}],["AWS/Lambda","Duration","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"p95 Latency","stat":"p95"}],["AWS/Lambda","Duration","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"p99 Latency","stat":"p99"}]],"yAxis":{}}},{"type":"metric","width":12,"height":6,"x":12,"y":0,"properties":{"view":"timeSeries","title":"Profile API Error Rates (4xx, 5xx)","region":"",
+              {
+                "Ref": "AWS::Region",
+              },
+              "","metrics":[["AWS/ApiGateway","4XXError","ApiId","",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "",{"label":"4XX Errors","stat":"Sum"}],["AWS/ApiGateway","5XXError","ApiId","",
+              {
+                "Ref": "HttpApiF5A9A8A7",
+              },
+              "",{"label":"5XX Errors","stat":"Sum"}]],"yAxis":{}}},{"type":"metric","width":12,"height":6,"x":0,"y":6,"properties":{"view":"timeSeries","title":"DynamoDB Throttling Events","region":"",
+              {
+                "Ref": "AWS::Region",
+              },
+              "","metrics":[["AWS/DynamoDB","UserErrors","TableName","",
+              {
+                "Ref": "VoteBoardGameTable4368E79C",
+              },
+              "",{"label":"User Errors (Throttling)","stat":"Sum"}],["AWS/DynamoDB","SystemErrors","TableName","",
+              {
+                "Ref": "VoteBoardGameTable4368E79C",
+              },
+              "",{"label":"System Errors","stat":"Sum"}]],"yAxis":{}}},{"type":"metric","width":12,"height":6,"x":12,"y":6,"properties":{"view":"timeSeries","title":"Lambda Errors and Timeouts","region":"",
+              {
+                "Ref": "AWS::Region",
+              },
+              "","metrics":[["AWS/Lambda","Errors","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"Lambda Errors","stat":"Sum"}],["AWS/Lambda","Throttles","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"Lambda Throttles","stat":"Sum"}],["AWS/Lambda","ConcurrentExecutions","FunctionName","",
+              {
+                "Ref": "ApiFunctionCE271BD4",
+              },
+              "",{"label":"Concurrent Executions","stat":"Maximum","yAxis":"right"}]],"yAxis":{}}}]}",
+            ],
+          ],
+        },
+        "DashboardName": "vbg-prod-profile-api-dashboard",
+      },
+      "Type": "AWS::CloudWatch::Dashboard",
+    },
+    "ProfileApiDynamoDbThrottlingAlarm7BAEB497": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "CriticalAlertTopicA6C95D9D",
+          },
+        ],
+        "AlarmDescription": "Profile API の DynamoDB 操作でスロットリングが発生しています",
+        "AlarmName": "vbg-prod-profile-api-dynamodb-throttling",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "TableName",
+            "Value": {
+              "Ref": "VoteBoardGameTable4368E79C",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "UserErrors",
+        "Namespace": "AWS/DynamoDB",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ProfileApiErrorRateAlarm54AFC518": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "CriticalAlertTopicA6C95D9D",
+          },
+        ],
+        "AlarmDescription": "Profile API のエラー率が 5% を超えています",
+        "AlarmName": "vbg-prod-profile-api-error-rate",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 2,
+        "EvaluationPeriods": 2,
+        "Metrics": [
+          {
+            "Expression": "(m1 / m2) * 100",
+            "Id": "expr_1",
+            "Label": "Profile API Error Rate (%)",
+            "ReturnData": true,
+          },
+          {
+            "Id": "m1",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiId",
+                    "Value": {
+                      "Ref": "HttpApiF5A9A8A7",
+                    },
+                  },
+                  {
+                    "Name": "Route",
+                    "Value": "/api/profile",
+                  },
+                ],
+                "MetricName": "5XXError",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiId",
+                    "Value": {
+                      "Ref": "HttpApiF5A9A8A7",
+                    },
+                  },
+                  {
+                    "Name": "Route",
+                    "Value": "/api/profile",
+                  },
+                ],
+                "MetricName": "Count",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 300,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "ProfileApiLatencyAlarm6144B20D": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "CriticalAlertTopicA6C95D9D",
+          },
+        ],
+        "AlarmDescription": "Profile API の p95 レイテンシが 500ms を超えています",
+        "AlarmName": "vbg-prod-profile-api-p95-latency",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "DatapointsToAlarm": 2,
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ApiFunctionCE271BD4",
+            },
+          },
+        ],
+        "EvaluationPeriods": 3,
+        "ExtendedStatistic": "p95",
+        "MetricName": "Duration",
+        "Namespace": "AWS/Lambda",
+        "Period": 300,
+        "Threshold": 500,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
     },
     "SchedulerErrorAlarm02DF039E": {
       "Properties": {

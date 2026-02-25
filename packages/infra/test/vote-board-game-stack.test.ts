@@ -51,11 +51,11 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      // S3 バケットが作成されていることを確認（web + log の2つ）
-      template.resourceCountIs('AWS::S3::Bucket', 2);
+      // S3 バケットが作成されていることを確認（web + log + icon の3つ）
+      template.resourceCountIs('AWS::S3::Bucket', 3);
 
-      // CloudFront Distribution が作成されていることを確認
-      template.resourceCountIs('AWS::CloudFront::Distribution', 1);
+      // CloudFront Distribution が作成されていることを確認（web + icon の2つ）
+      template.resourceCountIs('AWS::CloudFront::Distribution', 2);
     });
 
     it('should create CloudFormation outputs', () => {
@@ -175,10 +175,10 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      template.resourceCountIs('AWS::S3::Bucket', 2); // web + log
+      template.resourceCountIs('AWS::S3::Bucket', 3); // web + log + icon
     });
 
-    it('should have exactly 1 CloudFront distribution', () => {
+    it('should have exactly 2 CloudFront distributions', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
         appName: 'vbg',
@@ -186,7 +186,7 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      template.resourceCountIs('AWS::CloudFront::Distribution', 1);
+      template.resourceCountIs('AWS::CloudFront::Distribution', 2); // web + icon
     });
 
     it('should have exactly 1 Cognito User Pool', () => {

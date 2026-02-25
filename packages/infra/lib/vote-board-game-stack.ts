@@ -59,6 +59,19 @@ export class VoteBoardGameStack extends cdk.Stack {
       enforceSSL: true,
     });
 
+    // S3 バケット (アイコン画像用)
+    const iconBucket = new s3.Bucket(this, 'IconBucket', {
+      bucketName: `${appName}-${environment}-s3-icons-${this.account}`,
+      publicReadAccess: false,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: !isProduction,
+      serverAccessLogsBucket: logBucket,
+      serverAccessLogsPrefix: 'icon-bucket-logs/',
+      enforceSSL: true,
+    });
+
     // CloudFront Distribution
     const distribution = new cloudfront.Distribution(this, 'WebDistribution', {
       defaultBehavior: {
@@ -100,8 +113,51 @@ export class VoteBoardGameStack extends cdk.Stack {
       true
     );
 
+    // CloudFront Distribution for Icon Bucket
+    const iconDistribution = new cloudfront.Distribution(this, 'IconDistribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(iconBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED_FOR_UNCOMPRESSED_OBJECTS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+      },
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+      enableLogging: true,
+      logBucket: logBucket,
+      logFilePrefix: 'icon-cloudfront-logs/',
+    });
+
+    // cdk-nag suppressions for Icon CloudFront
+    NagSuppressions.addResourceSuppressions(
+      iconDistribution,
+      [
+        {
+          id: 'AwsSolutions-CFR1',
+          reason: 'MVP では Geo restriction は不要。将来的に必要に応じて実装。',
+        },
+        {
+          id: 'AwsSolutions-CFR2',
+          reason: 'MVP では WAF は不要。将来的にトラフィック増加時に実装。',
+        },
+        {
+          id: 'AwsSolutions-CFR4',
+          reason: 'デフォルト CloudFront 証明書を使用。カスタムドメイン実装時に ACM 証明書で対応。',
+        },
+      ],
+      true
+    );
+
     // CloudFront のドメイン名を CORS 用に準備
     const frontendOrigin = `https://${distribution.distributionDomainName}`;
+
+    // アイコンバケットにCORS設定を追加
+    iconBucket.addCorsRule({
+      allowedMethods: [s3.HttpMethods.PUT],
+      allowedOrigins: [frontendOrigin],
+      allowedHeaders: ['*'],
+      maxAge: 3000,
+    });
 
     // DynamoDB テーブル (Single Table Design)
     const table = new dynamodb.Table(this, 'VoteBoardGameTable', {
@@ -294,6 +350,8 @@ export class VoteBoardGameStack extends cdk.Stack {
         COGNITO_USER_POOL_ID: userPool.userPoolId,
         COGNITO_CLIENT_ID: userPoolClient.userPoolClientId,
         ALLOWED_ORIGINS: allowedOrigins,
+        ICON_BUCKET_NAME: iconBucket.bucketName,
+        CDN_DOMAIN: iconDistribution.distributionDomainName,
       },
       logGroup: apiLogGroup,
       tracing: lambda.Tracing.ACTIVE,
@@ -310,6 +368,9 @@ export class VoteBoardGameStack extends cdk.Stack {
       'cognito-idp:AdminDeleteUser'
     );
 
+    // Lambda に S3 アイコンバケットへのアクセス権限を付与（Presigned URL生成用）
+    iconBucket.grantPut(apiLambda);
+
     // cdk-nag suppression for ApiLambdaRole/DefaultPolicy wildcard permissions
     NagSuppressions.addResourceSuppressions(
       apiLambdaRole,
@@ -317,11 +378,15 @@ export class VoteBoardGameStack extends cdk.Stack {
         {
           id: 'AwsSolutions-IAM5',
           reason:
-            'DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations',
+            'DynamoDB GSI access requires wildcard for index ARNs, Cognito operations require wildcard for user operations, S3 PutObject requires wildcard for object keys',
           appliesTo: [
             'Action::cognito-idp:*',
+            'Action::s3:Abort*',
             {
               regex: '/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g',
+            },
+            {
+              regex: '/^Resource::<IconBucket.*\\.Arn>/\\*$/g',
             },
             'Resource::*',
           ],
@@ -547,6 +612,128 @@ export class VoteBoardGameStack extends cdk.Stack {
         roleArn: schedulerRole.roleArn,
       },
     });
+
+    // CloudWatch Dashboard for Profile API Monitoring
+    const profileApiDashboard = new cloudwatch.Dashboard(this, 'ProfileApiDashboard', {
+      dashboardName: `${appName}-${environment}-profile-api-dashboard`,
+    });
+
+    // Profile API Latency Metrics (p50, p95, p99)
+    const profileApiLatencyWidget = new cloudwatch.GraphWidget({
+      title: 'Profile API Latency (p50, p95, p99)',
+      left: [
+        apiLambda.metricDuration({
+          statistic: 'p50',
+          label: 'p50 Latency',
+          period: cdk.Duration.minutes(5),
+        }),
+        apiLambda.metricDuration({
+          statistic: 'p95',
+          label: 'p95 Latency',
+          period: cdk.Duration.minutes(5),
+        }),
+        apiLambda.metricDuration({
+          statistic: 'p99',
+          label: 'p99 Latency',
+          period: cdk.Duration.minutes(5),
+        }),
+      ],
+      width: 12,
+    });
+
+    // Profile API Error Rate Metrics (4xx, 5xx)
+    const profileApiErrorRateWidget = new cloudwatch.GraphWidget({
+      title: 'Profile API Error Rates (4xx, 5xx)',
+      left: [
+        new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: '4XXError',
+          dimensionsMap: {
+            ApiId: httpApi.apiId,
+          },
+          statistic: 'Sum',
+          label: '4XX Errors',
+          period: cdk.Duration.minutes(5),
+        }),
+        new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: '5XXError',
+          dimensionsMap: {
+            ApiId: httpApi.apiId,
+          },
+          statistic: 'Sum',
+          label: '5XX Errors',
+          period: cdk.Duration.minutes(5),
+        }),
+      ],
+      width: 12,
+    });
+
+    // DynamoDB Throttling Metrics
+    const dynamodbThrottlingWidget = new cloudwatch.GraphWidget({
+      title: 'DynamoDB Throttling Events',
+      left: [
+        new cloudwatch.Metric({
+          namespace: 'AWS/DynamoDB',
+          metricName: 'UserErrors',
+          dimensionsMap: {
+            TableName: table.tableName,
+          },
+          statistic: 'Sum',
+          label: 'User Errors (Throttling)',
+          period: cdk.Duration.minutes(5),
+        }),
+        new cloudwatch.Metric({
+          namespace: 'AWS/DynamoDB',
+          metricName: 'SystemErrors',
+          dimensionsMap: {
+            TableName: table.tableName,
+          },
+          statistic: 'Sum',
+          label: 'System Errors',
+          period: cdk.Duration.minutes(5),
+        }),
+      ],
+      width: 12,
+    });
+
+    // Lambda Errors and Timeouts
+    const lambdaErrorsWidget = new cloudwatch.GraphWidget({
+      title: 'Lambda Errors and Timeouts',
+      left: [
+        apiLambda.metricErrors({
+          statistic: 'Sum',
+          label: 'Lambda Errors',
+          period: cdk.Duration.minutes(5),
+        }),
+        apiLambda.metricThrottles({
+          statistic: 'Sum',
+          label: 'Lambda Throttles',
+          period: cdk.Duration.minutes(5),
+        }),
+      ],
+      right: [
+        new cloudwatch.Metric({
+          namespace: 'AWS/Lambda',
+          metricName: 'ConcurrentExecutions',
+          dimensionsMap: {
+            FunctionName: apiLambda.functionName,
+          },
+          statistic: 'Maximum',
+          label: 'Concurrent Executions',
+          period: cdk.Duration.minutes(5),
+        }),
+      ],
+      width: 12,
+    });
+
+    // Add widgets to dashboard
+    profileApiDashboard.addWidgets(
+      profileApiLatencyWidget,
+      profileApiErrorRateWidget,
+      dynamodbThrottlingWidget,
+      lambdaErrorsWidget
+    );
 
     // CloudWatch Alarms and Monitoring (Production only)
     if (isProduction) {
@@ -805,6 +992,87 @@ export class VoteBoardGameStack extends cdk.Stack {
       });
       schedulerErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(criticalAlertTopic));
 
+      // 6. Profile API Specific Alarms
+      // Critical: Profile API エラー率が 5% を超えた場合
+      const profileApiErrorRateAlarm = new cloudwatch.Alarm(this, 'ProfileApiErrorRateAlarm', {
+        alarmName: `${appName}-${environment}-profile-api-error-rate`,
+        alarmDescription: 'Profile API のエラー率が 5% を超えています',
+        metric: new cloudwatch.MathExpression({
+          expression: '(m1 / m2) * 100',
+          usingMetrics: {
+            m1: new cloudwatch.Metric({
+              namespace: 'AWS/ApiGateway',
+              metricName: '5XXError',
+              dimensionsMap: {
+                ApiId: httpApi.apiId,
+                Route: '/api/profile',
+              },
+              statistic: 'Sum',
+              period: cdk.Duration.minutes(5),
+            }),
+            m2: new cloudwatch.Metric({
+              namespace: 'AWS/ApiGateway',
+              metricName: 'Count',
+              dimensionsMap: {
+                ApiId: httpApi.apiId,
+                Route: '/api/profile',
+              },
+              statistic: 'Sum',
+              period: cdk.Duration.minutes(5),
+            }),
+          },
+          label: 'Profile API Error Rate (%)',
+        }),
+        threshold: 5,
+        evaluationPeriods: 2,
+        datapointsToAlarm: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      profileApiErrorRateAlarm.addAlarmAction(new cloudwatchActions.SnsAction(criticalAlertTopic));
+
+      // Critical: Profile API p95 レイテンシが 500ms を超えた場合
+      const profileApiLatencyAlarm = new cloudwatch.Alarm(this, 'ProfileApiLatencyAlarm', {
+        alarmName: `${appName}-${environment}-profile-api-p95-latency`,
+        alarmDescription: 'Profile API の p95 レイテンシが 500ms を超えています',
+        metric: apiLambda.metricDuration({
+          statistic: 'p95',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 500,
+        evaluationPeriods: 3,
+        datapointsToAlarm: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+      profileApiLatencyAlarm.addAlarmAction(new cloudwatchActions.SnsAction(criticalAlertTopic));
+
+      // Critical: DynamoDB スロットリングが発生した場合
+      const profileApiDynamoDbThrottlingAlarm = new cloudwatch.Alarm(
+        this,
+        'ProfileApiDynamoDbThrottlingAlarm',
+        {
+          alarmName: `${appName}-${environment}-profile-api-dynamodb-throttling`,
+          alarmDescription: 'Profile API の DynamoDB 操作でスロットリングが発生しています',
+          metric: new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'UserErrors',
+            dimensionsMap: {
+              TableName: table.tableName,
+            },
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 1,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
+      profileApiDynamoDbThrottlingAlarm.addAlarmAction(
+        new cloudwatchActions.SnsAction(criticalAlertTopic)
+      );
+
       // Outputs for SNS Topics
       new cdk.CfnOutput(this, 'CriticalAlertTopicArn', {
         value: criticalAlertTopic.topicArn,
@@ -838,6 +1106,12 @@ export class VoteBoardGameStack extends cdk.Stack {
       exportName: `VoteBoardGameWebBucketName-${environment}`,
     });
 
+    new cdk.CfnOutput(this, 'IconBucketName', {
+      value: iconBucket.bucketName,
+      description: 'アイコン画像用 S3 バケット名',
+      exportName: `VoteBoardGameIconBucketName-${environment}`,
+    });
+
     new cdk.CfnOutput(this, 'DistributionId', {
       value: distribution.distributionId,
       description: 'CloudFront ディストリビューション ID',
@@ -848,6 +1122,18 @@ export class VoteBoardGameStack extends cdk.Stack {
       value: distribution.distributionDomainName,
       description: 'CloudFront ドメイン名',
       exportName: `VoteBoardGameDistributionDomain-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'IconDistributionId', {
+      value: iconDistribution.distributionId,
+      description: 'Icon CloudFront ディストリビューション ID',
+      exportName: `VoteBoardGameIconDistributionId-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'IconDistributionDomainName', {
+      value: iconDistribution.distributionDomainName,
+      description: 'Icon CloudFront ドメイン名',
+      exportName: `VoteBoardGameIconDistributionDomain-${environment}`,
     });
 
     new cdk.CfnOutput(this, 'Environment', {
@@ -913,6 +1199,12 @@ export class VoteBoardGameStack extends cdk.Stack {
       value: schedule.name!,
       description: 'EventBridge Scheduler 名',
       exportName: `VoteBoardGameScheduleName-${environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'ProfileApiDashboardName', {
+      value: profileApiDashboard.dashboardName,
+      description: 'Profile API CloudWatch Dashboard 名',
+      exportName: `VoteBoardGameProfileApiDashboardName-${environment}`,
     });
   }
 }
