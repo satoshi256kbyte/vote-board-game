@@ -12,7 +12,7 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
   - Export DIRECTIONS constant with all 8 direction vectors
   - _Requirements: 1.1, 2.4, 9.1, 9.2, 9.3, 9.4, 10.2, 10.3, 10.4_
 
-- [-] 2. Implement board initialization and basic operations
+- [x] 2. Implement board initialization and basic operations
   - [x] 2.1 Implement board module (board.ts)
     - Write `createInitialBoard()` to create 8x8 board with standard Othello starting position
     - Write `getCellState()`, `setCellState()`, `isValidPosition()` helper functions
@@ -33,8 +33,8 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
     - Use fast-check with numRuns: 100
     - _File: board.property.test.ts_
 
-- [~] 3. Implement move validation logic
-  - [~] 3.1 Implement validation module (validation.ts)
+- [-] 3. Implement move validation logic
+  - [x] 3.1 Implement validation module (validation.ts)
     - Write `checkDirection()` to find flippable discs in a single direction
     - Write `findFlippedPositions()` to check all 8 directions
     - Write `validateMove()` to determine if a move is legal
