@@ -113,7 +113,7 @@ export function RegisterForm() {
 
     const success = await register(email, password);
     if (success) {
-      router.push('/');
+      router.push('/email-verification');
     }
   };
 
