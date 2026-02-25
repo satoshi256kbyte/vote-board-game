@@ -57,7 +57,7 @@
     - _要件: 6.1, 6.2, 6.3, 6.4, 17.3_
 
 - [ ] 3. プロフィール表示画面の実装
-  - [~] 3.1 ProfileViewコンポーネントを実装
+  - [x] 3.1 ProfileViewコンポーネントを実装
     - `packages/web/src/components/profile/profile-view.tsx`を作成
     - useProfileフックを使用してプロフィール情報を取得
     - ユーザー名、メールアドレス、アイコン画像を表示
@@ -65,7 +65,7 @@
     - Next.js Imageコンポーネントを使用して画像を最適化
     - _要件: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 11.1, 11.3, 15.1, 15.2, 15.3, 17.1, 17.2_
 
-  - [~] 3.2 ProfileViewコンポーネントのユニットテストを作成
+  - [x] 3.2 ProfileViewコンポーネントのユニットテストを作成
     - `packages/web/src/components/profile/profile-view.test.tsx`を作成
     - ローディング状態、プロフィール表示、エラー表示、再読み込みボタンをテスト
     - React Testing Libraryを使用
