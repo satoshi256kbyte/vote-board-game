@@ -19,14 +19,14 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
     - Write `getEmptyPositions()`, `countDiscs()`, `isBoardFull()` utility functions
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 6.2, 7.1, 7.2_
 
-  - [~] 2.2 Write unit tests for board module (board.test.ts)
+  - [x] 2.2 Write unit tests for board module (board.test.ts)
     - Test initial board configuration matches Othello rules
     - Test cell state getters and setters
     - Test position validation for valid and invalid coordinates
     - Test empty position detection and disc counting
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
 
-  - [~] 2.3 Write property test for board initialization
+  - [x] 2.3 Write property test for board initialization
     - **Property 1: Board initialization creates correct structure**
     - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.6**
     - Test that createInitialBoard() always produces 8x8 board with exactly 4 discs in correct positions
