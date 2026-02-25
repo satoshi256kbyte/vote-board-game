@@ -30,13 +30,13 @@
     - プロフィール取得、ローディング状態、エラー状態、再取得機能を実装
     - _要件: 1.1, 3.1, 11.1, 11.3, 17.1, 17.2_
 
-  - [~] 2.2 useProfileフックのユニットテストを作成
+  - [x] 2.2 useProfileフックのユニットテストを作成
     - `packages/web/src/lib/hooks/use-profile.test.ts`を作成
     - renderHookを使用してフックの動作をテスト
     - ローディング状態、成功時、エラー時の挙動をテスト
     - _要件: 1.1, 11.1, 17.1_
 
-  - [~] 2.3 useProfileUpdateフックを実装
+  - [x] 2.3 useProfileUpdateフックを実装
     - `packages/web/src/lib/hooks/use-profile-update.ts`を作成
     - プロフィール更新、ローディング状態、エラー状態を実装
     - _要件: 7.1, 7.2, 7.3, 7.4, 8.1, 9.1, 9.2, 9.3, 9.4, 9.5_
