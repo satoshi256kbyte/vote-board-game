@@ -12,7 +12,7 @@
     - Profile、ProfileUpdateData、UploadUrlResponse型を定義
     - _要件: 1.1, 1.2, 1.3, 1.4, 3.1, 3.2_
 
-  - [~] 1.2 プロフィールサービスを実装
+  - [x] 1.2 プロフィールサービスを実装
     - `packages/web/src/lib/services/profile-service.ts`を作成
     - getProfile、updateProfile、getUploadUrlメソッドを実装
     - エラーハンドリング（401、400、500、ネットワークエラー）を実装
