@@ -149,7 +149,7 @@
     - _Requirements: 1.1, 2.1, 2.4, 3.1, 3.13, 5.2, 5.3, 5.4_
 
 - [ ] 6. メインアプリケーションへの統合
-  - [~] 6.1 Honoアプリにゲームルートを追加
+  - [x] 6.1 Honoアプリにゲームルートを追加
     - `packages/api/src/index.ts` を更新
     - games ルーターを `/api/games` パスにマウント
     - _Requirements: 1.1, 2.1, 3.1_
