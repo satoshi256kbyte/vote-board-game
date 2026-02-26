@@ -15,7 +15,7 @@
     - GetGameResponse, CreateGameRequest, CreateGameResponse 型を定義
     - _Requirements: 1.10, 2.5, 3.1_
 
-  - [~] 1.2 Zodバリデーションスキーマを作成
+  - [x] 1.2 Zodバリデーションスキーマを作成
     - `packages/api/src/schemas/game.ts` を作成
     - getGamesQuerySchema (status, limit, cursor) を定義
     - createGameSchema (gameType, aiSide) を定義
