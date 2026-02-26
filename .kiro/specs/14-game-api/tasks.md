@@ -27,7 +27,7 @@
     - **Validates: Requirements 5.1, 6.5**
 
 - [ ] 2. GameServiceの実装
-  - [~] 2.1 GameServiceクラスの基本構造を作成
+  - [x] 2.1 GameServiceクラスの基本構造を作成
     - `packages/api/src/services/game.ts` を作成
     - GameRepository と Othello Logic への依存を注入
     - listGames, getGame, createGame, checkAndFinishGame メソッドのスケルトンを定義
