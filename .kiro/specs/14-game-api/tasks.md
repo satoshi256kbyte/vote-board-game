@@ -133,7 +133,7 @@
     - 500 INTERNAL_ERROR エラーハンドリング
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [~] 5.4 POST /api/games エンドポイントを実装
+  - [x] 5.4 POST /api/games エンドポイントを実装
     - zValidator で createGameSchema を適用
     - GameService.createGame() を呼び出し
     - 201 Created レスポンスを返す
