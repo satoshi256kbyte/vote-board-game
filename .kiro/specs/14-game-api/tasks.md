@@ -125,7 +125,7 @@
     - エラーハンドリング (500 INTERNAL_ERROR)
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10_
 
-  - [~] 5.3 GET /api/games/:gameId エンドポイントを実装
+  - [x] 5.3 GET /api/games/:gameId エンドポイントを実装
     - zValidator で gameIdParamSchema を適用
     - GameService.getGame() を呼び出し
     - 200 OK レスポンスを返す
