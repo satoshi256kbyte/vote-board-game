@@ -8,7 +8,7 @@
 
 ## Tasks
 
-- [ ] 1. 型定義とバリデーションスキーマの作成
+- [x] 1. 型定義とバリデーションスキーマの作成
   - [x] 1.1 リクエスト/レスポンス型を定義
     - `packages/api/src/types/game.ts` を作成
     - GetGamesQuery, GetGamesResponse, GameSummary 型を定義
@@ -26,7 +26,7 @@
     - **Property 18: Error Responses Have Required Structure**
     - **Validates: Requirements 5.1, 6.5**
 
-- [ ] 2. GameServiceの実装
+- [x] 2. GameServiceの実装
   - [x] 2.1 GameServiceクラスの基本構造を作成
     - `packages/api/src/services/game.ts` を作成
     - GameRepository と Othello Logic への依存を注入
@@ -95,7 +95,7 @@
   - すべてのプロパティテストとユニットテストが通ることを確認
   - 問題があればユーザーに質問
 
-- [ ] 4. GameRepositoryの拡張（必要に応じて）
+- [x] 4. GameRepositoryの拡張（必要に応じて）
   - [x] 4.1 既存のGameRepositoryを確認
     - `packages/api/src/lib/dynamodb/repositories/game.ts` を確認
     - 必要なメソッド (create, getById, listByStatus, finish) が存在するか確認
@@ -111,7 +111,7 @@
     - **Property 19: BoardState Round-Trip Preserves Data**
     - **Validates: Requirements 6.6, 6.7**
 
-- [ ] 5. APIルートの実装
+- [x] 5. APIルートの実装
   - [x] 5.1 Honoルーターを作成
     - `packages/api/src/routes/games.ts` を作成
     - Hono Router インスタンスを作成
@@ -148,7 +148,7 @@
     - POST /api/games の正常系とエラー系をテスト
     - _Requirements: 1.1, 2.1, 2.4, 3.1, 3.13, 5.2, 5.3, 5.4_
 
-- [ ] 6. メインアプリケーションへの統合
+- [x] 6. メインアプリケーションへの統合
   - [x] 6.1 Honoアプリにゲームルートを追加
     - `packages/api/src/index.ts` を更新
     - games ルーターを `/api/games` パスにマウント
@@ -167,7 +167,7 @@
     - DynamoDB クライアントの設定を確認
     - _Requirements: 1.1, 2.1, 3.1, 4.1_
 
-- [ ] 7. 統合テストの作成
+- [x] 7. 統合テストの作成
   - [x] 7.1 DynamoDB Local を使用した統合テストを作成
     - `packages/api/src/routes/games.integration.test.ts` を作成
     - テストテーブルの作成とクリーンアップ
