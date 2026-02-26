@@ -49,8 +49,8 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
             createdAt: fc
-              .date({ min: new Date('2024-01-01'), max: new Date() })
-              .map((d) => d.toISOString()),
+              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
+              .map((timestamp) => new Date(timestamp).toISOString()),
           }),
           { minLength: 0, maxLength: 50 }
         ),
@@ -105,8 +105,8 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
             createdAt: fc
-              .date({ min: new Date('2024-01-01'), max: new Date() })
-              .map((d) => d.toISOString()),
+              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
+              .map((timestamp) => new Date(timestamp).toISOString()),
           }),
           { minLength: 0, maxLength: 150 }
         ),
@@ -158,8 +158,8 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
             createdAt: fc
-              .date({ min: new Date('2024-01-01'), max: new Date() })
-              .map((d) => d.toISOString()),
+              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
+              .map((timestamp) => new Date(timestamp).toISOString()),
           }),
           { minLength: 5, maxLength: 30 }
         ),
@@ -244,8 +244,8 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
             createdAt: fc
-              .date({ min: new Date('2024-01-01'), max: new Date() })
-              .map((d) => d.toISOString()),
+              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
+              .map((timestamp) => new Date(timestamp).toISOString()),
           }),
           { minLength: 2, maxLength: 20 }
         ),
@@ -363,8 +363,8 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             currentTurn: fc.nat({ max: 100 }),
             winner: fc.option(fc.constantFrom('AI', 'COLLECTIVE', 'DRAW'), { nil: undefined }),
             createdAt: fc
-              .date({ min: new Date('2024-01-01'), max: new Date() })
-              .map((d) => d.toISOString()),
+              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
+              .map((timestamp) => new Date(timestamp).toISOString()),
           }),
           { minLength: 1, maxLength: 10 }
         ),

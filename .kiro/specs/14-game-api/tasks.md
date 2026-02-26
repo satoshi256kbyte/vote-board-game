@@ -64,13 +64,13 @@
     - **Property 6: List Response Contains Required Fields**
     - **Validates: Requirements 1.2, 1.4, 1.7, 1.8, 1.9, 1.10**
 
-  - [~] 2.6 getGameメソッドを実装
+  - [x] 2.6 getGameメソッドを実装
     - GameRepository.getById() でゲームを取得
     - 存在しない場合は null を返す
     - boardState を JSON からオブジェクトにパース
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [~] 2.7 ゲーム詳細取得のプロパティテストを作成
+  - [x] 2.7 ゲーム詳細取得のプロパティテストを作成
     - **Property 7: Detail Response BoardState Is Object**
     - **Property 8: Detail Response Contains Required Fields**
     - **Validates: Requirements 2.3, 2.5**
