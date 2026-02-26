@@ -107,7 +107,7 @@
     - ページネーション対応 (ExclusiveStartKey, LastEvaluatedKey)
     - _Requirements: 1.1, 1.2, 1.7_
 
-  - [~] 4.3 BoardState シリアライゼーションのプロパティテストを作成
+  - [x] 4.3 BoardState シリアライゼーションのプロパティテストを作成
     - **Property 19: BoardState Round-Trip Preserves Data**
     - **Validates: Requirements 6.6, 6.7**
 

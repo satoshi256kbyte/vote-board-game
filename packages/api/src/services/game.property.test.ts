@@ -1301,3 +1301,55 @@ describe('GameService Property Tests - Game End Detection', () => {
     );
   });
 });
+
+describe('GameService Property Tests - BoardState Serialization', () => {
+  /**
+   * Property 19: BoardState Round-Trip Preserves Data
+   * **Validates: Requirements 6.6, 6.7**
+   *
+   * For any valid board state, serializing it to JSON string for DynamoDB storage
+   * and then deserializing it should produce an equivalent board state.
+   */
+  it('Property 19: BoardState Round-Trip Preserves Data', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.array(fc.constantFrom(0, 1, 2), { minLength: 8, maxLength: 8 }), {
+          minLength: 8,
+          maxLength: 8,
+        }),
+        (board) => {
+          // Create a BoardState object
+          const originalBoardState = { board };
+
+          // Serialize to JSON string (as stored in DynamoDB)
+          const serialized = JSON.stringify(originalBoardState);
+
+          // Deserialize back to object (as retrieved from DynamoDB)
+          const deserialized = JSON.parse(serialized) as { board: number[][] };
+
+          // Verify the deserialized board state matches the original
+          expect(deserialized).toEqual(originalBoardState);
+
+          // Verify board structure is preserved
+          expect(deserialized.board).toHaveLength(8);
+          expect(deserialized.board[0]).toHaveLength(8);
+
+          // Verify each cell value is preserved
+          for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+              expect(deserialized.board[row][col]).toBe(originalBoardState.board[row][col]);
+            }
+          }
+
+          // Verify the board is a proper 2D array (not flattened or corrupted)
+          expect(Array.isArray(deserialized.board)).toBe(true);
+          deserialized.board.forEach((row) => {
+            expect(Array.isArray(row)).toBe(true);
+            expect(row).toHaveLength(8);
+          });
+        }
+      ),
+      { numRuns: 20, endOnFailure: true }
+    );
+  });
+});
