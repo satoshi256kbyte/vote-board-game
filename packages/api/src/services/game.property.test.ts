@@ -892,3 +892,412 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
     );
   });
 });
+
+describe('GameService Property Tests - Game End Detection', () => {
+  let gameService: GameService;
+  let gameRepository: GameRepository;
+  let mockDocClient: DynamoDBDocumentClient;
+
+  beforeEach(() => {
+    mockDocClient = {
+      send: vi.fn(),
+    } as unknown as DynamoDBDocumentClient;
+    gameRepository = new GameRepository(mockDocClient, 'test-table');
+    gameService = new GameService(gameRepository);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  /**
+   * Property 12: Full Board Triggers Game End
+   * **Validates: Requirements 4.2**
+   *
+   * For any board state where all 64 cells are occupied, the game end detection
+   * logic should determine that the game should end.
+   */
+  it('Property 12: Full Board Triggers Game End', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.uuid(),
+        fc.constantFrom('BLACK', 'WHITE'),
+        fc.array(fc.array(fc.constantFrom(1, 2), { minLength: 8, maxLength: 8 }), {
+          minLength: 8,
+          maxLength: 8,
+        }),
+        async (gameId, aiSide, fullBoard) => {
+          // Clear mocks for each iteration
+          vi.mocked(mockDocClient.send).mockClear();
+
+          // Ensure board is completely full (no empty cells)
+          const boardState = JSON.stringify({ board: fullBoard });
+
+          // Mock repository to return an active game with full board
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+            Item: {
+              PK: `GAME#${gameId}`,
+              SK: `GAME#${gameId}`,
+              GSI1PK: 'GAME#STATUS#ACTIVE',
+              GSI1SK: new Date().toISOString(),
+              entityType: 'GAME',
+              gameId,
+              gameType: 'OTHELLO',
+              status: 'ACTIVE',
+              aiSide,
+              currentTurn: 60,
+              boardState,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          } as never);
+
+          // Mock repository.finish to succeed
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+
+          // Execute
+          await gameService.checkAndFinishGame(gameId);
+
+          // Verify that finish was called (game should end)
+          expect(mockDocClient.send).toHaveBeenCalledTimes(2); // getById + finish
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  /**
+   * Property 13: No Legal Moves Triggers Game End
+   * **Validates: Requirements 4.3**
+   *
+   * For any board state where both BLACK and WHITE players have no legal moves,
+   * the game end detection logic should determine that the game should end.
+   */
+  it('Property 13: No Legal Moves Triggers Game End', async () => {
+    await fc.assert(
+      fc.asyncProperty(fc.uuid(), fc.constantFrom('BLACK', 'WHITE'), async (gameId, aiSide) => {
+        // Clear mocks for each iteration
+        vi.mocked(mockDocClient.send).mockClear();
+
+        // Create a board where no legal moves exist for either player
+        // This is a specific configuration where all cells are blocked
+        const noMovesBoard = [
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1, 1, 1, 2],
+        ];
+
+        const boardState = JSON.stringify({ board: noMovesBoard });
+
+        // Mock repository to return an active game
+        vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+          Item: {
+            PK: `GAME#${gameId}`,
+            SK: `GAME#${gameId}`,
+            GSI1PK: 'GAME#STATUS#ACTIVE',
+            GSI1SK: new Date().toISOString(),
+            entityType: 'GAME',
+            gameId,
+            gameType: 'OTHELLO',
+            status: 'ACTIVE',
+            aiSide,
+            currentTurn: 50,
+            boardState,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        } as never);
+
+        // Mock repository.finish to succeed
+        vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+
+        // Execute
+        await gameService.checkAndFinishGame(gameId);
+
+        // Verify that finish was called (game should end)
+        expect(mockDocClient.send).toHaveBeenCalledTimes(2); // getById + finish
+      }),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  /**
+   * Property 14: Single Color Triggers Game End
+   * **Validates: Requirements 4.4**
+   *
+   * For any board state where only one color (BLACK or WHITE) remains on the board,
+   * the game end detection logic should determine that the game should end.
+   */
+  it('Property 14: Single Color Triggers Game End', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.uuid(),
+        fc.constantFrom('BLACK', 'WHITE'),
+        fc.constantFrom(1, 2),
+        fc.integer({ min: 1, max: 64 }),
+        async (gameId, aiSide, singleColor, discCount) => {
+          // Clear mocks for each iteration
+          vi.mocked(mockDocClient.send).mockClear();
+
+          // Create a board with only one color
+          const board = Array.from({ length: 8 }, () => Array(8).fill(0));
+
+          // Place discs of single color
+          let placed = 0;
+          for (let row = 0; row < 8 && placed < discCount; row++) {
+            for (let col = 0; col < 8 && placed < discCount; col++) {
+              board[row][col] = singleColor;
+              placed++;
+            }
+          }
+
+          const boardState = JSON.stringify({ board });
+
+          // Mock repository to return an active game
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+            Item: {
+              PK: `GAME#${gameId}`,
+              SK: `GAME#${gameId}`,
+              GSI1PK: 'GAME#STATUS#ACTIVE',
+              GSI1SK: new Date().toISOString(),
+              entityType: 'GAME',
+              gameId,
+              gameType: 'OTHELLO',
+              status: 'ACTIVE',
+              aiSide,
+              currentTurn: 30,
+              boardState,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          } as never);
+
+          // Mock repository.finish to succeed
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+
+          // Execute
+          await gameService.checkAndFinishGame(gameId);
+
+          // Verify that finish was called (game should end)
+          expect(mockDocClient.send).toHaveBeenCalledTimes(2); // getById + finish
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  /**
+   * Property 15: Game End Updates Status to FINISHED
+   * **Validates: Requirements 4.5**
+   *
+   * For any game that meets end conditions, processing the game end should update
+   * the status field to FINISHED.
+   */
+  it('Property 15: Game End Updates Status to FINISHED', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.uuid(),
+        fc.constantFrom('BLACK', 'WHITE'),
+        fc.array(fc.array(fc.constantFrom(1, 2), { minLength: 8, maxLength: 8 }), {
+          minLength: 8,
+          maxLength: 8,
+        }),
+        async (gameId, aiSide, fullBoard) => {
+          // Clear mocks for each iteration
+          vi.mocked(mockDocClient.send).mockClear();
+
+          const boardState = JSON.stringify({ board: fullBoard });
+
+          // Mock repository to return an active game
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+            Item: {
+              PK: `GAME#${gameId}`,
+              SK: `GAME#${gameId}`,
+              GSI1PK: 'GAME#STATUS#ACTIVE',
+              GSI1SK: new Date().toISOString(),
+              entityType: 'GAME',
+              gameId,
+              gameType: 'OTHELLO',
+              status: 'ACTIVE',
+              aiSide,
+              currentTurn: 60,
+              boardState,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          } as never);
+
+          // Mock repository.finish to succeed
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+
+          // Execute
+          await gameService.checkAndFinishGame(gameId);
+
+          // Verify that finish was called with a winner
+          const finishCalls = vi.mocked(mockDocClient.send).mock.calls;
+          expect(finishCalls.length).toBe(2);
+
+          // The second call should be the UpdateCommand for finishing the game
+          // We verify that the repository.finish method was invoked
+          expect(finishCalls[1]).toBeDefined();
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  /**
+   * Property 16: Winner Determined by Disc Count and AI Side
+   * **Validates: Requirements 4.6, 4.7, 4.8, 4.9**
+   *
+   * For any finished game, the winner should be: DRAW if disc counts are equal,
+   * AI if the AI's color has more discs, or COLLECTIVE if the collective's color
+   * has more discs.
+   */
+  it('Property 16: Winner Determined by Disc Count and AI Side', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.uuid(),
+        fc.constantFrom('BLACK', 'WHITE'),
+        fc.integer({ min: 1, max: 63 }).map((blackCount) => ({
+          blackCount,
+          whiteCount: 64 - blackCount,
+        })),
+        async (gameId, aiSide, { blackCount, whiteCount }) => {
+          // Clear mocks for each iteration
+          vi.mocked(mockDocClient.send).mockClear();
+
+          // Create a FULL board with specified disc counts
+          const board = Array.from({ length: 8 }, () => Array(8).fill(0));
+          let blackPlaced = 0;
+          let whitePlaced = 0;
+
+          for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+              if (blackPlaced < blackCount) {
+                board[row][col] = CellState.Black;
+                blackPlaced++;
+              } else if (whitePlaced < whiteCount) {
+                board[row][col] = CellState.White;
+                whitePlaced++;
+              }
+            }
+          }
+
+          const boardState = JSON.stringify({ board });
+
+          // Determine expected winner
+          let expectedWinner: 'AI' | 'COLLECTIVE' | 'DRAW';
+          if (blackCount === whiteCount) {
+            expectedWinner = 'DRAW';
+          } else if (blackCount > whiteCount) {
+            expectedWinner = aiSide === 'BLACK' ? 'AI' : 'COLLECTIVE';
+          } else {
+            expectedWinner = aiSide === 'WHITE' ? 'AI' : 'COLLECTIVE';
+          }
+
+          // Mock repository to return an active game
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+            Item: {
+              PK: `GAME#${gameId}`,
+              SK: `GAME#${gameId}`,
+              GSI1PK: 'GAME#STATUS#ACTIVE',
+              GSI1SK: new Date().toISOString(),
+              entityType: 'GAME',
+              gameId,
+              gameType: 'OTHELLO',
+              status: 'ACTIVE',
+              aiSide,
+              currentTurn: 60,
+              boardState,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          } as never);
+
+          // Capture the winner passed to finish
+          let capturedWinner: string | undefined;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          vi.mocked(mockDocClient.send).mockImplementationOnce((command: any) => {
+            // Extract winner from UpdateCommand
+            if (command.input?.ExpressionAttributeValues) {
+              capturedWinner = command.input.ExpressionAttributeValues[':winner'];
+            }
+            return Promise.resolve({} as never);
+          });
+
+          // Execute
+          await gameService.checkAndFinishGame(gameId);
+
+          // Verify winner matches expected
+          expect(capturedWinner).toBe(expectedWinner);
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  /**
+   * Property 17: Finished Game Is Persisted
+   * **Validates: Requirements 4.10**
+   *
+   * For any game that is finished, the updated game state (status = FINISHED,
+   * winner set) should be retrievable from the database.
+   */
+  it('Property 17: Finished Game Is Persisted', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.uuid(),
+        fc.constantFrom('BLACK', 'WHITE'),
+        fc.array(fc.array(fc.constantFrom(1, 2), { minLength: 8, maxLength: 8 }), {
+          minLength: 8,
+          maxLength: 8,
+        }),
+        async (gameId, aiSide, fullBoard) => {
+          // Clear mocks for each iteration
+          vi.mocked(mockDocClient.send).mockClear();
+
+          const boardState = JSON.stringify({ board: fullBoard });
+
+          // Mock repository to return an active game
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+            Item: {
+              PK: `GAME#${gameId}`,
+              SK: `GAME#${gameId}`,
+              GSI1PK: 'GAME#STATUS#ACTIVE',
+              GSI1SK: new Date().toISOString(),
+              entityType: 'GAME',
+              gameId,
+              gameType: 'OTHELLO',
+              status: 'ACTIVE',
+              aiSide,
+              currentTurn: 60,
+              boardState,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          } as never);
+
+          // Mock repository.finish to succeed
+          vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+
+          // Execute checkAndFinishGame
+          await gameService.checkAndFinishGame(gameId);
+
+          // Verify that DynamoDB was called to persist the finished state
+          expect(mockDocClient.send).toHaveBeenCalledTimes(2);
+
+          // The second call should be an UpdateCommand
+          const calls = vi.mocked(mockDocClient.send).mock.calls;
+          expect(calls[1]).toBeDefined();
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});

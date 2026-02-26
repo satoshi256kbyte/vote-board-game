@@ -82,7 +82,7 @@
     - GameRepository.finish() でステータスと勝者を更新
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10_
 
-  - [~] 2.9 ゲーム終了検知のプロパティテストを作成
+  - [x] 2.9 ゲーム終了検知のプロパティテストを作成
     - **Property 12: Full Board Triggers Game End**
     - **Property 13: No Legal Moves Triggers Game End**
     - **Property 14: Single Color Triggers Game End**
@@ -91,7 +91,7 @@
     - **Property 17: Finished Game Is Persisted**
     - **Validates: Requirements 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10**
 
-- [~] 3. Checkpoint - サービス層のテストを実行
+- [x] 3. Checkpoint - サービス層のテストを実行
   - すべてのプロパティテストとユニットテストが通ることを確認
   - 問題があればユーザーに質問
 
