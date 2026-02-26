@@ -75,7 +75,7 @@
     - **Property 8: Detail Response Contains Required Fields**
     - **Validates: Requirements 2.3, 2.5**
 
-  - [~] 2.8 ゲーム終了検知ロジックを実装
+  - [x] 2.8 ゲーム終了検知ロジックを実装
     - checkAndFinishGame メソッドを実装
     - shouldEndGame() でゲーム終了を判定
     - determineWinner() で勝者を決定 (ディスク数をカウント)

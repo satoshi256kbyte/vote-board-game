@@ -50,7 +50,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             currentTurn: fc.nat({ max: 100 }),
             createdAt: fc
               .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+              .map((d) => d.toISOString()),
           }),
           { minLength: 0, maxLength: 50 }
         ),
@@ -106,7 +106,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             currentTurn: fc.nat({ max: 100 }),
             createdAt: fc
               .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+              .map((d) => d.toISOString()),
           }),
           { minLength: 0, maxLength: 150 }
         ),
@@ -159,7 +159,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             currentTurn: fc.nat({ max: 100 }),
             createdAt: fc
               .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+              .map((d) => d.toISOString()),
           }),
           { minLength: 5, maxLength: 30 }
         ),
@@ -245,7 +245,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             currentTurn: fc.nat({ max: 100 }),
             createdAt: fc
               .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+              .map((d) => d.toISOString()),
           }),
           { minLength: 2, maxLength: 20 }
         ),
@@ -364,7 +364,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             winner: fc.option(fc.constantFrom('AI', 'COLLECTIVE', 'DRAW'), { nil: undefined }),
             createdAt: fc
               .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+              .map((d) => d.toISOString()),
           }),
           { minLength: 1, maxLength: 10 }
         ),
@@ -410,176 +410,6 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             expect(typeof game.createdAt).toBe('string');
             expect(typeof game.updatedAt).toBe('string');
           });
-        }
-      ),
-      { numRuns: 20, endOnFailure: true }
-    );
-  });
-});
-
-describe('GameService Property Tests - Game Detail Retrieval', () => {
-  let gameService: GameService;
-  let gameRepository: GameRepository;
-  let mockDocClient: DynamoDBDocumentClient;
-
-  beforeEach(() => {
-    mockDocClient = {
-      send: vi.fn(),
-    } as unknown as DynamoDBDocumentClient;
-    gameRepository = new GameRepository(mockDocClient, 'test-table');
-    gameService = new GameService(gameRepository);
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  /**
-   * Property 7: Detail Response BoardState Is Object
-   * **Validates: Requirements 2.3**
-   *
-   * For any game retrieved by the detail endpoint, the boardState field should be
-   * a parsed object (not a JSON string) containing a board array.
-   */
-  it('Property 7: Detail Response BoardState Is Object', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.uuid(),
-        fc.constantFrom('OTHELLO' as const),
-        fc.constantFrom('ACTIVE', 'FINISHED'),
-        fc.constantFrom('BLACK', 'WHITE'),
-        fc.nat({ max: 100 }),
-        fc.array(fc.array(fc.constantFrom(0, 1, 2), { minLength: 8, maxLength: 8 }), {
-          minLength: 8,
-          maxLength: 8,
-        }),
-        async (gameId, gameType, status, aiSide, currentTurn, board) => {
-          // Mock repository response with boardState as JSON string
-          const boardStateJson = JSON.stringify({ board });
-          vi.mocked(mockDocClient.send).mockResolvedValue({
-            Item: {
-              PK: `GAME#${gameId}`,
-              SK: `GAME#${gameId}`,
-              GSI1PK: `GAME#STATUS#${status}`,
-              GSI1SK: new Date().toISOString(),
-              entityType: 'GAME',
-              gameId,
-              gameType,
-              status,
-              aiSide,
-              currentTurn,
-              boardState: boardStateJson, // Stored as JSON string
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-          } as never);
-
-          // Execute
-          const result = await gameService.getGame(gameId);
-
-          // Verify boardState is an object, not a string
-          expect(result).not.toBeNull();
-          expect(result!.boardState).toBeDefined();
-          expect(typeof result!.boardState).toBe('object');
-          expect(typeof result!.boardState).not.toBe('string');
-
-          // Verify boardState has board property
-          expect(result!.boardState).toHaveProperty('board');
-          expect(Array.isArray(result!.boardState.board)).toBe(true);
-
-          // Verify board dimensions
-          expect(result!.boardState.board).toHaveLength(8);
-          expect(result!.boardState.board[0]).toHaveLength(8);
-        }
-      ),
-      { numRuns: 20, endOnFailure: true }
-    );
-  });
-
-  /**
-   * Property 8: Detail Response Contains Required Fields
-   * **Validates: Requirements 2.5**
-   *
-   * For any game returned in the detail endpoint, the response object should contain
-   * all required fields: gameId, gameType, status, aiSide, currentTurn, boardState,
-   * winner, createdAt, and updatedAt.
-   */
-  it('Property 8: Detail Response Contains Required Fields', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.record({
-          gameId: fc.uuid(),
-          gameType: fc.constant('OTHELLO' as const),
-          status: fc.constantFrom('ACTIVE', 'FINISHED'),
-          aiSide: fc.constantFrom('BLACK', 'WHITE'),
-          currentTurn: fc.nat({ max: 100 }),
-          winner: fc.option(fc.constantFrom('AI', 'COLLECTIVE', 'DRAW'), { nil: undefined }),
-          board: fc.array(fc.array(fc.constantFrom(0, 1, 2), { minLength: 8, maxLength: 8 }), {
-            minLength: 8,
-            maxLength: 8,
-          }),
-          createdAt: fc
-            .date({ min: new Date('2024-01-01'), max: new Date() })
-            .map((d) => d.toISOString()),
-        }),
-        async (gameData) => {
-          // Mock repository response
-          const boardStateJson = JSON.stringify({ board: gameData.board });
-          vi.mocked(mockDocClient.send).mockResolvedValue({
-            Item: {
-              PK: `GAME#${gameData.gameId}`,
-              SK: `GAME#${gameData.gameId}`,
-              GSI1PK: `GAME#STATUS#${gameData.status}`,
-              GSI1SK: gameData.createdAt,
-              entityType: 'GAME',
-              gameId: gameData.gameId,
-              gameType: gameData.gameType,
-              status: gameData.status,
-              aiSide: gameData.aiSide,
-              currentTurn: gameData.currentTurn,
-              boardState: boardStateJson,
-              winner: gameData.winner,
-              createdAt: gameData.createdAt,
-              updatedAt: gameData.createdAt,
-            },
-          } as never);
-
-          // Execute
-          const result = await gameService.getGame(gameData.gameId);
-
-          // Verify result is not null
-          expect(result).not.toBeNull();
-
-          // Verify all required fields are present
-          expect(result).toHaveProperty('gameId');
-          expect(result).toHaveProperty('gameType');
-          expect(result).toHaveProperty('status');
-          expect(result).toHaveProperty('aiSide');
-          expect(result).toHaveProperty('currentTurn');
-          expect(result).toHaveProperty('boardState');
-          expect(result).toHaveProperty('createdAt');
-          expect(result).toHaveProperty('updatedAt');
-          // winner is optional, but the property should exist
-          expect('winner' in result!).toBe(true);
-
-          // Verify field types
-          expect(typeof result!.gameId).toBe('string');
-          expect(typeof result!.gameType).toBe('string');
-          expect(typeof result!.status).toBe('string');
-          expect(typeof result!.aiSide).toBe('string');
-          expect(typeof result!.currentTurn).toBe('number');
-          expect(typeof result!.boardState).toBe('object');
-          expect(typeof result!.createdAt).toBe('string');
-          expect(typeof result!.updatedAt).toBe('string');
-
-          // Verify field values match input
-          expect(result!.gameId).toBe(gameData.gameId);
-          expect(result!.gameType).toBe(gameData.gameType);
-          expect(result!.status).toBe(gameData.status);
-          expect(result!.aiSide).toBe(gameData.aiSide);
-          expect(result!.currentTurn).toBe(gameData.currentTurn);
-          expect(result!.winner).toBe(gameData.winner);
-          expect(result!.createdAt).toBe(gameData.createdAt);
         }
       ),
       { numRuns: 20, endOnFailure: true }
@@ -718,176 +548,6 @@ describe('GameService Property Tests - Game Creation', () => {
         expect(createdGame.boardState).toBeDefined();
         expect(createdGame.boardState.board).toHaveLength(8);
       }),
-      { numRuns: 20, endOnFailure: true }
-    );
-  });
-});
-
-describe('GameService Property Tests - Game Detail Retrieval', () => {
-  let gameService: GameService;
-  let gameRepository: GameRepository;
-  let mockDocClient: DynamoDBDocumentClient;
-
-  beforeEach(() => {
-    mockDocClient = {
-      send: vi.fn(),
-    } as unknown as DynamoDBDocumentClient;
-    gameRepository = new GameRepository(mockDocClient, 'test-table');
-    gameService = new GameService(gameRepository);
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  /**
-   * Property 7: Detail Response BoardState Is Object
-   * **Validates: Requirements 2.3**
-   *
-   * For any game retrieved by the detail endpoint, the boardState field should be
-   * a parsed object (not a JSON string) containing a board array.
-   */
-  it('Property 7: Detail Response BoardState Is Object', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.uuid(),
-        fc.constantFrom('BLACK', 'WHITE'),
-        fc.array(fc.array(fc.constantFrom(0, 1, 2), { minLength: 8, maxLength: 8 }), {
-          minLength: 8,
-          maxLength: 8,
-        }),
-        async (gameId, aiSide, board) => {
-          // Create boardState as JSON string (as stored in DynamoDB)
-          const boardStateString = JSON.stringify({ board });
-
-          // Mock repository response
-          vi.mocked(mockDocClient.send).mockResolvedValue({
-            Item: {
-              PK: `GAME#${gameId}`,
-              SK: `GAME#${gameId}`,
-              GSI1PK: 'GAME#STATUS#ACTIVE',
-              GSI1SK: new Date().toISOString(),
-              entityType: 'GAME',
-              gameId,
-              gameType: 'OTHELLO',
-              status: 'ACTIVE',
-              aiSide,
-              currentTurn: 0,
-              boardState: boardStateString,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-          } as never);
-
-          // Execute
-          const result = await gameService.getGame(gameId);
-
-          // Verify boardState is an object, not a string
-          expect(result).not.toBeNull();
-          expect(typeof result!.boardState).toBe('object');
-          expect(typeof result!.boardState.board).toBe('object');
-          expect(Array.isArray(result!.boardState.board)).toBe(true);
-
-          // Verify the board data is preserved
-          expect(result!.boardState.board).toEqual(board);
-        }
-      ),
-      { numRuns: 20, endOnFailure: true }
-    );
-  });
-
-  /**
-   * Property 8: Detail Response Contains Required Fields
-   * **Validates: Requirements 2.5**
-   *
-   * For any game returned in the detail endpoint, the response object should contain
-   * all required fields: gameId, gameType, status, aiSide, currentTurn, boardState,
-   * winner, createdAt, and updatedAt.
-   */
-  it('Property 8: Detail Response Contains Required Fields', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.record({
-          gameId: fc.uuid(),
-          gameType: fc.constant('OTHELLO' as const),
-          status: fc.constantFrom('ACTIVE', 'FINISHED'),
-          aiSide: fc.constantFrom('BLACK', 'WHITE'),
-          currentTurn: fc.nat({ max: 100 }),
-          winner: fc.option(fc.constantFrom('AI', 'COLLECTIVE', 'DRAW'), { nil: undefined }),
-          createdAt: fc
-            .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-            .map((timestamp) => new Date(timestamp).toISOString()),
-        }),
-        fc.array(fc.array(fc.constantFrom(0, 1, 2), { minLength: 8, maxLength: 8 }), {
-          minLength: 8,
-          maxLength: 8,
-        }),
-        async (gameData, board) => {
-          // Create boardState as JSON string
-          const boardStateString = JSON.stringify({ board });
-
-          // Mock repository response
-          vi.mocked(mockDocClient.send).mockResolvedValue({
-            Item: {
-              PK: `GAME#${gameData.gameId}`,
-              SK: `GAME#${gameData.gameId}`,
-              GSI1PK: `GAME#STATUS#${gameData.status}`,
-              GSI1SK: gameData.createdAt,
-              entityType: 'GAME',
-              gameId: gameData.gameId,
-              gameType: gameData.gameType,
-              status: gameData.status,
-              aiSide: gameData.aiSide,
-              currentTurn: gameData.currentTurn,
-              boardState: boardStateString,
-              winner: gameData.winner,
-              createdAt: gameData.createdAt,
-              updatedAt: gameData.createdAt,
-            },
-          } as never);
-
-          // Execute
-          const result = await gameService.getGame(gameData.gameId);
-
-          // Verify all required fields are present
-          expect(result).not.toBeNull();
-          expect(result).toHaveProperty('gameId');
-          expect(result).toHaveProperty('gameType');
-          expect(result).toHaveProperty('status');
-          expect(result).toHaveProperty('aiSide');
-          expect(result).toHaveProperty('currentTurn');
-          expect(result).toHaveProperty('boardState');
-          expect(result).toHaveProperty('createdAt');
-          expect(result).toHaveProperty('updatedAt');
-          // winner is optional, but the property should exist
-          expect('winner' in result!).toBe(true);
-
-          // Verify types
-          expect(typeof result!.gameId).toBe('string');
-          expect(typeof result!.gameType).toBe('string');
-          expect(typeof result!.status).toBe('string');
-          expect(typeof result!.aiSide).toBe('string');
-          expect(typeof result!.currentTurn).toBe('number');
-          expect(typeof result!.boardState).toBe('object');
-          expect(typeof result!.createdAt).toBe('string');
-          expect(typeof result!.updatedAt).toBe('string');
-
-          // Verify boardState structure
-          expect(result!.boardState).toHaveProperty('board');
-          expect(Array.isArray(result!.boardState.board)).toBe(true);
-          expect(result!.boardState.board).toHaveLength(8);
-          expect(result!.boardState.board[0]).toHaveLength(8);
-
-          // Verify values match
-          expect(result!.gameId).toBe(gameData.gameId);
-          expect(result!.gameType).toBe(gameData.gameType);
-          expect(result!.status).toBe(gameData.status);
-          expect(result!.aiSide).toBe(gameData.aiSide);
-          expect(result!.currentTurn).toBe(gameData.currentTurn);
-          expect(result!.winner).toBe(gameData.winner);
-          expect(result!.createdAt).toBe(gameData.createdAt);
-        }
-      ),
       { numRuns: 20, endOnFailure: true }
     );
   });
