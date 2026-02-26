@@ -2,7 +2,7 @@
  * Moves module for Othello game logic
  */
 
-import { Board, CellState, Move, Player, Position } from './types';
+import { Board, Move, Player, Position } from './types';
 import { setCellState } from './board';
 import { findFlippedPositions } from './validation';
 
@@ -36,6 +36,6 @@ export function createMove(
   return {
     position,
     player,
-    flippedPositions,
+    flippedPositions: [...flippedPositions],
   };
 }
