@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { flipDiscs, executeMove, createMove } from './moves';
-import { CellState, Player, Position, Board } from './types';
+import { CellState, Position } from './types';
 import { createInitialBoard, getCellState, countDiscs } from './board';
 import { validateMove } from './validation';
 
@@ -25,7 +25,6 @@ describe('moves module - property tests', () => {
       fc.assert(
         fc.property(playerArb, (player) => {
           const board = createInitialBoard();
-          const opponent = player === CellState.Black ? CellState.White : CellState.Black;
 
           // Find a valid move for the player
           let validMove: Position | null = null;

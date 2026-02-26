@@ -5,9 +5,9 @@
  * initialization, turn management, and game end detection.
  */
 
-import { Board, CellState, GameState, GameStatus, Move, Player, Position } from './types';
+import { Board, CellState, GameState, GameStatus, Player, Position } from './types';
 import { createInitialBoard, countDiscs, isBoardFull } from './board';
-import { validateMove, hasLegalMoves, getLegalMoves } from './validation';
+import { validateMove, hasLegalMoves } from './validation';
 import { executeMove, createMove } from './moves';
 
 /**
