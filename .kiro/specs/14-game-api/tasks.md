@@ -101,7 +101,7 @@
     - 必要なメソッド (create, getById, listByStatus, finish) が存在するか確認
     - _Requirements: 3.11, 4.10_
 
-  - [~] 4.2 不足しているメソッドを追加
+  - [x] 4.2 不足しているメソッドを追加
     - listByStatus メソッドが存在しない場合は実装
     - GSI1 (GAME#STATUS#<status>) を使用してクエリ
     - ページネーション対応 (ExclusiveStartKey, LastEvaluatedKey)
