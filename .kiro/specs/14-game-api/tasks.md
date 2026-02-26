@@ -141,7 +141,7 @@
     - 500 INTERNAL_ERROR エラーハンドリング
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12, 3.13_
 
-  - [~] 5.5 APIエンドポイントのユニットテストを作成
+  - [x] 5.5 APIエンドポイントのユニットテストを作成
     - `packages/api/src/routes/games.test.ts` を作成
     - GET /api/games の正常系とエラー系をテスト
     - GET /api/games/:gameId の正常系とエラー系をテスト
