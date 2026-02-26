@@ -40,7 +40,7 @@
     - boardState を JSON からオブジェクトにパース
     - _Requirements: 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12_
 
-  - [~] 2.3 ゲーム作成のプロパティテストを作成
+  - [x] 2.3 ゲーム作成のプロパティテストを作成
     - **Property 9: Created Game Has Valid UUID**
     - **Property 10: Created Game Has Correct Initial State**
     - **Property 11: Created Game Is Persisted**

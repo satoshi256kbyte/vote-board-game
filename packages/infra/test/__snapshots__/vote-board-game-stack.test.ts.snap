@@ -237,7 +237,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "13fe18f4119ec0a505ec0aa4a51f2817b59f9470377744c4bdb6858ae00322d7.zip",
+          "S3Key": "d8eae27df45d1b532185a9178eba8ac13f436882092f6a108c2f2a0d8b1427fc.zip",
         },
         "Environment": {
           "Variables": {
@@ -531,7 +531,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "13fe18f4119ec0a505ec0aa4a51f2817b59f9470377744c4bdb6858ae00322d7.zip",
+          "S3Key": "d8eae27df45d1b532185a9178eba8ac13f436882092f6a108c2f2a0d8b1427fc.zip",
         },
         "Environment": {
           "Variables": {
@@ -2914,7 +2914,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "13fe18f4119ec0a505ec0aa4a51f2817b59f9470377744c4bdb6858ae00322d7.zip",
+          "S3Key": "d8eae27df45d1b532185a9178eba8ac13f436882092f6a108c2f2a0d8b1427fc.zip",
         },
         "Environment": {
           "Variables": {
@@ -3417,7 +3417,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "13fe18f4119ec0a505ec0aa4a51f2817b59f9470377744c4bdb6858ae00322d7.zip",
+          "S3Key": "d8eae27df45d1b532185a9178eba8ac13f436882092f6a108c2f2a0d8b1427fc.zip",
         },
         "Environment": {
           "Variables": {
