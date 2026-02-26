@@ -161,7 +161,7 @@
     - 本番環境で機密情報を隠蔽していることを確認
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-  - [~] 6.3 依存性注入の設定
+  - [x] 6.3 依存性注入の設定
     - GameService のインスタンスを作成
     - GameRepository と Othello Logic を注入
     - DynamoDB クライアントの設定を確認
