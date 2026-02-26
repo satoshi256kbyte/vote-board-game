@@ -22,7 +22,7 @@
     - gameIdParamSchema (UUID v4 validation) を定義
     - _Requirements: 3.2, 3.3, 3.4, 3.5, 6.1, 6.4_
 
-  - [ ]\* 1.3 バリデーションスキーマのプロパティテストを作成
+  - [x] 1.3 バリデーションスキーマのプロパティテストを作成
     - **Property 18: Error Responses Have Required Structure**
     - **Validates: Requirements 5.1, 6.5**
 
@@ -40,7 +40,7 @@
     - boardState を JSON からオブジェクトにパース
     - _Requirements: 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12_
 
-  - [ ]\* 2.3 ゲーム作成のプロパティテストを作成
+  - [~] 2.3 ゲーム作成のプロパティテストを作成
     - **Property 9: Created Game Has Valid UUID**
     - **Property 10: Created Game Has Correct Initial State**
     - **Property 11: Created Game Is Persisted**
@@ -55,7 +55,7 @@
     - nextCursor の生成
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9_
 
-  - [ ]\* 2.5 ゲーム一覧取得のプロパティテストを作成
+  - [~] 2.5 ゲーム一覧取得のプロパティテストを作成
     - **Property 1: Status Filter Returns Only Matching Games**
     - **Property 2: Limit Parameter Bounds Response Size**
     - **Property 3: Pagination Cursor Maintains Consistency**
@@ -70,7 +70,7 @@
     - boardState を JSON からオブジェクトにパース
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [ ]\* 2.7 ゲーム詳細取得のプロパティテストを作成
+  - [~] 2.7 ゲーム詳細取得のプロパティテストを作成
     - **Property 7: Detail Response BoardState Is Object**
     - **Property 8: Detail Response Contains Required Fields**
     - **Validates: Requirements 2.3, 2.5**
@@ -82,7 +82,7 @@
     - GameRepository.finish() でステータスと勝者を更新
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10_
 
-  - [ ]\* 2.9 ゲーム終了検知のプロパティテストを作成
+  - [~] 2.9 ゲーム終了検知のプロパティテストを作成
     - **Property 12: Full Board Triggers Game End**
     - **Property 13: No Legal Moves Triggers Game End**
     - **Property 14: Single Color Triggers Game End**
@@ -107,7 +107,7 @@
     - ページネーション対応 (ExclusiveStartKey, LastEvaluatedKey)
     - _Requirements: 1.1, 1.2, 1.7_
 
-  - [ ]\* 4.3 BoardState シリアライゼーションのプロパティテストを作成
+  - [~] 4.3 BoardState シリアライゼーションのプロパティテストを作成
     - **Property 19: BoardState Round-Trip Preserves Data**
     - **Validates: Requirements 6.6, 6.7**
 
@@ -141,7 +141,7 @@
     - 500 INTERNAL_ERROR エラーハンドリング
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12, 3.13_
 
-  - [ ]\* 5.5 APIエンドポイントのユニットテストを作成
+  - [~] 5.5 APIエンドポイントのユニットテストを作成
     - `packages/api/src/routes/games.test.ts` を作成
     - GET /api/games の正常系とエラー系をテスト
     - GET /api/games/:gameId の正常系とエラー系をテスト
@@ -168,7 +168,7 @@
     - _Requirements: 1.1, 2.1, 3.1, 4.1_
 
 - [ ] 7. 統合テストの作成
-  - [ ]\* 7.1 DynamoDB Local を使用した統合テストを作成
+  - [~] 7.1 DynamoDB Local を使用した統合テストを作成
     - `packages/api/src/routes/games.integration.test.ts` を作成
     - テストテーブルの作成とクリーンアップ
     - ゲーム作成→取得のエンドツーエンドフロー

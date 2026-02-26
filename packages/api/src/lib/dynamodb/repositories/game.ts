@@ -49,7 +49,11 @@ export class GameRepository extends BaseRepository {
     return (result.Item as GameEntity) || null;
   }
 
-  async listByStatus(status: 'ACTIVE' | 'FINISHED', limit = 20): Promise<GameEntity[]> {
+  async listByStatus(
+    status: 'ACTIVE' | 'FINISHED',
+    limit = 20,
+    cursor?: string
+  ): Promise<{ items: GameEntity[]; lastEvaluatedKey?: Record<string, unknown> }> {
     const result = await this.docClient.send(
       new QueryCommand({
         TableName: this.tableName,
@@ -60,10 +64,16 @@ export class GameRepository extends BaseRepository {
         },
         ScanIndexForward: false, // 新しい順
         Limit: limit,
+        ExclusiveStartKey: cursor
+          ? JSON.parse(Buffer.from(cursor, 'base64').toString())
+          : undefined,
       })
     );
 
-    return (result.Items as GameEntity[]) || [];
+    return {
+      items: (result.Items as GameEntity[]) || [],
+      lastEvaluatedKey: result.LastEvaluatedKey,
+    };
   }
 
   async updateBoardState(gameId: string, boardState: string, currentTurn: number): Promise<void> {

@@ -71,8 +71,49 @@ describe('GameRepository', () => {
 
       const result = await repository.listByStatus('ACTIVE');
 
-      expect(result).toEqual(mockGames);
-      expect(result).toHaveLength(2);
+      expect(result.items).toEqual(mockGames);
+      expect(result.items).toHaveLength(2);
+      expect(result.lastEvaluatedKey).toBeUndefined();
+    });
+
+    it('should return games with pagination cursor', async () => {
+      const mockGames = [
+        { gameId: 'game-1', status: 'ACTIVE' },
+        { gameId: 'game-2', status: 'ACTIVE' },
+      ];
+      const mockLastEvaluatedKey = { PK: 'GAME#game-2', SK: 'GAME#game-2' };
+
+      vi.mocked(mockDocClient.send).mockResolvedValue({
+        Items: mockGames,
+        LastEvaluatedKey: mockLastEvaluatedKey,
+      } as never);
+
+      const result = await repository.listByStatus('ACTIVE', 20);
+
+      expect(result.items).toEqual(mockGames);
+      expect(result.lastEvaluatedKey).toEqual(mockLastEvaluatedKey);
+    });
+
+    it('should support cursor-based pagination', async () => {
+      const mockGames = [{ gameId: 'game-3', status: 'ACTIVE' }];
+      const cursor = Buffer.from(JSON.stringify({ PK: 'GAME#game-2', SK: 'GAME#game-2' })).toString(
+        'base64'
+      );
+
+      vi.mocked(mockDocClient.send).mockResolvedValue({
+        Items: mockGames,
+      } as never);
+
+      const result = await repository.listByStatus('ACTIVE', 20, cursor);
+
+      expect(result.items).toEqual(mockGames);
+      expect(mockDocClient.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          input: expect.objectContaining({
+            ExclusiveStartKey: { PK: 'GAME#game-2', SK: 'GAME#game-2' },
+          }),
+        })
+      );
     });
   });
 });
