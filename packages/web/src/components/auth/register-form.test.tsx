@@ -462,7 +462,7 @@ describe('RegisterForm - Client-side Validation', () => {
       // Wait for navigation
       await waitFor(() => {
         expect(mockRegisterFn).toHaveBeenCalledWith('test@example.com', 'password123');
-        expect(mockPush).toHaveBeenCalledWith('/');
+        expect(mockPush).toHaveBeenCalledWith('/email-verification');
       });
     });
 
