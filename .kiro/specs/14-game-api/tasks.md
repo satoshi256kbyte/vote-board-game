@@ -46,7 +46,7 @@
     - **Property 11: Created Game Is Persisted**
     - \*\*Validates: Requirements 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12\_
 
-  - [~] 2.4 listGamesメソッドを実装
+  - [x] 2.4 listGamesメソッドを実装
     - status パラメータでフィルタリング (デフォルト: ACTIVE)
     - limit パラメータで件数制限 (デフォルト: 20, 最大: 100)
     - cursor パラメータでページネーション
