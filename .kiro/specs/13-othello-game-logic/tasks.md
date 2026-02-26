@@ -68,7 +68,7 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
     - **Validates: Requirements 4.4**
     - Use fast-check with numRuns: 100, custom board and position generators
 
-- [~] 4. Implement move execution and board updates
+- [x] 4. Implement move execution and board updates
   - [x] 4.1 Implement moves module (moves.ts)
     - Write `flipDiscs()` to flip discs at specified positions
     - Write `executeMove()` to place disc and flip opponents
@@ -76,14 +76,14 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
     - Ensure all operations are immutable (return new board instances)
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 10.2, 10.3, 10.4_
 
-  - [~] 4.2 Write unit tests for moves module (moves.test.ts)
+  - [x] 4.2 Write unit tests for moves module (moves.test.ts)
     - Test disc placement at specified position
     - Test flipping in single and multiple directions
     - Test immutability (original board unchanged)
     - Test move record creation with complete data
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [~] 4.3 Write property tests for move execution (moves.property.test.ts)
+  - [x] 4.3 Write property tests for move execution (moves.property.test.ts)
     - **Property 8: Valid moves place disc and flip opponents**
     - **Validates: Requirements 3.1, 3.2**
     - **Property 9: Flips only occur between anchoring discs**
@@ -92,9 +92,9 @@ This plan implements a pure, functional TypeScript module for Othello (Reversi) 
     - **Validates: Requirements 3.4**
     - **Property 11: Invalid moves don't modify board**
     - **Validates: Requirements 3.5**
-    - Use fast-check with numRuns: 100
+    - Use fast-check with numRuns: 10
 
-- [~] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [~] 6. Implement game state management and turn logic

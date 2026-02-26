@@ -474,7 +474,67 @@ SK: MOVE#789
 
 ## ファイル編集
 
-- **[重要]ヒアドキュメントによる置換は禁止です。失敗し、動作が止まる可能性が高いです**
+### ヒアドキュメント（heredoc）の使用禁止
+
+**[重要] ヒアドキュメント（heredoc）による編集は完全に禁止です**
+
+#### 問題点
+
+1. **実行の失敗**: heredoc を使ったファイル編集は高確率で失敗する
+2. **完了の認識不能**: 成功した場合でも、AI が処理の終了を認識できず、無限待機状態になる
+3. **動作の停止**: 結果として作業全体が停止し、ユーザーの介入が必要になる
+
+#### 禁止される操作例
+
+```bash
+# NG: heredoc による cat コマンド
+cat > file.txt << 'EOF'
+content here
+EOF
+
+# NG: heredoc による tee コマンド
+tee file.txt << 'EOF'
+content here
+EOF
+
+# NG: heredoc によるリダイレクト
+cat << 'EOF' > file.txt
+content here
+EOF
+```
+
+#### 代替手段
+
+ファイル編集には必ず以下のツールを使用すること:
+
+1. **fsWrite**: 新規ファイル作成または全体の上書き
+2. **fsAppend**: 既存ファイルへの追記
+3. **strReplace**: 既存ファイルの部分置換
+4. **editCode**: コードファイルの構造的な編集（AST ベース）
+
+```typescript
+// OK: fsWrite を使用
+fsWrite({ path: 'file.txt', text: 'content here' });
+
+// OK: strReplace を使用
+strReplace({
+  path: 'file.txt',
+  oldStr: 'old content',
+  newStr: 'new content',
+});
+
+// OK: editCode を使用（コードファイルの場合）
+editCode({
+  path: 'src/example.ts',
+  operation: 'replace_node',
+  selector: 'functionName',
+  replacement: 'new function code',
+});
+```
+
+#### 例外
+
+heredoc の使用が許可される例外は一切ありません。どのような状況でも上記のツールを使用してください。
 
 ## プロパティベーステスト（fast-check）
 
