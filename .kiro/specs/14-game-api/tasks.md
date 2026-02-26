@@ -168,7 +168,7 @@
     - _Requirements: 1.1, 2.1, 3.1, 4.1_
 
 - [ ] 7. 統合テストの作成
-  - [~] 7.1 DynamoDB Local を使用した統合テストを作成
+  - [x] 7.1 DynamoDB Local を使用した統合テストを作成
     - `packages/api/src/routes/games.integration.test.ts` を作成
     - テストテーブルの作成とクリーンアップ
     - ゲーム作成→取得のエンドツーエンドフロー
@@ -176,7 +176,7 @@
     - ゲーム終了検知と勝者決定
     - _Requirements: 1.1, 2.1, 3.1, 4.1_
 
-- [~] 8. Final Checkpoint - すべてのテストを実行
+- [x] 8. Final Checkpoint - すべてのテストを実行
   - すべてのユニットテスト、プロパティテスト、統合テストが通ることを確認
   - TypeScript の型チェックが通ることを確認
   - ESLint エラーがないことを確認
