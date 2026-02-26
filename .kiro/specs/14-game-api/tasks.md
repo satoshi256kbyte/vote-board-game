@@ -55,7 +55,7 @@
     - nextCursor の生成
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9_
 
-  - [~] 2.5 ゲーム一覧取得のプロパティテストを作成
+  - [x] 2.5 ゲーム一覧取得のプロパティテストを作成
     - **Property 1: Status Filter Returns Only Matching Games**
     - **Property 2: Limit Parameter Bounds Response Size**
     - **Property 3: Pagination Cursor Maintains Consistency**
