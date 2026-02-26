@@ -96,7 +96,7 @@
   - 問題があればユーザーに質問
 
 - [ ] 4. GameRepositoryの拡張（必要に応じて）
-  - [~] 4.1 既存のGameRepositoryを確認
+  - [x] 4.1 既存のGameRepositoryを確認
     - `packages/api/src/lib/dynamodb/repositories/game.ts` を確認
     - 必要なメソッド (create, getById, listByStatus, finish) が存在するか確認
     - _Requirements: 3.11, 4.10_
