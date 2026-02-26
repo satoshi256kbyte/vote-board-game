@@ -1,48 +1,150 @@
+/**
+ * Game API Routes
+ *
+ * ゲーム管理のためのRESTful APIエンドポイント群
+ * - GET /api/games - ゲーム一覧取得
+ * - GET /api/games/:gameId - ゲーム詳細取得
+ * - POST /api/games - ゲーム作成
+ */
+
 import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import type { Context } from 'hono';
+import { GameService } from '../services/game.js';
+import { GameRepository } from '../lib/dynamodb/repositories/game.js';
+import { getGamesQuerySchema, createGameSchema, gameIdParamSchema } from '../schemas/game.js';
 
 const gamesRouter = new Hono();
 
+// バリデーションエラーハンドラー（共通）
+const validationErrorHandler = (
+  result: {
+    success: boolean;
+    error?: { issues: Array<{ path: (string | number)[]; message: string }> };
+  },
+  c: Context
+) => {
+  if (!result.success) {
+    const fields: Record<string, string> = {};
+    result.error!.issues.forEach((issue) => {
+      const fieldName = issue.path.join('.');
+      fields[fieldName] = issue.message;
+    });
+    return c.json(
+      {
+        error: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: { fields },
+      },
+      400
+    );
+  }
+};
+
+// GameService インスタンスの作成（依存性注入）
+const gameRepository = new GameRepository();
+const gameService = new GameService(gameRepository);
+
 // GET /api/games - ゲーム一覧取得
-gamesRouter.get('/', async (c) => {
-  // TODO: DynamoDB から取得
-  return c.json({
-    games: [],
-  });
-});
+gamesRouter.get(
+  '/',
+  zValidator('query', getGamesQuerySchema, validationErrorHandler),
+  async (c) => {
+    try {
+      const { status, limit, cursor } = c.req.valid('query');
+
+      const result = await gameService.listGames({
+        status,
+        limit,
+        cursor,
+      });
+
+      return c.json(result, 200);
+    } catch (error) {
+      console.error('Failed to list games', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
+
+      return c.json(
+        {
+          error: 'INTERNAL_ERROR',
+          message: 'Failed to retrieve games',
+        },
+        500
+      );
+    }
+  }
+);
 
 // GET /api/games/:gameId - ゲーム詳細取得
-gamesRouter.get('/:gameId', async (c) => {
-  const gameId = c.req.param('gameId');
+gamesRouter.get(
+  '/:gameId',
+  zValidator('param', gameIdParamSchema, validationErrorHandler),
+  async (c) => {
+    try {
+      const { gameId } = c.req.valid('param');
 
-  // TODO: DynamoDB から取得
-  return c.json({
-    gameId,
-    status: 'active',
-    currentTurn: 1,
-  });
-});
+      const game = await gameService.getGame(gameId);
 
-// GET /api/games/:gameId/board - 盤面取得
-gamesRouter.get('/:gameId/board', async (c) => {
-  const gameId = c.req.param('gameId');
+      if (!game) {
+        return c.json(
+          {
+            error: 'NOT_FOUND',
+            message: 'Game not found',
+          },
+          404
+        );
+      }
 
-  // TODO: DynamoDB から取得
-  return c.json({
-    gameId,
-    board: [],
-    turn: 1,
-  });
-});
+      return c.json(game, 200);
+    } catch (error) {
+      console.error('Failed to get game', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
 
-// GET /api/games/:gameId/history - 対局履歴取得
-gamesRouter.get('/:gameId/history', async (c) => {
-  const gameId = c.req.param('gameId');
+      return c.json(
+        {
+          error: 'INTERNAL_ERROR',
+          message: 'Failed to retrieve game',
+        },
+        500
+      );
+    }
+  }
+);
 
-  // TODO: DynamoDB から取得
-  return c.json({
-    gameId,
-    moves: [],
-  });
+// POST /api/games - ゲーム作成
+gamesRouter.post('/', zValidator('json', createGameSchema, validationErrorHandler), async (c) => {
+  try {
+    const { gameType, aiSide } = c.req.valid('json');
+
+    const game = await gameService.createGame({
+      gameType,
+      aiSide,
+    });
+
+    console.log('Game created successfully', {
+      gameId: game.gameId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return c.json(game, 201);
+  } catch (error) {
+    console.error('Failed to create game', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    });
+
+    return c.json(
+      {
+        error: 'INTERNAL_ERROR',
+        message: 'Failed to create game',
+      },
+      500
+    );
+  }
 });
 
 export { gamesRouter };

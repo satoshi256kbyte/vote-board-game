@@ -1,8 +1,12 @@
 import { GetCommand, PutCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { BaseRepository } from './base';
+import { docClient, TABLE_NAME } from '../index.js';
 import { GameEntity, Keys, GSIKeys } from '../types';
 
 export class GameRepository extends BaseRepository {
+  constructor() {
+    super(docClient, TABLE_NAME);
+  }
   async create(params: {
     gameId: string;
     gameType: 'OTHELLO' | 'CHESS' | 'GO' | 'SHOGI';

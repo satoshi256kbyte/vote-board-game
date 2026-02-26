@@ -112,13 +112,13 @@
     - **Validates: Requirements 6.6, 6.7**
 
 - [ ] 5. APIルートの実装
-  - [~] 5.1 Honoルーターを作成
+  - [x] 5.1 Honoルーターを作成
     - `packages/api/src/routes/games.ts` を作成
     - Hono Router インスタンスを作成
     - GameService を依存注入
     - _Requirements: 1.1, 2.1, 3.1_
 
-  - [~] 5.2 GET /api/games エンドポイントを実装
+  - [x] 5.2 GET /api/games エンドポイントを実装
     - zValidator で getGamesQuerySchema を適用
     - GameService.listGames() を呼び出し
     - 200 OK レスポンスを返す
