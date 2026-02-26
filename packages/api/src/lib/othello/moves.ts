@@ -1,12 +1,18 @@
+/**
+ * Moves module for Othello game logic
+ */
+
 import { Board, CellState, Move, Player, Position } from './types';
 import { setCellState } from './board';
 import { findFlippedPositions } from './validation';
 
 export function flipDiscs(board: Board, positions: readonly Position[], player: Player): Board {
   let newBoard = board;
+
   for (const position of positions) {
     newBoard = setCellState(newBoard, position, player);
   }
+
   return newBoard;
 }
 
@@ -27,5 +33,9 @@ export function createMove(
   player: Player,
   flippedPositions: readonly Position[]
 ): Move {
-  return { position, player, flippedPositions: [...flippedPositions] };
+  return {
+    position,
+    player,
+    flippedPositions,
+  };
 }
