@@ -9,19 +9,26 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fc from 'fast-check';
 import { GameService } from './game';
 import { GameRepository } from '../lib/dynamodb/repositories/game';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { CellState } from '../lib/othello';
+
+// Mock DynamoDB client at module level
+vi.mock('../lib/dynamodb.js', () => ({
+  docClient: {
+    send: vi.fn(),
+  },
+  TABLE_NAME: 'test-table',
+}));
+
+// Import mocked docClient
+import { docClient } from '../lib/dynamodb.js';
+const mockSend = docClient.send as ReturnType<typeof vi.fn>;
 
 describe('GameService Property Tests - Game List Retrieval', () => {
   let gameService: GameService;
   let gameRepository: GameRepository;
-  let mockDocClient: DynamoDBDocumentClient;
 
   beforeEach(() => {
-    mockDocClient = {
-      send: vi.fn(),
-    } as unknown as DynamoDBDocumentClient;
-    gameRepository = new GameRepository(mockDocClient, 'test-table');
+    gameRepository = new GameRepository();
     gameService = new GameService(gameRepository);
   });
 
@@ -59,7 +66,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
           const expectedGames = allGames.filter((g) => g.status === filterStatus);
 
           // Mock repository response
-          vi.mocked(mockDocClient.send).mockResolvedValue({
+          mockSend.mockResolvedValue({
             Items: expectedGames.map((g) => ({
               ...g,
               PK: `GAME#${g.gameId}`,
@@ -113,7 +120,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
         async (limit, allGames) => {
           // Mock repository response with limited items
           const limitedGames = allGames.slice(0, limit);
-          vi.mocked(mockDocClient.send).mockResolvedValue({
+          mockSend.mockResolvedValue({
             Items: limitedGames.map((g) => ({
               ...g,
               PK: `GAME#${g.gameId}`,
@@ -174,7 +181,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
 
           // Mock repository responses for each page
           let callCount = 0;
-          vi.mocked(mockDocClient.send).mockImplementation(() => {
+          mockSend.mockImplementation(() => {
             const page = pages[callCount];
             const hasMore = callCount < pages.length - 1;
             const lastKey = hasMore
@@ -254,7 +261,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
           const sortedGames = [...games].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
           // Mock repository response with sorted games
-          vi.mocked(mockDocClient.send).mockResolvedValue({
+          mockSend.mockResolvedValue({
             Items: sortedGames.map((g) => ({
               ...g,
               PK: `GAME#${g.gameId}`,
@@ -305,7 +312,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
           createdAt: new Date(Date.now() - i * 1000).toISOString(),
         }));
 
-        vi.mocked(mockDocClient.send).mockResolvedValue({
+        mockSend.mockResolvedValue({
           Items: mockGames.map((g) => ({
             ...g,
             PK: `GAME#${g.gameId}`,
@@ -370,7 +377,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
         ),
         async (games) => {
           // Mock repository response
-          vi.mocked(mockDocClient.send).mockResolvedValue({
+          mockSend.mockResolvedValue({
             Items: games.map((g) => ({
               ...g,
               PK: `GAME#${g.gameId}`,
@@ -420,13 +427,9 @@ describe('GameService Property Tests - Game List Retrieval', () => {
 describe('GameService Property Tests - Game Detail Retrieval', () => {
   let gameService: GameService;
   let gameRepository: GameRepository;
-  let mockDocClient: DynamoDBDocumentClient;
 
   beforeEach(() => {
-    mockDocClient = {
-      send: vi.fn(),
-    } as unknown as DynamoDBDocumentClient;
-    gameRepository = new GameRepository(mockDocClient, 'test-table');
+    gameRepository = new GameRepository();
     gameService = new GameService(gameRepository);
   });
 
@@ -456,7 +459,7 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
         async (gameId, gameType, status, aiSide, currentTurn, board) => {
           // Mock repository response with boardState as JSON string
           const boardStateJson = JSON.stringify({ board });
-          vi.mocked(mockDocClient.send).mockResolvedValue({
+          mockSend.mockResolvedValue({
             Item: {
               PK: `GAME#${gameId}`,
               SK: `GAME#${gameId}`,
@@ -525,7 +528,7 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
         async (gameData) => {
           // Mock repository response
           const boardStateJson = JSON.stringify({ board: gameData.board });
-          vi.mocked(mockDocClient.send).mockResolvedValue({
+          mockSend.mockResolvedValue({
             Item: {
               PK: `GAME#${gameData.gameId}`,
               SK: `GAME#${gameData.gameId}`,
@@ -590,13 +593,9 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
 describe('GameService Property Tests - Game Creation', () => {
   let gameService: GameService;
   let gameRepository: GameRepository;
-  let mockDocClient: DynamoDBDocumentClient;
 
   beforeEach(() => {
-    mockDocClient = {
-      send: vi.fn(),
-    } as unknown as DynamoDBDocumentClient;
-    gameRepository = new GameRepository(mockDocClient, 'test-table');
+    gameRepository = new GameRepository();
     gameService = new GameService(gameRepository);
   });
 
@@ -615,7 +614,7 @@ describe('GameService Property Tests - Game Creation', () => {
     await fc.assert(
       fc.asyncProperty(fc.constantFrom('BLACK', 'WHITE'), async (aiSide) => {
         // Mock DynamoDB responses
-        vi.mocked(mockDocClient.send).mockResolvedValue({} as never);
+        mockSend.mockResolvedValue({} as never);
 
         // Execute
         const game = await gameService.createGame({
@@ -647,7 +646,7 @@ describe('GameService Property Tests - Game Creation', () => {
     await fc.assert(
       fc.asyncProperty(fc.constantFrom('BLACK', 'WHITE'), async (aiSide) => {
         // Mock DynamoDB responses
-        vi.mocked(mockDocClient.send).mockResolvedValue({} as never);
+        mockSend.mockResolvedValue({} as never);
 
         // Execute
         const game = await gameService.createGame({
@@ -696,7 +695,7 @@ describe('GameService Property Tests - Game Creation', () => {
     await fc.assert(
       fc.asyncProperty(fc.constantFrom('BLACK', 'WHITE'), async (aiSide) => {
         // Mock DynamoDB responses
-        vi.mocked(mockDocClient.send).mockResolvedValue({} as never);
+        mockSend.mockResolvedValue({} as never);
 
         // Execute creation
         const createdGame = await gameService.createGame({
@@ -705,8 +704,8 @@ describe('GameService Property Tests - Game Creation', () => {
         });
 
         // Verify DynamoDB send was called (for both create and updateBoardState)
-        expect(mockDocClient.send).toHaveBeenCalled();
-        const callCount = vi.mocked(mockDocClient.send).mock.calls.length;
+        expect(mockSend).toHaveBeenCalled();
+        const callCount = mockSend.mock.calls.length;
         expect(callCount).toBeGreaterThanOrEqual(2); // At least create + updateBoardState
 
         // Verify the game data is consistent
@@ -726,13 +725,9 @@ describe('GameService Property Tests - Game Creation', () => {
 describe('GameService Property Tests - Game Detail Retrieval', () => {
   let gameService: GameService;
   let gameRepository: GameRepository;
-  let mockDocClient: DynamoDBDocumentClient;
 
   beforeEach(() => {
-    mockDocClient = {
-      send: vi.fn(),
-    } as unknown as DynamoDBDocumentClient;
-    gameRepository = new GameRepository(mockDocClient, 'test-table');
+    gameRepository = new GameRepository();
     gameService = new GameService(gameRepository);
   });
 
@@ -761,7 +756,7 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
           const boardStateString = JSON.stringify({ board });
 
           // Mock repository response
-          vi.mocked(mockDocClient.send).mockResolvedValue({
+          mockSend.mockResolvedValue({
             Item: {
               PK: `GAME#${gameId}`,
               SK: `GAME#${gameId}`,
@@ -827,7 +822,7 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
           const boardStateString = JSON.stringify({ board });
 
           // Mock repository response
-          vi.mocked(mockDocClient.send).mockResolvedValue({
+          mockSend.mockResolvedValue({
             Item: {
               PK: `GAME#${gameData.gameId}`,
               SK: `GAME#${gameData.gameId}`,
@@ -896,13 +891,9 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
 describe('GameService Property Tests - Game End Detection', () => {
   let gameService: GameService;
   let gameRepository: GameRepository;
-  let mockDocClient: DynamoDBDocumentClient;
 
   beforeEach(() => {
-    mockDocClient = {
-      send: vi.fn(),
-    } as unknown as DynamoDBDocumentClient;
-    gameRepository = new GameRepository(mockDocClient, 'test-table');
+    gameRepository = new GameRepository();
     gameService = new GameService(gameRepository);
   });
 
@@ -928,13 +919,13 @@ describe('GameService Property Tests - Game End Detection', () => {
         }),
         async (gameId, aiSide, fullBoard) => {
           // Clear mocks for each iteration
-          vi.mocked(mockDocClient.send).mockClear();
+          mockSend.mockClear();
 
           // Ensure board is completely full (no empty cells)
           const boardState = JSON.stringify({ board: fullBoard });
 
           // Mock repository to return an active game with full board
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+          mockSend.mockResolvedValueOnce({
             Item: {
               PK: `GAME#${gameId}`,
               SK: `GAME#${gameId}`,
@@ -953,13 +944,13 @@ describe('GameService Property Tests - Game End Detection', () => {
           } as never);
 
           // Mock repository.finish to succeed
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+          mockSend.mockResolvedValueOnce({} as never);
 
           // Execute
           await gameService.checkAndFinishGame(gameId);
 
           // Verify that finish was called (game should end)
-          expect(mockDocClient.send).toHaveBeenCalledTimes(2); // getById + finish
+          expect(mockSend).toHaveBeenCalledTimes(2); // getById + finish
         }
       ),
       { numRuns: 10, endOnFailure: true }
@@ -977,7 +968,7 @@ describe('GameService Property Tests - Game End Detection', () => {
     await fc.assert(
       fc.asyncProperty(fc.uuid(), fc.constantFrom('BLACK', 'WHITE'), async (gameId, aiSide) => {
         // Clear mocks for each iteration
-        vi.mocked(mockDocClient.send).mockClear();
+        mockSend.mockClear();
 
         // Create a board where no legal moves exist for either player
         // This is a specific configuration where all cells are blocked
@@ -995,7 +986,7 @@ describe('GameService Property Tests - Game End Detection', () => {
         const boardState = JSON.stringify({ board: noMovesBoard });
 
         // Mock repository to return an active game
-        vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+        mockSend.mockResolvedValueOnce({
           Item: {
             PK: `GAME#${gameId}`,
             SK: `GAME#${gameId}`,
@@ -1014,13 +1005,13 @@ describe('GameService Property Tests - Game End Detection', () => {
         } as never);
 
         // Mock repository.finish to succeed
-        vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+        mockSend.mockResolvedValueOnce({} as never);
 
         // Execute
         await gameService.checkAndFinishGame(gameId);
 
         // Verify that finish was called (game should end)
-        expect(mockDocClient.send).toHaveBeenCalledTimes(2); // getById + finish
+        expect(mockSend).toHaveBeenCalledTimes(2); // getById + finish
       }),
       { numRuns: 10, endOnFailure: true }
     );
@@ -1042,7 +1033,7 @@ describe('GameService Property Tests - Game End Detection', () => {
         fc.integer({ min: 1, max: 64 }),
         async (gameId, aiSide, singleColor, discCount) => {
           // Clear mocks for each iteration
-          vi.mocked(mockDocClient.send).mockClear();
+          mockSend.mockClear();
 
           // Create a board with only one color
           const board = Array.from({ length: 8 }, () => Array(8).fill(0));
@@ -1059,7 +1050,7 @@ describe('GameService Property Tests - Game End Detection', () => {
           const boardState = JSON.stringify({ board });
 
           // Mock repository to return an active game
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+          mockSend.mockResolvedValueOnce({
             Item: {
               PK: `GAME#${gameId}`,
               SK: `GAME#${gameId}`,
@@ -1078,13 +1069,13 @@ describe('GameService Property Tests - Game End Detection', () => {
           } as never);
 
           // Mock repository.finish to succeed
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+          mockSend.mockResolvedValueOnce({} as never);
 
           // Execute
           await gameService.checkAndFinishGame(gameId);
 
           // Verify that finish was called (game should end)
-          expect(mockDocClient.send).toHaveBeenCalledTimes(2); // getById + finish
+          expect(mockSend).toHaveBeenCalledTimes(2); // getById + finish
         }
       ),
       { numRuns: 10, endOnFailure: true }
@@ -1109,12 +1100,12 @@ describe('GameService Property Tests - Game End Detection', () => {
         }),
         async (gameId, aiSide, fullBoard) => {
           // Clear mocks for each iteration
-          vi.mocked(mockDocClient.send).mockClear();
+          mockSend.mockClear();
 
           const boardState = JSON.stringify({ board: fullBoard });
 
           // Mock repository to return an active game
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+          mockSend.mockResolvedValueOnce({
             Item: {
               PK: `GAME#${gameId}`,
               SK: `GAME#${gameId}`,
@@ -1133,13 +1124,13 @@ describe('GameService Property Tests - Game End Detection', () => {
           } as never);
 
           // Mock repository.finish to succeed
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+          mockSend.mockResolvedValueOnce({} as never);
 
           // Execute
           await gameService.checkAndFinishGame(gameId);
 
           // Verify that finish was called with a winner
-          const finishCalls = vi.mocked(mockDocClient.send).mock.calls;
+          const finishCalls = mockSend.mock.calls;
           expect(finishCalls.length).toBe(2);
 
           // The second call should be the UpdateCommand for finishing the game
@@ -1170,7 +1161,7 @@ describe('GameService Property Tests - Game End Detection', () => {
         })),
         async (gameId, aiSide, { blackCount, whiteCount }) => {
           // Clear mocks for each iteration
-          vi.mocked(mockDocClient.send).mockClear();
+          mockSend.mockClear();
 
           // Create a FULL board with specified disc counts
           const board = Array.from({ length: 8 }, () => Array(8).fill(0));
@@ -1202,7 +1193,7 @@ describe('GameService Property Tests - Game End Detection', () => {
           }
 
           // Mock repository to return an active game
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+          mockSend.mockResolvedValueOnce({
             Item: {
               PK: `GAME#${gameId}`,
               SK: `GAME#${gameId}`,
@@ -1223,7 +1214,7 @@ describe('GameService Property Tests - Game End Detection', () => {
           // Capture the winner passed to finish
           let capturedWinner: string | undefined;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          vi.mocked(mockDocClient.send).mockImplementationOnce((command: any) => {
+          mockSend.mockImplementationOnce((command: any) => {
             // Extract winner from UpdateCommand
             if (command.input?.ExpressionAttributeValues) {
               capturedWinner = command.input.ExpressionAttributeValues[':winner'];
@@ -1260,12 +1251,12 @@ describe('GameService Property Tests - Game End Detection', () => {
         }),
         async (gameId, aiSide, fullBoard) => {
           // Clear mocks for each iteration
-          vi.mocked(mockDocClient.send).mockClear();
+          mockSend.mockClear();
 
           const boardState = JSON.stringify({ board: fullBoard });
 
           // Mock repository to return an active game
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({
+          mockSend.mockResolvedValueOnce({
             Item: {
               PK: `GAME#${gameId}`,
               SK: `GAME#${gameId}`,
@@ -1284,16 +1275,16 @@ describe('GameService Property Tests - Game End Detection', () => {
           } as never);
 
           // Mock repository.finish to succeed
-          vi.mocked(mockDocClient.send).mockResolvedValueOnce({} as never);
+          mockSend.mockResolvedValueOnce({} as never);
 
           // Execute checkAndFinishGame
           await gameService.checkAndFinishGame(gameId);
 
           // Verify that DynamoDB was called to persist the finished state
-          expect(mockDocClient.send).toHaveBeenCalledTimes(2);
+          expect(mockSend).toHaveBeenCalledTimes(2);
 
           // The second call should be an UpdateCommand
-          const calls = vi.mocked(mockDocClient.send).mock.calls;
+          const calls = mockSend.mock.calls;
           expect(calls[1]).toBeDefined();
         }
       ),
