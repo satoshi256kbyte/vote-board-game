@@ -1,63 +1,281 @@
-# @vote-board-game/web
+# Vote Board Game - Frontend
 
-フロントエンドアプリケーション（Next.js 15 + React 19）
+投票ボードゲームのフロントエンドアプリケーション。Next.js 16 (App Router) + React 19 + TypeScript で構築されています。
+
+## 技術スタック
+
+- **Framework**: Next.js 16 (App Router)
+- **React**: React 19
+- **TypeScript**: Strict mode
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Icons**: Lucide React
+- **Testing**: Vitest + React Testing Library
+- **E2E Testing**: Playwright
+
+## プロジェクト構造
+
+```
+packages/web/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── games/             # Game-related pages
+│   │   │   ├── new/           # Game creation
+│   │   │   └── [gameId]/      # Game detail and candidates
+│   │   ├── login/             # Authentication pages
+│   │   ├── register/
+│   │   └── page.tsx           # Home page (game list)
+│   ├── components/            # React components
+│   │   ├── ui/                # shadcn/ui components
+│   │   ├── board.tsx          # Othello board component
+│   │   ├── candidate-card.tsx # Candidate display
+│   │   ├── game-card.tsx      # Game summary card
+│   │   ├── move-history.tsx   # Move history list
+│   │   └── share-button.tsx   # Share functionality
+│   ├── lib/                   # Utilities and services
+│   │   ├── api/               # API client
+│   │   ├── contexts/          # React contexts
+│   │   ├── hooks/             # Custom hooks
+│   │   ├── services/          # Business logic
+│   │   └── utils.ts           # Utility functions
+│   └── types/                 # TypeScript type definitions
+├── e2e/                       # E2E tests
+└── public/                    # Static assets
+```
+
+## 主要コンポーネント
+
+### Board Component
+
+オセロの盤面を表示するコンポーネント。表示専用モードとインタラクティブモードをサポート。
+
+```tsx
+import { Board } from '@/components/board';
+
+// Display mode
+<Board boardState={game.boardState} />
+
+// Interactive mode
+<Board
+  boardState={game.boardState}
+  onCellClick={(row, col) => handleCellClick(row, col)}
+  highlightedCell={{ row: 3, col: 4 }}
+/>
+```
+
+### CandidateCard Component
+
+次の一手候補を表示し、投票機能を提供するコンポーネント。
+
+```tsx
+import { CandidateCard } from '@/components/candidate-card';
+
+<CandidateCard
+  candidate={candidate}
+  isVoted={false}
+  onVote={(candidateId) => handleVote(candidateId)}
+/>;
+```
+
+### ShareButton Component
+
+Web Share API を使用したシェア機能を提供。非対応ブラウザではクリップボードにコピー。
+
+```tsx
+import { ShareButton } from '@/components/share-button';
+
+<ShareButton title="オセロ対局" text="この対局をチェック！" url="https://example.com/games/123" />;
+```
+
+## API Client
+
+型安全な API クライアントを提供。
+
+```tsx
+import { fetchGames, fetchGame, createGame, vote } from '@/lib/api/client';
+
+// Get games list
+const { games, nextCursor } = await fetchGames({ status: 'ACTIVE' });
+
+// Get game detail
+const game = await fetchGame(gameId);
+
+// Create new game
+const newGame = await createGame({
+  gameType: 'OTHELLO',
+  aiSide: 'BLACK',
+});
+
+// Vote for candidate
+await vote(gameId, candidateId);
+```
+
+## 認証
+
+Cognito を使用した認証システム。
+
+```tsx
+import { useAuth } from '@/lib/hooks/use-auth';
+
+function MyComponent() {
+  const { user, isAuthenticated, login, logout } = useAuth();
+
+  if (!isAuthenticated) {
+    return <div>Please login</div>;
+  }
+
+  return <div>Welcome, {user?.username}</div>;
+}
+```
 
 ## 開発
 
-```bash
-# 開発サーバー起動
-pnpm dev
+### セットアップ
 
-# ビルド
+```bash
+# 依存関係のインストール
+pnpm install
+
+# 環境変数の設定
+cp .env.example .env.local
+# .env.local を編集して必要な環境変数を設定
+```
+
+### 開発サーバー
+
+```bash
+pnpm dev
+```
+
+http://localhost:3000 でアプリケーションが起動します。
+
+### ビルド
+
+```bash
+# 静的エクスポート
 pnpm build
+
+# ビルド結果は out/ ディレクトリに出力されます
+```
+
+### テスト
+
+```bash
+# ユニットテスト
+pnpm test
+
+# ウォッチモード
+pnpm test:watch
+
+# カバレッジ
+pnpm test:coverage
+
+# E2Eテスト
+pnpm test:e2e
+```
+
+### Lint & Format
+
+```bash
+# ESLint
+pnpm lint
+
+# Prettier
+pnpm format
 
 # 型チェック
 pnpm type-check
 ```
 
-## 技術スタック
+## 環境変数
 
-- Next.js 15 (App Router)
-- React 19
-- TypeScript (strict mode)
-- Tailwind CSS
-- shadcn/ui
-- Lucide React
+`.env.local` に以下の環境変数を設定してください：
 
-## プロジェクト構造
+```bash
+# API URL
+NEXT_PUBLIC_API_URL=https://api.example.com
 
-```text
-src/
-├── app/              # Next.js App Router
-│   ├── layout.tsx    # ルートレイアウト（globals.css読み込み）
-│   ├── page.tsx      # ホームページ
-│   └── globals.css   # グローバルスタイル（Tailwind + CSS変数）
-└── lib/              # ユーティリティ
-    └── utils.ts      # cn() - className結合関数
+# Cognito
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=ap-northeast-1_xxxxx
+NEXT_PUBLIC_COGNITO_CLIENT_ID=xxxxx
+NEXT_PUBLIC_COGNITO_REGION=ap-northeast-1
 ```
 
-## スタイリング
+## デプロイ
 
-Tailwind CSSとCSS変数ベースのカラーシステムを使用。ライト/ダークモード対応。
+### S3 + CloudFront
 
-### Tailwindクラスの使用
+```bash
+# ビルド
+pnpm build
 
-```tsx
-<div className="flex items-center justify-center p-4">
-  <h1 className="text-4xl font-bold text-foreground">タイトル</h1>
-</div>
+# S3にアップロード
+aws s3 sync out/ s3://your-bucket-name/ --delete
+
+# CloudFront キャッシュをクリア
+aws cloudfront create-invalidation --distribution-id YOUR_DIST_ID --paths "/*"
 ```
 
-### クラスの結合
+## コーディング規約
 
-条件付きクラスには`cn()`ユーティリティを使用：
+### Server Components vs Client Components
 
-```tsx
-import { cn } from '@/lib/utils';
+- デフォルトは Server Components を使用
+- 以下の場合のみ Client Components (`'use client'`) を使用：
+  - インタラクティブな機能（onClick, onChange など）
+  - React hooks（useState, useEffect など）
+  - ブラウザ API（localStorage, navigator など）
 
-<div className={cn('base-class', condition && 'conditional-class')} />;
+### TypeScript
+
+- strict mode を有効化
+- `any` 型は使用しない
+- 型定義は `types/` ディレクトリに配置
+
+### スタイリング
+
+- Tailwind CSS のユーティリティクラスを使用
+- カスタムクラスは最小限に
+- レスポンシブデザインを考慮（モバイルファースト）
+
+### テスト
+
+- すべてのコンポーネントにユニットテストを作成
+- 重要な機能には統合テストを作成
+- プロパティベーステストは `numRuns: 10-20` に制限
+- `fc.asyncProperty` は React コンポーネントのテストで使用しない
+
+## トラブルシューティング
+
+### ビルドエラー
+
+```bash
+# node_modules を削除して再インストール
+rm -rf node_modules
+pnpm install
+
+# Next.js のキャッシュをクリア
+rm -rf .next
 ```
 
-## shadcn/uiコンポーネント
+### 型エラー
 
-必要に応じて`src/components/ui/`に追加予定。
+```bash
+# TypeScript の型チェック
+pnpm type-check
+
+# 型定義の再生成
+pnpm build
+```
+
+## 参考リンク
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [shadcn/ui Documentation](https://ui.shadcn.com)
+- [Vitest Documentation](https://vitest.dev)
+
+## ライセンス
+
+MIT
