@@ -88,7 +88,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
 
   try {
     [game, candidates] = await Promise.all([fetchGame(gameId), fetchCandidates(gameId)]);
-  } catch {
+  } catch (error) {
     if (error instanceof ApiError && error.statusCode === 404) {
       notFound();
     }
