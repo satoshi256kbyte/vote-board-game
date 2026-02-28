@@ -45,13 +45,13 @@ jobs:
         run: pnpm format:check
 
       - name: ESLint
-        run: pnpm lint
+        run: pnpm lint --quiet
 
       - name: Type check
         run: pnpm type-check
 
       - name: Test
-        run: pnpm test
+        run: pnpm test --run --reporter=basic
 
   build:
     runs-on: ubuntu-latest
