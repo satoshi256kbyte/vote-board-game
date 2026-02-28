@@ -44,14 +44,21 @@ test.describe('User Login Flow', () => {
       });
 
       // Setup network request logging
-      const apiRequests: { url: string; status: number; method: string }[] = [];
-      page.on('response', (response) => {
+      const apiRequests: { url: string; status: number; method: string; body?: string }[] = [];
+      page.on('response', async (response) => {
         const url = response.url();
         if (url.includes('/auth/login')) {
+          let body: string | undefined;
+          try {
+            body = await response.text();
+          } catch (e) {
+            body = 'Could not read response body';
+          }
           apiRequests.push({
             url,
             status: response.status(),
             method: response.request().method(),
+            body,
           });
         }
       });
