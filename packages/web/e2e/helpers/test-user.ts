@@ -4,6 +4,14 @@
  */
 
 import type { Page } from '@playwright/test';
+import {
+  CognitoIdentityProviderClient,
+  AdminCreateUserCommand,
+  AdminSetUserPasswordCommand,
+  MessageActionType,
+} from '@aws-sdk/client-cognito-identity-provider';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 export interface TestUser {
   email: string;
@@ -42,7 +50,7 @@ export function generateTestUser(): TestUser {
 }
 
 /**
- * Creates a test user using the registration API
+ * Creates a test user in Cognito and DynamoDB
  *
  * Requirements:
  * - 7.3: Test users should be created with unique identifiers
@@ -54,40 +62,69 @@ export async function createTestUser(): Promise<TestUser> {
   const testUser = generateTestUser();
 
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) {
-      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
+    const userPoolId = process.env.USER_POOL_ID;
+    const tableName = process.env.TABLE_NAME;
+
+    if (!userPoolId) {
+      throw new Error('USER_POOL_ID environment variable is not set');
     }
+
+    if (!tableName) {
+      throw new Error('TABLE_NAME environment variable is not set');
+    }
+
+    const region = process.env.AWS_REGION || 'ap-northeast-1';
+    const cognitoClient = new CognitoIdentityProviderClient({ region });
 
     // Generate username (max 20 characters)
-    // Use last 10 digits of timestamp + 4 digit random = 14 chars + 'test' prefix = 18 chars
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
-    const shortTimestamp = timestamp.toString().slice(-10); // Last 10 digits
+    const shortTimestamp = timestamp.toString().slice(-10);
     const username = `test${shortTimestamp}${random}`;
 
-    // Call registration API
-    const response = await fetch(`${apiUrl}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: testUser.email,
-        password: testUser.password,
-        username,
-      }),
+    // Create user in Cognito
+    const createCommand = new AdminCreateUserCommand({
+      UserPoolId: userPoolId,
+      Username: testUser.email,
+      UserAttributes: [
+        { Name: 'email', Value: testUser.email },
+        { Name: 'email_verified', Value: 'true' },
+      ],
+      MessageAction: MessageActionType.SUPPRESS,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        `Registration API failed with status ${response.status}: ${JSON.stringify(errorData)}`
-      );
-    }
+    const createResponse = await cognitoClient.send(createCommand);
+    const userId = createResponse.User?.Username || testUser.email;
 
-    const data = await response.json();
-    const userId = data.userId;
+    // Set permanent password
+    const setPasswordCommand = new AdminSetUserPasswordCommand({
+      UserPoolId: userPoolId,
+      Username: testUser.email,
+      Password: testUser.password,
+      Permanent: true,
+    });
+
+    await cognitoClient.send(setPasswordCommand);
+
+    // Create user record in DynamoDB
+    const dynamoClient = new DynamoDBClient({ region });
+    const docClient = DynamoDBDocumentClient.from(dynamoClient);
+
+    const now = new Date().toISOString();
+    await docClient.send(
+      new PutCommand({
+        TableName: tableName,
+        Item: {
+          PK: `USER#${userId}`,
+          SK: `USER#${userId}`,
+          userId,
+          email: testUser.email,
+          username,
+          createdAt: now,
+          updatedAt: now,
+        },
+      })
+    );
 
     console.log(`[CreateTestUser] Successfully created test user: ${testUser.email}`);
 

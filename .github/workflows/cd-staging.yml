@@ -94,6 +94,7 @@ jobs:
           BASE_URL: ${{ steps.vercel-url.outputs.url }}
           NEXT_PUBLIC_API_URL: ${{ needs.deploy-staging.outputs.api-url }}
           USER_POOL_ID: ${{ needs.deploy-staging.outputs.user-pool-id }}
+          TABLE_NAME: ${{ needs.deploy-staging.outputs.table-name }}
           AWS_REGION: ap-northeast-1
 
       - name: Upload test results
