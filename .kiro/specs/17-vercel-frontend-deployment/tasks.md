@@ -99,14 +99,14 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - GitHub Variables から Vercel URL を取得
     - 各環境（production, staging, development）に `VERCEL_URL` を設定
     - _要件: 3.1, 3.2_
-  - [ ] 5.3 Vercel 環境変数ファイルを生成するステップを追加
+  - [x] 5.3 Vercel 環境変数ファイルを生成するステップを追加
     - `.github/workflows/deploy-reusable.yml` に新しいステップを追加
     - CDK Outputs から API URL と Cognito 設定を取得
     - `.env.production` ファイルを生成（本番環境用）
     - `.env.preview` ファイルを生成（プレビュー環境用）
     - 生成したファイルをアーティファクトとしてアップロード
     - _要件: 2.1, 2.2, 2.3, 2.4, 2.5_
-  - [ ] 5.4 cd-production.yml の E2E テストステップを更新
+  - [x] 5.4 cd-production.yml の E2E テストステップを更新
     - `.github/workflows/cd-production.yml` を更新
     - GitHub Variables から Vercel URL を取得
     - `BASE_URL` 環境変数を Vercel URL に設定
