@@ -10,6 +10,7 @@ export default defineConfig({
     hookTimeout: 15000, // 15 seconds for hooks
     teardownTimeout: 5000, // 5 seconds for teardown
     exclude: ['**/node_modules/**', '**/e2e/**'],
+    reporters: process.env.CI ? ['basic'] : ['default'],
   },
   resolve: {
     alias: {

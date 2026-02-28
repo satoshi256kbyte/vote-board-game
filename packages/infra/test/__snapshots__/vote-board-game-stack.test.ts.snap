@@ -207,11 +207,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "14cc95193a04aac87bcd0f4154ad5db6202b17f32f4ef2ca0e56c9d1867b3305.zip",
+          "S3Key": "f39550a64fb435c53da9031eaa85f2166af5ea008ea7f4d2d08a519008ed8b7d.zip",
         },
         "Environment": {
           "Variables": {
-            "ALLOWED_ORIGINS": "http://localhost:3000",
+            "ALLOWED_ORIGINS": "http://localhost:3000,https://vote-board-game-*-satoshi256kbytes-projects.vercel.app",
             "CDN_DOMAIN": {
               "Fn::GetAtt": [
                 "IconDistribution6DC53514",
@@ -228,6 +228,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
               "Ref": "IconBucketB9D7CB87",
             },
             "NODE_ENV": "dev",
+            "NODE_OPTIONS": "--enable-source-maps",
             "TABLE_NAME": {
               "Ref": "VoteBoardGameTable4368E79C",
             },
@@ -501,11 +502,12 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "14cc95193a04aac87bcd0f4154ad5db6202b17f32f4ef2ca0e56c9d1867b3305.zip",
+          "S3Key": "f39550a64fb435c53da9031eaa85f2166af5ea008ea7f4d2d08a519008ed8b7d.zip",
         },
         "Environment": {
           "Variables": {
             "NODE_ENV": "dev",
+            "NODE_OPTIONS": "--enable-source-maps",
             "TABLE_NAME": {
               "Ref": "VoteBoardGameTable4368E79C",
             },
@@ -937,6 +939,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           ],
           "AllowOrigins": [
             "http://localhost:3000",
+            "https://vote-board-game-*-satoshi256kbytes-projects.vercel.app",
           ],
           "MaxAge": 3600,
         },
@@ -2512,7 +2515,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "14cc95193a04aac87bcd0f4154ad5db6202b17f32f4ef2ca0e56c9d1867b3305.zip",
+          "S3Key": "f39550a64fb435c53da9031eaa85f2166af5ea008ea7f4d2d08a519008ed8b7d.zip",
         },
         "Environment": {
           "Variables": {
@@ -2533,6 +2536,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
               "Ref": "IconBucketB9D7CB87",
             },
             "NODE_ENV": "prod",
+            "NODE_OPTIONS": "--enable-source-maps",
             "TABLE_NAME": {
               "Ref": "VoteBoardGameTable4368E79C",
             },
@@ -3015,11 +3019,12 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "14cc95193a04aac87bcd0f4154ad5db6202b17f32f4ef2ca0e56c9d1867b3305.zip",
+          "S3Key": "f39550a64fb435c53da9031eaa85f2166af5ea008ea7f4d2d08a519008ed8b7d.zip",
         },
         "Environment": {
           "Variables": {
             "NODE_ENV": "prod",
+            "NODE_OPTIONS": "--enable-source-maps",
             "TABLE_NAME": {
               "Ref": "VoteBoardGameTable4368E79C",
             },

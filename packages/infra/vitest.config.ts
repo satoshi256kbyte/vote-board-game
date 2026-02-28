@@ -5,6 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['test/**/*.test.ts'],
+    reporters: process.env.CI ? ['basic'] : ['default'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

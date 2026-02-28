@@ -51,7 +51,7 @@ jobs:
         run: pnpm type-check
 
       - name: Test
-        run: pnpm test --run --reporter=basic
+        run: pnpm test
 
   build:
     runs-on: ubuntu-latest
