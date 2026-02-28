@@ -66,7 +66,11 @@ export class LoginPage {
     await retryAssertion(async () => {
       const url = this.page.url();
       // Accept either '/' or '/games' as valid redirect destinations
-      expect(url === '/' || url.includes('/games') || url.endsWith('/')).toBe(true);
+      const isValid = url === '/' || url.includes('/games') || url.endsWith('/');
+      if (!isValid) {
+        throw new Error(`Expected URL to be '/' or contain '/games', but got: ${url}`);
+      }
+      expect(isValid).toBe(true);
     });
   }
 }
