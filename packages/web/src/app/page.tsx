@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { fetchGames, ApiError } from '@/lib/api/client';
 import { GameList } from '@/components/game-list';
@@ -92,11 +92,6 @@ export default function Home() {
   return (
     <div className="bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">投票対局</h1>
-          <p className="mt-2 text-gray-600">みんなで投票して次の一手を決めよう</p>
-        </div>
-
         <GameList initialGames={games} initialStatus={status} initialNextCursor={nextCursor} />
       </div>
     </div>

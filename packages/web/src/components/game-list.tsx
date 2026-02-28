@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GameCard } from './game-card';
 import type { GameSummary, GameStatus } from '@/types/game';

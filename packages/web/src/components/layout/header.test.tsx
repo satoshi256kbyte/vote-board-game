@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { Header } from './header';
 import * as useAuthModule from '@/lib/hooks/use-auth';
 import * as nextNavigation from 'next/navigation';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -22,7 +23,7 @@ describe('Header', () => {
     vi.clearAllMocks();
     vi.mocked(nextNavigation.useRouter).mockReturnValue({
       push: mockPush,
-    } as any);
+    } as unknown as AppRouterInstance);
   });
 
   it('should render logo', () => {
@@ -30,10 +31,13 @@ describe('Header', () => {
       user: null,
       isAuthenticated: false,
       logout: vi.fn(),
-    } as any);
+      login: vi.fn(),
+      setUser: vi.fn(),
+      isLoading: false,
+    });
 
     render(<Header />);
-    expect(screen.getByText('投票ボドゲ')).toBeInTheDocument();
+    expect(screen.getByText('投票対局')).toBeInTheDocument();
   });
 
   it('should render login and register buttons when not authenticated', () => {
@@ -41,7 +45,10 @@ describe('Header', () => {
       user: null,
       isAuthenticated: false,
       logout: vi.fn(),
-    } as any);
+      login: vi.fn(),
+      setUser: vi.fn(),
+      isLoading: false,
+    });
 
     render(<Header />);
     expect(screen.getByText('ログイン')).toBeInTheDocument();
@@ -50,10 +57,13 @@ describe('Header', () => {
 
   it('should render create game and profile buttons when authenticated', () => {
     vi.mocked(useAuthModule.useAuth).mockReturnValue({
-      user: { username: 'testuser', email: 'test@example.com' },
+      user: { userId: 'user-1', username: 'testuser', email: 'test@example.com' },
       isAuthenticated: true,
       logout: vi.fn(),
-    } as any);
+      login: vi.fn(),
+      setUser: vi.fn(),
+      isLoading: false,
+    });
 
     render(<Header />);
     expect(screen.getByText('対局作成')).toBeInTheDocument();
@@ -64,10 +74,13 @@ describe('Header', () => {
     const user = userEvent.setup();
     const mockLogout = vi.fn();
     vi.mocked(useAuthModule.useAuth).mockReturnValue({
-      user: { username: 'testuser', email: 'test@example.com' },
+      user: { userId: 'user-1', username: 'testuser', email: 'test@example.com' },
       isAuthenticated: true,
       logout: mockLogout,
-    } as any);
+      login: vi.fn(),
+      setUser: vi.fn(),
+      isLoading: false,
+    });
 
     render(<Header />);
 

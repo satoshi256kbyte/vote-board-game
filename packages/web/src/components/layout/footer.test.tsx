@@ -6,9 +6,7 @@ describe('Footer', () => {
   it('should render copyright text', () => {
     render(<Footer />);
     const currentYear = new Date().getFullYear();
-    expect(
-      screen.getByText(`© ${currentYear} 投票ボドゲ. All rights reserved.`)
-    ).toBeInTheDocument();
+    expect(screen.getByText(`© ${currentYear} 投票対局. All rights reserved.`)).toBeInTheDocument();
   });
 
   it('should render with correct styling', () => {

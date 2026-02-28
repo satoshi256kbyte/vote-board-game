@@ -19,6 +19,18 @@ vi.mock('@/lib/api/client', async (importOriginal) => {
   };
 });
 
+// Mock useAuth hook
+vi.mock('@/lib/hooks/use-auth', () => ({
+  useAuth: vi.fn(() => ({
+    user: null,
+    isAuthenticated: false,
+    logout: vi.fn(),
+    login: vi.fn(),
+    setUser: vi.fn(),
+    isLoading: false,
+  })),
+}));
+
 // Mock next/navigation
 const mockPush = vi.fn();
 const mockGet = vi.fn();
@@ -80,7 +92,7 @@ describe('Game List Screen Integration', () => {
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByText('投票対局')).toBeInTheDocument();
+      expect(screen.queryByText('進行中')).toBeInTheDocument();
     });
 
     expect(screen.getByText('進行中')).toHaveClass('border-blue-500');

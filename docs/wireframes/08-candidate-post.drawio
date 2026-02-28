@@ -9,7 +9,7 @@
         <mxCell id="header" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;" vertex="1" parent="1">
           <mxGeometry x="40" y="40" width="1320" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="logo" value="[ロゴ] 投票ボドゲ" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+        <mxCell id="logo" value="[ロゴ] 投票対局" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="60" y="55" width="200" height="30" as="geometry" />
         </mxCell>
         
@@ -58,7 +58,7 @@
         </mxCell>
         
         <!-- フッター -->
-        <mxCell id="footer" value="© 2026 投票ボドゲ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9fafb;strokeColor=#e5e7eb;align=center;" vertex="1" parent="1">
+        <mxCell id="footer" value="© 2026 投票対局" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9fafb;strokeColor=#e5e7eb;align=center;" vertex="1" parent="1">
           <mxGeometry x="40" y="1120" width="1320" height="40" as="geometry" />
         </mxCell>
       </root>

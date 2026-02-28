@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
@@ -28,7 +27,7 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-xl font-bold text-gray-900">投票ボドゲ</span>
+            <span className="text-xl font-bold text-gray-900">投票対局</span>
           </Link>
 
           {/* Navigation */}

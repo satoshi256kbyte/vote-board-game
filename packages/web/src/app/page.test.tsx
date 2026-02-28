@@ -19,6 +19,18 @@ vi.mock('@/lib/api/client', async (importOriginal) => {
   };
 });
 
+// Mock useAuth hook
+vi.mock('@/lib/hooks/use-auth', () => ({
+  useAuth: vi.fn(() => ({
+    user: null,
+    isAuthenticated: false,
+    logout: vi.fn(),
+    login: vi.fn(),
+    setUser: vi.fn(),
+    isLoading: false,
+  })),
+}));
+
 // Mock the GameList component
 vi.mock('@/components/game-list', () => ({
   GameList: ({ initialGames }: { initialGames: GameSummary[] }) => (
@@ -81,11 +93,9 @@ describe('Home (Game List Screen)', () => {
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByText('投票対局')).toBeInTheDocument();
+      expect(screen.queryByTestId('game-list')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('みんなで投票して次の一手を決めよう')).toBeInTheDocument();
-    expect(screen.getByTestId('game-list')).toBeInTheDocument();
     expect(screen.getByTestId('game-game-1')).toBeInTheDocument();
     expect(screen.getByTestId('game-game-2')).toBeInTheDocument();
   });
