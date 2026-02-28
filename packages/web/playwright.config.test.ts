@@ -101,12 +101,10 @@ describe('Playwright Config', () => {
       expect(config.use?.navigationTimeout).toBe(30000);
     });
 
-    it('should configure three browsers (Chromium, Firefox, WebKit)', () => {
+    it('should configure only Chromium browser', () => {
       const config = createPlaywrightConfig('https://example.com', false);
-      expect(config.projects).toHaveLength(3);
+      expect(config.projects).toHaveLength(1);
       expect(config.projects?.[0].name).toBe('chromium');
-      expect(config.projects?.[1].name).toBe('firefox');
-      expect(config.projects?.[2].name).toBe('webkit');
     });
 
     it('should configure HTML and list reporters', () => {
