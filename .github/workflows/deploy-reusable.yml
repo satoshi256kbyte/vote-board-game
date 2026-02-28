@@ -121,6 +121,36 @@ jobs:
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
           echo "api-lambda-name=$API_LAMBDA_NAME" >> $GITHUB_OUTPUT
 
+      - name: Generate Vercel environment files
+        run: |
+          # CDK outputs から値を取得
+          API_URL=$(jq -r '.[] | .ApiUrl' packages/infra/cdk-outputs.json)
+          COGNITO_USER_POOL_ID=$(jq -r '.[] | .UserPoolId' packages/infra/cdk-outputs.json)
+          COGNITO_CLIENT_ID=$(jq -r '.[] | .UserPoolClientId' packages/infra/cdk-outputs.json)
+
+          # .env.production を生成
+          echo "NEXT_PUBLIC_API_URL=${API_URL}" > .env.production
+          echo "NEXT_PUBLIC_APP_URL=${{ vars.VERCEL_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> .env.production
+          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> .env.production
+          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> .env.production
+
+          # .env.preview を生成
+          echo "NEXT_PUBLIC_API_URL=${API_URL}" > .env.preview
+          echo "NEXT_PUBLIC_APP_URL=https://\$VERCEL_URL" >> .env.preview
+          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> .env.preview
+          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> .env.preview
+          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> .env.preview
+
+      - name: Upload environment files as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vercel-env-files-${{ github.run_id }}
+          path: |
+            .env.production
+            .env.preview
+          retention-days: 30
+
       - name: Verify API health
         run: |
           echo "Checking API health..."
