@@ -128,27 +128,32 @@ jobs:
           COGNITO_USER_POOL_ID=$(jq -r '.[] | .UserPoolId' packages/infra/cdk-outputs.json)
           COGNITO_CLIENT_ID=$(jq -r '.[] | .UserPoolClientId' packages/infra/cdk-outputs.json)
 
-          # .env.production を生成
-          echo "NEXT_PUBLIC_API_URL=${API_URL}" > .env.production
-          echo "NEXT_PUBLIC_APP_URL=${{ vars.VERCEL_URL }}" >> .env.production
-          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> .env.production
-          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> .env.production
-          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> .env.production
+          # 環境名を取得
+          if [ "${{ inputs.environment }}" = "development" ]; then
+            ENV_SUFFIX="development"
+          elif [ "${{ inputs.environment }}" = "staging" ]; then
+            ENV_SUFFIX="staging"
+          elif [ "${{ inputs.environment }}" = "production" ]; then
+            ENV_SUFFIX="production"
+          else
+            ENV_SUFFIX="${{ inputs.environment }}"
+          fi
 
-          # .env.preview を生成
-          echo "NEXT_PUBLIC_API_URL=${API_URL}" > .env.preview
-          echo "NEXT_PUBLIC_APP_URL=https://\$VERCEL_URL" >> .env.preview
-          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> .env.preview
-          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> .env.preview
-          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> .env.preview
+          # .env.{environment} を生成（本番用）
+          echo "NEXT_PUBLIC_API_URL=${API_URL}" > .env.${ENV_SUFFIX}
+          echo "NEXT_PUBLIC_APP_URL=${{ vars.VERCEL_URL }}" >> .env.${ENV_SUFFIX}
+          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> .env.${ENV_SUFFIX}
+          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> .env.${ENV_SUFFIX}
+          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> .env.${ENV_SUFFIX}
+
+          echo "Generated .env.${ENV_SUFFIX}"
+          cat .env.${ENV_SUFFIX}
 
       - name: Upload environment files as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: vercel-env-files-${{ github.run_id }}
-          path: |
-            .env.production
-            .env.preview
+          name: vercel-env-${{ inputs.environment }}
+          path: .env.${{ inputs.environment }}
           retention-days: 30
 
       - name: Verify API health
