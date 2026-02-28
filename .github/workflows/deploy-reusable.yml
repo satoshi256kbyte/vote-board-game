@@ -104,6 +104,10 @@ jobs:
             ENV_NAME="${{ inputs.environment }}"
           fi
 
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Short environment name: ${ENV_NAME}"
+          echo "Vercel URL from vars: ${{ vars.VERCEL_URL }}"
+
           pnpm cdk deploy --require-approval never --outputs-file cdk-outputs.json \
             --context appName=vbg \
             --context environment=$ENV_NAME \
@@ -115,31 +119,60 @@ jobs:
       - name: Extract CDK Outputs
         id: cdk-outputs
         run: |
+          echo "Extracting CDK outputs from packages/infra/cdk-outputs.json"
+          cat packages/infra/cdk-outputs.json
+
           API_URL=$(jq -r '.[] | .ApiUrl' packages/infra/cdk-outputs.json)
           API_LAMBDA_NAME=$(jq -r '.[] | .ApiLambdaFunctionName' packages/infra/cdk-outputs.json)
+
+          echo "API URL: ${API_URL}"
+          echo "API Lambda Name: ${API_LAMBDA_NAME}"
 
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
           echo "api-lambda-name=$API_LAMBDA_NAME" >> $GITHUB_OUTPUT
 
       - name: Generate Vercel environment files
         run: |
+          echo "=== Vercel Environment File Generation ==="
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Vercel URL from vars: ${{ vars.VERCEL_URL }}"
+
           # CDK outputs から値を取得
+          echo "Reading CDK outputs..."
           API_URL=$(jq -r '.[] | .ApiUrl' packages/infra/cdk-outputs.json)
           COGNITO_USER_POOL_ID=$(jq -r '.[] | .UserPoolId' packages/infra/cdk-outputs.json)
           COGNITO_CLIENT_ID=$(jq -r '.[] | .UserPoolClientId' packages/infra/cdk-outputs.json)
 
+          echo "API URL: ${API_URL}"
+          echo "Cognito User Pool ID: ${COGNITO_USER_POOL_ID}"
+          echo "Cognito Client ID: ${COGNITO_CLIENT_ID}"
+
           # 環境名を設定（inputs.environment をそのまま使用）
           ENV_NAME="${{ inputs.environment }}"
 
+          echo "Target environment name: ${ENV_NAME}"
+          echo "Current directory: $(pwd)"
+          echo "Files before generation:"
+          ls -la
+
           # .env.{environment} を生成
-          echo "NEXT_PUBLIC_API_URL=${API_URL}" > .env.${ENV_NAME}
-          echo "NEXT_PUBLIC_APP_URL=${{ vars.VERCEL_URL }}" >> .env.${ENV_NAME}
-          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> .env.${ENV_NAME}
-          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> .env.${ENV_NAME}
-          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> .env.${ENV_NAME}
+          echo "NEXT_PUBLIC_API_URL=${API_URL}" > ".env.${ENV_NAME}"
+          echo "NEXT_PUBLIC_APP_URL=${{ vars.VERCEL_URL }}" >> ".env.${ENV_NAME}"
+          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> ".env.${ENV_NAME}"
+          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> ".env.${ENV_NAME}"
+          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> ".env.${ENV_NAME}"
 
           echo "Generated .env.${ENV_NAME}"
-          cat .env.${ENV_NAME}
+          echo "Files after generation:"
+          ls -la .env.* || echo "No .env files found"
+          echo "Content of .env.${ENV_NAME}:"
+          cat ".env.${ENV_NAME}"
+
+          echo "Generated .env.${ENV_NAME}"
+          echo "Files after generation:"
+          ls -la .env.* || echo "No .env files found"
+          echo "Content of .env.${ENV_NAME}:"
+          cat ".env.${ENV_NAME}"
 
       - name: Upload environment files as artifacts
         uses: actions/upload-artifact@v4
@@ -147,6 +180,7 @@ jobs:
           name: vercel-env-${{ inputs.environment }}
           path: .env.${{ inputs.environment }}
           retention-days: 30
+          if-no-files-found: error
 
       - name: Verify API health
         run: |
