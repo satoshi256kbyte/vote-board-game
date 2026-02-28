@@ -128,26 +128,18 @@ jobs:
           COGNITO_USER_POOL_ID=$(jq -r '.[] | .UserPoolId' packages/infra/cdk-outputs.json)
           COGNITO_CLIENT_ID=$(jq -r '.[] | .UserPoolClientId' packages/infra/cdk-outputs.json)
 
-          # 環境名を取得
-          if [ "${{ inputs.environment }}" = "development" ]; then
-            ENV_SUFFIX="development"
-          elif [ "${{ inputs.environment }}" = "staging" ]; then
-            ENV_SUFFIX="staging"
-          elif [ "${{ inputs.environment }}" = "production" ]; then
-            ENV_SUFFIX="production"
-          else
-            ENV_SUFFIX="${{ inputs.environment }}"
-          fi
+          # 環境名を設定（inputs.environment をそのまま使用）
+          ENV_NAME="${{ inputs.environment }}"
 
-          # .env.{environment} を生成（本番用）
-          echo "NEXT_PUBLIC_API_URL=${API_URL}" > .env.${ENV_SUFFIX}
-          echo "NEXT_PUBLIC_APP_URL=${{ vars.VERCEL_URL }}" >> .env.${ENV_SUFFIX}
-          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> .env.${ENV_SUFFIX}
-          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> .env.${ENV_SUFFIX}
-          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> .env.${ENV_SUFFIX}
+          # .env.{environment} を生成
+          echo "NEXT_PUBLIC_API_URL=${API_URL}" > .env.${ENV_NAME}
+          echo "NEXT_PUBLIC_APP_URL=${{ vars.VERCEL_URL }}" >> .env.${ENV_NAME}
+          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}" >> .env.${ENV_NAME}
+          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}" >> .env.${ENV_NAME}
+          echo "NEXT_PUBLIC_AWS_REGION=ap-northeast-1" >> .env.${ENV_NAME}
 
-          echo "Generated .env.${ENV_SUFFIX}"
-          cat .env.${ENV_SUFFIX}
+          echo "Generated .env.${ENV_NAME}"
+          cat .env.${ENV_NAME}
 
       - name: Upload environment files as artifacts
         uses: actions/upload-artifact@v4
