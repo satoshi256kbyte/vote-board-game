@@ -157,11 +157,13 @@ test.describe('User Login Flow', () => {
     await page.evaluate(() => localStorage.clear());
 
     // Attempt to access protected page without authentication
-    await page.goto('/games');
+    await page.goto('/profile');
 
     // Should redirect to login page with redirect parameter
     await page.waitForURL(/\/login/, { timeout: 10000 });
     const url = page.url();
     expect(url).toContain('/login');
+    // Verify redirect parameter is set
+    expect(url).toContain('redirect=%2Fprofile');
   });
 });
