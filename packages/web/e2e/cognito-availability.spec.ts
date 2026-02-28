@@ -22,6 +22,5 @@ test.describe('Cognito Availability Handling', () => {
     const testUser = generateTestUser();
     expect(testUser.email).toBeTruthy();
     expect(testUser.password).toBeTruthy();
-    expect(testUser.username).toBeTruthy();
   });
 });

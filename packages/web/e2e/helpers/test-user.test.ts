@@ -32,12 +32,11 @@ describe('generateTestUser', () => {
     expect(user.password).toMatch(/[0-9]/);
   });
 
-  it('should generate a non-empty username', () => {
+  it('should generate a test user with unique email and password', () => {
     const user = generateTestUser();
 
-    expect(user.username).toBeTruthy();
-    expect(user.username.length).toBeGreaterThan(0);
-    expect(user.username).toMatch(/^testuser\d+$/);
+    expect(user.email).toBeTruthy();
+    expect(user.password).toBeTruthy();
   });
 });
 
@@ -78,7 +77,6 @@ describe('loginUser', () => {
     const testUser = {
       email: 'test@example.com',
       password: 'TestPass123',
-      username: 'testuser',
     };
 
     await loginUser(mockPage, testUser);
@@ -94,7 +92,6 @@ describe('loginUser', () => {
     const testUser = {
       email: 'test@example.com',
       password: 'TestPass123',
-      username: 'testuser',
     };
 
     vi.mocked(mockPage.waitForURL).mockRejectedValue(new Error('Login failed'));

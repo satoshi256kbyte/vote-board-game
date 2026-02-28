@@ -29,7 +29,6 @@ import { getPasswordResetCode } from '../helpers/cognito-code';
 
 // Arbitrary for generating valid test user data
 const testUserArbitrary = fc.record({
-  username: fc.string({ minLength: 3, maxLength: 20 }).filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
   emailPrefix: fc.string({ minLength: 5, maxLength: 15 }).filter((s) => /^[a-z0-9]+$/.test(s)),
   passwordSuffix: fc.integer({ min: 1000, max: 9999 }),
   newPasswordSuffix: fc.integer({ min: 1000, max: 9999 }),
@@ -68,17 +67,15 @@ test.describe('Password Reset Flow - Property Tests', () => {
           const email = `${userData.emailPrefix}-${timestamp}-${random}@example.com`;
           const oldPassword = `TestPass${userData.passwordSuffix}!`;
           const newPassword = `NewPass${userData.newPasswordSuffix}!`;
-          const username = userData.username;
 
           testEmails.push(email);
 
           // Pre-register the test user
           await navigateWithErrorHandling(page, '/register');
           await expect(page.locator('h1')).toContainText('アカウント作成', { timeout: 10000 });
-          await page.fill('input[name="username"]', username);
           await page.fill('input[name="email"]', email);
           await page.fill('input[name="password"]', oldPassword);
-          await page.fill('input[name="confirmPassword"]', oldPassword);
+          await page.fill('input[name="password-confirmation"]', oldPassword);
           await page.click('button[type="submit"]');
           await page.waitForURL('/', { timeout: 15000 });
 

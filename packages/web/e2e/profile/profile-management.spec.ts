@@ -20,7 +20,7 @@ authenticatedUser.describe('Profile Management', () => {
 
       // Verify profile data is visible
       const profileData: ProfileData = {
-        displayName: testUser.username || testUser.email.split('@')[0],
+        displayName: testUser.email.split('@')[0],
       };
       await profilePage.expectProfileDataVisible(profileData);
     }

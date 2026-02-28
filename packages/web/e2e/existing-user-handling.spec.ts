@@ -17,10 +17,9 @@ test.describe('Existing User Error Handling', () => {
     try {
       // First, register the user normally
       await page.goto('/register');
-      await page.fill('input[name="username"]', testUser.username);
       await page.fill('input[name="email"]', testUser.email);
       await page.fill('input[name="password"]', testUser.password);
-      await page.fill('input[name="confirmPassword"]', testUser.password);
+      await page.fill('input[name="password-confirmation"]', testUser.password);
       await page.click('button[type="submit"]');
       await page.waitForURL('/');
 

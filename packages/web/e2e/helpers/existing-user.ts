@@ -49,10 +49,9 @@ export async function registerWithRetry(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       // Fill registration form
-      await page.fill('input[name="username"]', testUser.username);
       await page.fill('input[name="email"]', testUser.email);
       await page.fill('input[name="password"]', testUser.password);
-      await page.fill('input[name="confirmPassword"]', testUser.password);
+      await page.fill('input[name="password-confirmation"]', testUser.password);
 
       // Submit form
       await page.click('button[type="submit"]');
