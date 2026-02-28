@@ -56,6 +56,14 @@ test.describe('User Login Flow', () => {
         }
       });
 
+      // Setup navigation logging
+      const navigationEvents: string[] = [];
+      page.on('framenavigated', (frame) => {
+        if (frame === page.mainFrame()) {
+          navigationEvents.push(`Navigated to: ${frame.url()}`);
+        }
+      });
+
       // Login with valid credentials
       console.log(`[Test] Attempting login with email: ${testUser.email}`);
       await loginPage.login(testUser.email, testUser.password);
@@ -66,9 +74,21 @@ test.describe('User Login Flow', () => {
       // Log current state
       const currentUrl = page.url();
       console.log(`[Test] Current URL after login: ${currentUrl}`);
+      console.log(`[Test] Navigation events:`, navigationEvents);
       console.log(`[Test] API requests:`, JSON.stringify(apiRequests, null, 2));
       console.log(`[Test] Console messages:`, consoleMessages.slice(-10));
       console.log(`[Test] Console errors:`, consoleErrors);
+
+      // Check localStorage state
+      const localStorageState = await page.evaluate(() => {
+        return {
+          accessToken: localStorage.getItem('accessToken'),
+          refreshToken: localStorage.getItem('refreshToken'),
+          user: localStorage.getItem('user'),
+          allKeys: Object.keys(localStorage),
+        };
+      });
+      console.log(`[Test] localStorage state:`, JSON.stringify(localStorageState, null, 2));
 
       // Check if login API was called and succeeded
       const loginRequest = apiRequests.find((req) => req.url.includes('/auth/login'));
@@ -82,6 +102,19 @@ test.describe('User Login Flow', () => {
       }
 
       console.log(`[Test] Login API succeeded with status ${loginRequest.status}`);
+
+      // Check if tokens were saved to localStorage
+      if (!localStorageState.accessToken) {
+        throw new Error('Access token was not saved to localStorage');
+      }
+      if (!localStorageState.refreshToken) {
+        throw new Error('Refresh token was not saved to localStorage');
+      }
+      if (!localStorageState.user) {
+        throw new Error('User data was not saved to localStorage');
+      }
+
+      console.log(`[Test] Tokens and user data successfully saved to localStorage`);
 
       // Verify redirect (login redirects to '/' by default)
       await loginPage.expectRedirectToGameList();

@@ -59,28 +59,13 @@ export function createPlaywrightConfig(
       navigationTimeout: 30 * 1000,
     },
 
-    // ブラウザ設定（CI環境ではChromiumのみ）
-    projects: isCI
-      ? [
-          {
-            name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
-          },
-        ]
-      : [
-          {
-            name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
-          },
-          {
-            name: 'firefox',
-            use: { ...devices['Desktop Firefox'] },
-          },
-          {
-            name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
-          },
-        ],
+    // ブラウザ設定（CI環境ではChromiumのみ、ローカルもChromiumのみ）
+    projects: [
+      {
+        name: 'chromium',
+        use: { ...devices['Desktop Chrome'] },
+      },
+    ],
   };
 }
 
