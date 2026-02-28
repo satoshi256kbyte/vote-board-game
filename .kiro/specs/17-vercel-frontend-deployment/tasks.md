@@ -93,7 +93,7 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - "Invalidate CloudFront cache" ステップを削除
     - "Extract CDK Outputs" からフロントエンド関連の出力を削除
     - _要件: 5.1, 5.2, 5.3, 5.4_
-  - [ ] 5.2 CDK デプロイコマンドに Vercel URL を渡すように更新
+  - [x] 5.2 CDK デプロイコマンドに Vercel URL を渡すように更新
     - `.github/workflows/deploy-reusable.yml` の CDK デプロイステップを更新
     - `--context vercelUrl=${{ vars.VERCEL_URL }}` を追加（`vercelProductionUrl` から変更）
     - GitHub Variables から Vercel URL を取得
