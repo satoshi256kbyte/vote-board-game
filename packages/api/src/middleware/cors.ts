@@ -21,11 +21,7 @@ export const corsMiddleware = (allowedOrigins: string) => {
 
     // プリフライトリクエスト（OPTIONS）の処理
     if (c.req.method === 'OPTIONS') {
-      c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-      c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      c.header('Access-Control-Max-Age', '3600');
-
-      // ヘッダーを含むResponseを構築
+      // Construct Response with headers
       const headers = new Headers();
       if (origin && isOriginAllowed(origin, origins)) {
         headers.set('Access-Control-Allow-Origin', origin);

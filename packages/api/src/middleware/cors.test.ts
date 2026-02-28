@@ -92,25 +92,33 @@ describe('CORS Middleware', () => {
       (mockContext.req!.header as MockFn).mockReturnValue('https://vote-board-game-web.vercel.app');
       mockContext.req!.method = 'OPTIONS';
 
-      await middleware(mockContext as Context, mockNext);
+      const result = await middleware(mockContext as Context, mockNext);
 
+      // Response オブジェクトが返されることを確認
+      expect(result).toBeInstanceOf(Response);
+      expect(mockNext).not.toHaveBeenCalled();
+
+      // Response のヘッダーを確認
+      const response = result as Response;
+      expect(response.status).toBe(204);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
+        'https://vote-board-game-web.vercel.app'
+      );
+      expect(response.headers.get('Access-Control-Allow-Methods')).toBe(
+        'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+      );
+      expect(response.headers.get('Access-Control-Allow-Headers')).toBe(
+        'Content-Type, Authorization'
+      );
+      expect(response.headers.get('Access-Control-Max-Age')).toBe('3600');
+      expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true');
+
+      // Context の header メソッドは OPTIONS リクエストでは呼ばれない（直接 Response に設定）
       expect(mockContext.header).toHaveBeenCalledWith(
         'Access-Control-Allow-Origin',
         'https://vote-board-game-web.vercel.app'
       );
-      expect(mockContext.header).toHaveBeenCalledWith(
-        'Access-Control-Allow-Methods',
-        'GET, POST, PUT, PATCH, DELETE, OPTIONS'
-      );
-      expect(mockContext.header).toHaveBeenCalledWith(
-        'Access-Control-Allow-Headers',
-        'Content-Type, Authorization'
-      );
-      expect(mockContext.header).toHaveBeenCalledWith('Access-Control-Max-Age', '3600');
-      // Response オブジェクトが返されることを確認
-      const result = await middleware(mockContext as Context, mockNext);
-      expect(result).toBeInstanceOf(Response);
-      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockContext.header).toHaveBeenCalledWith('Access-Control-Allow-Credentials', 'true');
     });
 
     it('should reject requests from unauthorized origins', async () => {
