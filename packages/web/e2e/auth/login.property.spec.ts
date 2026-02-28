@@ -100,7 +100,7 @@ test.describe('User Login Flow - Property Tests', () => {
 
             // Property 7: Login Stores Authentication Tokens (Access Token)
             console.log(`[Property Test] Step 5: Checking access token`);
-            const accessToken = await page.evaluate(() => localStorage.getItem('accessToken'));
+            const accessToken = await page.evaluate(() => localStorage.getItem('vbg_access_token'));
             expect(accessToken).toBeTruthy();
             expect(accessToken).not.toBe('');
             console.log(
@@ -109,7 +109,9 @@ test.describe('User Login Flow - Property Tests', () => {
 
             // Property 7: Login Stores Authentication Tokens (Refresh Token)
             console.log(`[Property Test] Step 5: Checking refresh token`);
-            const refreshToken = await page.evaluate(() => localStorage.getItem('refreshToken'));
+            const refreshToken = await page.evaluate(() =>
+              localStorage.getItem('vbg_refresh_token')
+            );
             expect(refreshToken).toBeTruthy();
             expect(refreshToken).not.toBe('');
             console.log(

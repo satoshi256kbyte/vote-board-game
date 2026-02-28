@@ -121,7 +121,7 @@ test.describe('Password Reset Flow - Property Tests', () => {
           await page.waitForURL('/', { timeout: 15000 });
 
           // Verify successful login with new password
-          const accessToken = await page.evaluate(() => localStorage.getItem('accessToken'));
+          const accessToken = await page.evaluate(() => localStorage.getItem('vbg_access_token'));
           expect(accessToken).toBeTruthy();
           expect(accessToken).not.toBe('');
 

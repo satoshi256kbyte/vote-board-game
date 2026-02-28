@@ -149,14 +149,19 @@ test.describe('User Login Flow', () => {
     await loginPage.expectErrorMessage('');
   });
 
-  test.skip('should redirect to login when accessing protected page without authentication', async ({
+  test('should redirect to login when accessing protected page without authentication', async ({
     page,
   }) => {
+    // Clear any existing authentication
+    await page.goto('/');
+    await page.evaluate(() => localStorage.clear());
+
     // Attempt to access protected page without authentication
     await page.goto('/games');
 
-    // Should redirect to login page
-    await page.waitForURL('/login', { timeout: 10000 });
-    expect(page.url()).toContain('/login');
+    // Should redirect to login page with redirect parameter
+    await page.waitForURL(/\/login/, { timeout: 10000 });
+    const url = page.url();
+    expect(url).toContain('/login');
   });
 });
