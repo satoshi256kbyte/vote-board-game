@@ -63,7 +63,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download API artifact
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: ci.yml
           run_id: ${{ inputs.ci-run-id }}
@@ -71,7 +71,7 @@ jobs:
           path: packages/api/dist
 
       - name: Download Infra artifact
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: ci.yml
           run_id: ${{ inputs.ci-run-id }}
