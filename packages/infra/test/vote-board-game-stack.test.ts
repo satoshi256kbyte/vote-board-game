@@ -386,7 +386,7 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: 'http://localhost:3000',
+            ALLOWED_ORIGINS: 'http://localhost:3000,https://*.vercel.app',
           },
         },
       });
@@ -414,7 +414,7 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: 'https://stg.vote-board-game.example.com',
+            ALLOWED_ORIGINS: 'https://vote-board-game-web-stg.vercel.app,https://*.vercel.app',
           },
         },
       });
@@ -442,7 +442,7 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: 'https://vote-board-game.example.com',
+            ALLOWED_ORIGINS: 'https://*.vercel.app',
           },
         },
       });
@@ -460,18 +460,7 @@ describe('VoteBoardGameStack', () => {
         Name: 'vbg-dev-apigateway-main',
         ProtocolType: 'HTTP',
         CorsConfiguration: {
-          AllowOrigins: Match.arrayWith([
-            Match.objectLike({
-              'Fn::Join': Match.arrayWith([
-                Match.arrayWith([
-                  'https://',
-                  Match.objectLike({
-                    'Fn::GetAtt': Match.arrayWith([Match.stringLikeRegexp('WebDistribution.*')]),
-                  }),
-                ]),
-              ]),
-            }),
-          ]),
+          AllowOrigins: ['http://localhost:3000,https://*.vercel.app'],
           AllowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
           AllowHeaders: ['Content-Type', 'Authorization'],
           AllowCredentials: true,

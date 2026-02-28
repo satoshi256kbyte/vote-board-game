@@ -59,7 +59,7 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - Web CloudFront Distribution (`distribution`) を削除
     - 関連する CloudFormation Outputs を削除
     - _要件: 4.1, 4.2, 4.3, 4.5_
-  - [ ] 3.2 CORS 設定を更新
+  - [x] 3.2 CORS 設定を更新
     - `allowedOrigins` の計算ロジックを更新
     - Vercel URL を CDK context パラメータ `vercelProductionUrl` から取得
     - 開発環境: `http://localhost:3000,https://*.vercel.app`

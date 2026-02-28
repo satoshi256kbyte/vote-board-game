@@ -249,15 +249,20 @@ export class VoteBoardGameStack extends cdk.Stack {
       true
     );
 
+    // Vercel URL を CDK context から取得
+    const vercelProductionUrl = this.node.tryGetContext('vercelProductionUrl') || '';
+
     // ALLOWED_ORIGINS を環境ごとに設定
     const allowedOrigins = (() => {
       switch (environment) {
         case 'dev':
-          return 'http://localhost:3000';
+          return 'http://localhost:3000,https://*.vercel.app';
         case 'stg':
-          return 'https://stg.vote-board-game.example.com';
+          return 'https://vote-board-game-web-stg.vercel.app,https://*.vercel.app';
         case 'prod':
-          return 'https://vote-board-game.example.com';
+          return vercelProductionUrl
+            ? `${vercelProductionUrl},https://*.vercel.app`
+            : 'https://*.vercel.app';
         default:
           return 'http://localhost:3000';
       }
