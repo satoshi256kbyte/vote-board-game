@@ -20,7 +20,7 @@ import { LoginPage } from '../page-objects';
 import { createTestUser, cleanupTestUser } from '../helpers';
 
 test.describe('User Login Flow', () => {
-  test.skip('should successfully login with valid credentials and redirect to game list', async ({
+  test('should successfully login with valid credentials and redirect to game list', async ({
     page,
   }) => {
     const loginPage = new LoginPage(page);
@@ -32,8 +32,56 @@ test.describe('User Login Flow', () => {
       // Navigate to login page
       await loginPage.goto();
 
+      // Setup console logging to capture errors
+      const consoleMessages: string[] = [];
+      const consoleErrors: string[] = [];
+      page.on('console', (msg) => {
+        const text = msg.text();
+        consoleMessages.push(`[${msg.type()}] ${text}`);
+        if (msg.type() === 'error') {
+          consoleErrors.push(text);
+        }
+      });
+
+      // Setup network request logging
+      const apiRequests: { url: string; status: number; method: string }[] = [];
+      page.on('response', (response) => {
+        const url = response.url();
+        if (url.includes('/auth/login')) {
+          apiRequests.push({
+            url,
+            status: response.status(),
+            method: response.request().method(),
+          });
+        }
+      });
+
       // Login with valid credentials
+      console.log(`[Test] Attempting login with email: ${testUser.email}`);
       await loginPage.login(testUser.email, testUser.password);
+
+      // Wait a bit for any async operations
+      await page.waitForTimeout(2000);
+
+      // Log current state
+      const currentUrl = page.url();
+      console.log(`[Test] Current URL after login: ${currentUrl}`);
+      console.log(`[Test] API requests:`, JSON.stringify(apiRequests, null, 2));
+      console.log(`[Test] Console messages:`, consoleMessages.slice(-10));
+      console.log(`[Test] Console errors:`, consoleErrors);
+
+      // Check if login API was called and succeeded
+      const loginRequest = apiRequests.find((req) => req.url.includes('/auth/login'));
+      if (!loginRequest) {
+        throw new Error('Login API was not called');
+      }
+      if (loginRequest.status !== 200) {
+        throw new Error(
+          `Login API failed with status ${loginRequest.status}. Console errors: ${consoleErrors.join(', ')}`
+        );
+      }
+
+      console.log(`[Test] Login API succeeded with status ${loginRequest.status}`);
 
       // Verify redirect (login redirects to '/' by default)
       await loginPage.expectRedirectToGameList();
