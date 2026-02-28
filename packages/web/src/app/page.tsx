@@ -57,7 +57,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <div className="bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
             <div className="h-9 bg-gray-200 rounded w-64 animate-pulse" />
@@ -70,13 +70,13 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <div className="bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">投票対局</h1>
@@ -85,20 +85,20 @@ export default function Home() {
             <p className="text-red-600">{error}</p>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">投票対局</h1>
-          <p className="mt-2 text-gray-600">AI vs 集合知で次の一手を決める投票型ボードゲーム</p>
+          <p className="mt-2 text-gray-600">みんなで投票して次の一手を決めよう</p>
         </div>
 
         <GameList initialGames={games} initialStatus={status} initialNextCursor={nextCursor} />
       </div>
-    </main>
+    </div>
   );
 }
