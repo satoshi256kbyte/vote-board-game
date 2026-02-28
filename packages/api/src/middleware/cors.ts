@@ -24,7 +24,18 @@ export const corsMiddleware = (allowedOrigins: string) => {
       c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
       c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       c.header('Access-Control-Max-Age', '3600');
-      return new Response(null, { status: 204 });
+
+      // ヘッダーを含むResponseを構築
+      const headers = new Headers();
+      if (origin && isOriginAllowed(origin, origins)) {
+        headers.set('Access-Control-Allow-Origin', origin);
+        headers.set('Access-Control-Allow-Credentials', 'true');
+      }
+      headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+      headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      headers.set('Access-Control-Max-Age', '3600');
+
+      return new Response(null, { status: 204, headers });
     }
 
     await next();
