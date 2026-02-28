@@ -11,6 +11,9 @@ export function createPlaywrightConfig(
   return {
     testDir: './e2e',
 
+    // E2E テストファイルのパターン（.test.ts は Vitest 用なので除外）
+    testMatch: '**/*.spec.ts',
+
     // グローバルセットアップ（サービス可用性チェック）
     globalSetup: './e2e/global-setup.ts',
 
