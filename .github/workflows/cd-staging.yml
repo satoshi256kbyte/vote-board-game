@@ -92,7 +92,7 @@ jobs:
         run: pnpm --filter @vote-board-game/web test:e2e
         env:
           BASE_URL: ${{ steps.vercel-url.outputs.url }}
-          USER_POOL_ID: ${{ vars.USER_POOL_ID }}
+          USER_POOL_ID: ${{ needs.deploy-staging.outputs.user-pool-id }}
           AWS_REGION: ap-northeast-1
 
       - name: Upload test results

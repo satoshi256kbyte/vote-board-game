@@ -19,6 +19,9 @@ on:
       api-url:
         description: 'API Gateway URL'
         value: ${{ jobs.deploy.outputs.api-url }}
+      user-pool-id:
+        description: 'Cognito User Pool ID'
+        value: ${{ jobs.deploy.outputs.user-pool-id }}
 
 permissions:
   id-token: write
@@ -30,6 +33,7 @@ jobs:
     environment: ${{ inputs.environment }}
     outputs:
       api-url: ${{ steps.cdk-outputs.outputs.api-url }}
+      user-pool-id: ${{ steps.cdk-outputs.outputs.user-pool-id }}
 
     steps:
       - name: Checkout
@@ -126,12 +130,15 @@ jobs:
 
           API_URL=$(jq -r '.[] | .ApiUrl' packages/infra/cdk-outputs.json)
           API_LAMBDA_NAME=$(jq -r '.[] | .ApiLambdaFunctionName' packages/infra/cdk-outputs.json)
+          USER_POOL_ID=$(jq -r '.[] | .UserPoolId' packages/infra/cdk-outputs.json)
 
           echo "API URL: ${API_URL}"
           echo "API Lambda Name: ${API_LAMBDA_NAME}"
+          echo "User Pool ID: ${USER_POOL_ID}"
 
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
           echo "api-lambda-name=$API_LAMBDA_NAME" >> $GITHUB_OUTPUT
+          echo "user-pool-id=$USER_POOL_ID" >> $GITHUB_OUTPUT
 
       - name: Generate Vercel environment files
         run: |

@@ -93,7 +93,7 @@ jobs:
         run: pnpm --filter @vote-board-game/web test:e2e
         env:
           BASE_URL: ${{ steps.vercel-url.outputs.url }}
-          USER_POOL_ID: ${{ vars.USER_POOL_ID }}
+          USER_POOL_ID: ${{ needs.deploy-development.outputs.user-pool-id }}
           AWS_REGION: ap-northeast-1
         # Note: This step will fail the job and workflow if tests fail (requirement 3.5)
         # No continue-on-error is set, ensuring test failures are properly reported
