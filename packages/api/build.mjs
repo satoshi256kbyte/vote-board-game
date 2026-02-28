@@ -13,8 +13,9 @@ const sharedPackageJson = JSON.parse(
   readFileSync(new URL('../shared/package.json', import.meta.url), 'utf-8')
 );
 
-// AWS SDK v3 と shared パッケージは external に指定
-const externalDeps = ['@aws-sdk/*', ...Object.keys(sharedPackageJson.dependencies || {})];
+// AWS SDK v3 のみを external に指定（Lambda 環境に含まれているため）
+// その他の依存関係（zod, hono など）はすべてバンドルする
+const externalDeps = ['@aws-sdk/*'];
 
 // Lambda handler のビルド
 await esbuild.build({
