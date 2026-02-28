@@ -15,7 +15,6 @@ import { cleanupTestUser, navigateWithErrorHandling } from '../helpers';
 
 // Arbitrary for generating valid test user data
 const testUserArbitrary = fc.record({
-  username: fc.string({ minLength: 3, maxLength: 20 }).filter((s) => /^[a-zA-Z0-9_-]+$/.test(s)),
   emailPrefix: fc.string({ minLength: 5, maxLength: 15 }).filter((s) => /^[a-z0-9]+$/.test(s)),
   passwordSuffix: fc.integer({ min: 1000, max: 9999 }),
 });
@@ -34,6 +33,13 @@ test.describe('User Login Flow - Property Tests', () => {
    * - Store both access token and refresh token in localStorage
    */
   test('should satisfy all login properties for any valid credentials', async ({ page }) => {
+    // Skip test if API URL is not configured
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      test.skip(true, 'NEXT_PUBLIC_API_URL is not set - skipping authentication test');
+      return;
+    }
+
     const testEmails: string[] = [];
 
     try {
@@ -44,7 +50,6 @@ test.describe('User Login Flow - Property Tests', () => {
           const random = Math.floor(Math.random() * 10000);
           const email = `${userData.emailPrefix}-${timestamp}-${random}@example.com`;
           const password = `TestPass${userData.passwordSuffix}!`;
-          const username = userData.username;
 
           console.log(`[Property Test] Testing with user: ${email}`);
           testEmails.push(email);
@@ -56,10 +61,9 @@ test.describe('User Login Flow - Property Tests', () => {
             await expect(page.locator('h1')).toContainText('アカウント作成', { timeout: 10000 });
 
             console.log(`[Property Test] Step 1: Filling registration form`);
-            await page.fill('input[name="username"]', username);
             await page.fill('input[name="email"]', email);
             await page.fill('input[name="password"]', password);
-            await page.fill('input[name="confirmPassword"]', password);
+            await page.fill('input[name="password-confirmation"]', password);
 
             console.log(`[Property Test] Step 1: Submitting registration form`);
             await page.click('button[type="submit"]');
