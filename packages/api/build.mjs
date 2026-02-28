@@ -4,7 +4,7 @@ import { readFileSync, rmSync } from 'fs';
 // 古いビルドファイルをクリーンアップ
 try {
   rmSync('dist', { recursive: true, force: true });
-} catch (error) {
+} catch {
   // ディレクトリが存在しない場合は無視
 }
 
@@ -65,4 +65,5 @@ const __dirname = dirname(__filename);
   },
 });
 
+// eslint-disable-next-line no-console
 console.log('✅ Build completed successfully');
