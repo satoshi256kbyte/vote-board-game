@@ -37,17 +37,17 @@ describe('CORS Middleware', () => {
       expect(mockNext).toHaveBeenCalled();
     });
 
-    it('should allow requests from Vercel preview domains with wildcard', async () => {
-      const allowedOrigins = 'https://*.vercel.app';
+    it('should allow requests from explicit Vercel URLs', async () => {
+      const allowedOrigins = 'https://vote-board-game-web.vercel.app';
       const middleware = corsMiddleware(allowedOrigins);
 
-      (mockContext.req!.header as MockFn).mockReturnValue('https://my-preview-abc123.vercel.app');
+      (mockContext.req!.header as MockFn).mockReturnValue('https://vote-board-game-web.vercel.app');
 
       await middleware(mockContext as Context, mockNext);
 
       expect(mockContext.header).toHaveBeenCalledWith(
         'Access-Control-Allow-Origin',
-        'https://my-preview-abc123.vercel.app'
+        'https://vote-board-game-web.vercel.app'
       );
       expect(mockContext.header).toHaveBeenCalledWith('Access-Control-Allow-Credentials', 'true');
       expect(mockNext).toHaveBeenCalled();
@@ -69,9 +69,9 @@ describe('CORS Middleware', () => {
       expect(mockNext).toHaveBeenCalled();
     });
 
-    it('should allow requests from multiple allowed origins', async () => {
+    it('should allow requests from multiple explicit allowed origins', async () => {
       const allowedOrigins =
-        'https://vote-board-game-web.vercel.app,https://*.vercel.app,http://localhost:3000';
+        'https://vote-board-game-web.vercel.app,https://preview-test.vercel.app,http://localhost:3000';
       const middleware = corsMiddleware(allowedOrigins);
 
       (mockContext.req!.header as MockFn).mockReturnValue('https://preview-test.vercel.app');
@@ -167,36 +167,9 @@ describe('CORS Middleware', () => {
       expect(isOriginAllowed(origin, allowedOrigins)).toBe(true);
     });
 
-    it('should return true for wildcard match', () => {
-      const origin = 'https://preview-abc123.vercel.app';
-      const allowedOrigins = ['https://*.vercel.app'];
-
-      expect(isOriginAllowed(origin, allowedOrigins)).toBe(true);
-    });
-
-    it('should return true for multiple wildcard matches', () => {
-      const origins = [
-        'https://preview-abc.vercel.app',
-        'https://preview-xyz.vercel.app',
-        'https://my-app-test.vercel.app',
-      ];
-      const allowedOrigins = ['https://*.vercel.app'];
-
-      origins.forEach((origin) => {
-        expect(isOriginAllowed(origin, allowedOrigins)).toBe(true);
-      });
-    });
-
     it('should return false for non-matching origin', () => {
       const origin = 'https://malicious-site.com';
       const allowedOrigins = ['https://vote-board-game-web.vercel.app'];
-
-      expect(isOriginAllowed(origin, allowedOrigins)).toBe(false);
-    });
-
-    it('should return false for wildcard non-match', () => {
-      const origin = 'https://example.com';
-      const allowedOrigins = ['https://*.vercel.app'];
 
       expect(isOriginAllowed(origin, allowedOrigins)).toBe(false);
     });
@@ -205,7 +178,7 @@ describe('CORS Middleware', () => {
       const origin = 'http://localhost:3000';
       const allowedOrigins = [
         'https://vote-board-game-web.vercel.app',
-        'https://*.vercel.app',
+        'https://preview-test.vercel.app',
         'http://localhost:3000',
       ];
 
@@ -215,20 +188,6 @@ describe('CORS Middleware', () => {
     it('should handle special regex characters in origin', () => {
       const origin = 'https://app.example.com';
       const allowedOrigins = ['https://app.example.com'];
-
-      expect(isOriginAllowed(origin, allowedOrigins)).toBe(true);
-    });
-
-    it('should not match partial domain with wildcard', () => {
-      const origin = 'https://vercel.app.malicious.com';
-      const allowedOrigins = ['https://*.vercel.app'];
-
-      expect(isOriginAllowed(origin, allowedOrigins)).toBe(false);
-    });
-
-    it('should match subdomain with wildcard', () => {
-      const origin = 'https://sub.domain.vercel.app';
-      const allowedOrigins = ['https://*.vercel.app'];
 
       expect(isOriginAllowed(origin, allowedOrigins)).toBe(true);
     });

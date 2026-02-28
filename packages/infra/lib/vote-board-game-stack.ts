@@ -250,19 +250,17 @@ export class VoteBoardGameStack extends cdk.Stack {
     );
 
     // Vercel URL を CDK context から取得
-    const vercelProductionUrl = this.node.tryGetContext('vercelProductionUrl') || '';
+    const vercelUrl = this.node.tryGetContext('vercelUrl') || '';
 
     // ALLOWED_ORIGINS を環境ごとに設定
     const allowedOrigins = (() => {
       switch (environment) {
         case 'dev':
-          return 'http://localhost:3000,https://*.vercel.app';
+          return vercelUrl ? `http://localhost:3000,${vercelUrl}` : 'http://localhost:3000';
         case 'stg':
-          return 'https://vote-board-game-web-stg.vercel.app,https://*.vercel.app';
+          return vercelUrl || '';
         case 'prod':
-          return vercelProductionUrl
-            ? `${vercelProductionUrl},https://*.vercel.app`
-            : 'https://*.vercel.app';
+          return vercelUrl || '';
         default:
           return 'http://localhost:3000';
       }
@@ -340,7 +338,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       apiName: `${appName}-${environment}-apigateway-main`,
       description: `Vote Board Game API - ${environment}`,
       corsPreflight: {
-        allowOrigins: [allowedOrigins],
+        allowOrigins: allowedOrigins.split(','),
         allowMethods: [
           apigatewayv2.CorsHttpMethod.GET,
           apigatewayv2.CorsHttpMethod.POST,

@@ -51,7 +51,7 @@ Next.js フロントエンドアプリケーションを Vercel にデプロイ�
 #### 受け入れ基準
 
 1. THE CORS_Configuration SHALL allow requests from the Vercel production domain
-2. THE CORS_Configuration SHALL allow requests from Vercel preview deployment domains (\*.vercel.app)
+2. THE CORS_Configuration SHALL allow requests from explicit Vercel deployment URLs configured via GitHub environment variables
 3. THE CORS_Configuration SHALL include the necessary HTTP methods (GET, POST, PUT, DELETE, OPTIONS)
 4. THE CORS_Configuration SHALL include the necessary headers (Content-Type, Authorization)
 5. WHEN a preflight request is received, THE Backend_API SHALL respond with appropriate CORS headers

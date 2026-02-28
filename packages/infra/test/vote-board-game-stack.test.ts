@@ -51,11 +51,11 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      // S3 バケットが作成されていることを確認（web + log + icon の3つ）
-      template.resourceCountIs('AWS::S3::Bucket', 3);
+      // S3 バケットが作成されていることを確認（log + icon の2つ、web は削除済み）
+      template.resourceCountIs('AWS::S3::Bucket', 2);
 
-      // CloudFront Distribution が作成されていることを確認（web + icon の2つ）
-      template.resourceCountIs('AWS::CloudFront::Distribution', 2);
+      // CloudFront Distribution が作成されていることを確認（icon の1つ、web は削除済み）
+      template.resourceCountIs('AWS::CloudFront::Distribution', 1);
     });
 
     it('should create CloudFormation outputs', () => {
@@ -72,17 +72,7 @@ describe('VoteBoardGameStack', () => {
         },
       });
 
-      template.hasOutput('WebBucketName', {
-        Export: {
-          Name: 'VoteBoardGameWebBucketName-dev',
-        },
-      });
-
-      template.hasOutput('DistributionId', {
-        Export: {
-          Name: 'VoteBoardGameDistributionId-dev',
-        },
-      });
+      // WebBucketName と DistributionId は削除済み（Vercel 移行のため）
 
       template.hasOutput('Environment', {
         Value: 'dev',
@@ -175,10 +165,10 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      template.resourceCountIs('AWS::S3::Bucket', 3); // web + log + icon
+      template.resourceCountIs('AWS::S3::Bucket', 2); // log + icon (web は削除済み)
     });
 
-    it('should have exactly 2 CloudFront distributions', () => {
+    it('should have exactly 1 CloudFront distribution', () => {
       const app = new cdk.App();
       const stack = new VoteBoardGameStack(app, 'TestStack', {
         appName: 'vbg',
@@ -186,7 +176,7 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      template.resourceCountIs('AWS::CloudFront::Distribution', 2); // web + icon
+      template.resourceCountIs('AWS::CloudFront::Distribution', 1); // icon のみ (web は削除済み)
     });
 
     it('should have exactly 1 Cognito User Pool', () => {
@@ -219,7 +209,7 @@ describe('VoteBoardGameStack', () => {
       });
       const template = Template.fromStack(stack);
 
-      // API Lambda + Batch Lambda + S3AutoDelete Lambda が作成される
+      // API Lambda + Batch Lambda + S3AutoDelete Lambda (icon bucket 用) が作成される
       template.resourceCountIs('AWS::Lambda::Function', 3);
     });
 
@@ -386,7 +376,7 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: 'http://localhost:3000,https://*.vercel.app',
+            ALLOWED_ORIGINS: 'http://localhost:3000',
           },
         },
       });
@@ -414,7 +404,7 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: 'https://vote-board-game-web-stg.vercel.app,https://*.vercel.app',
+            ALLOWED_ORIGINS: '',
           },
         },
       });
@@ -442,7 +432,7 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: 'https://*.vercel.app',
+            ALLOWED_ORIGINS: '',
           },
         },
       });
@@ -460,7 +450,7 @@ describe('VoteBoardGameStack', () => {
         Name: 'vbg-dev-apigateway-main',
         ProtocolType: 'HTTP',
         CorsConfiguration: {
-          AllowOrigins: ['http://localhost:3000,https://*.vercel.app'],
+          AllowOrigins: ['http://localhost:3000'],
           AllowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
           AllowHeaders: ['Content-Type', 'Authorization'],
           AllowCredentials: true,

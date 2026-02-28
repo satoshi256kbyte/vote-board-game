@@ -87,11 +87,15 @@ API Gateway + Lambda (バックエンド)
 
 現在の CORS 設定を拡張して Vercel ドメインを許可します。
 
+**セキュリティアプローチ:**
+
+ワイルドカードパターン（`https://*.vercel.app`）は使用せず、GitHub Actions の環境変数から取得した明示的な Vercel URL のみを許可します。
+
 **許可するオリジン:**
 
-- Production: `https://vote-board-game-web.vercel.app`
-- Preview: `https://*.vercel.app`（ワイルドカード）
-- Development: `http://localhost:3000`（既存）
+- Development: `http://localhost:3000` + Vercel URL（環境変数から取得）
+- Staging: Vercel URL（環境変数から取得）
+- Production: Vercel URL（環境変数から取得）
 
 **実装方法:**
 
@@ -100,22 +104,34 @@ Lambda 関数の環境変数 `ALLOWED_ORIGINS` を更新:
 ```typescript
 // packages/infra/lib/vote-board-game-stack.ts
 // Vercel URL を CDK context から取得
-const vercelProductionUrl = this.node.tryGetContext('vercelProductionUrl') || '';
+const vercelUrl = this.node.tryGetContext('vercelUrl') || '';
 
 const allowedOrigins = (() => {
   switch (environment) {
     case 'dev':
-      return 'http://localhost:3000,https://*.vercel.app';
+      return vercelUrl ? `http://localhost:3000,${vercelUrl}` : 'http://localhost:3000';
     case 'stg':
-      return 'https://vote-board-game-web-stg.vercel.app,https://*.vercel.app';
+      return vercelUrl || '';
     case 'prod':
-      return vercelProductionUrl
-        ? `${vercelProductionUrl},https://*.vercel.app`
-        : 'https://*.vercel.app';
+      return vercelUrl || '';
     default:
       return 'http://localhost:3000';
   }
 })();
+```
+
+**GitHub Actions での設定:**
+
+環境変数 `VERCEL_URL` を各 GitHub Environment（production, staging, development）に設定し、CDK デプロイ時に渡します:
+
+```yaml
+- name: Deploy CDK Stack
+  run: |
+    pnpm cdk deploy \
+      --context appName=vbg \
+      --context environment=${{ inputs.environment }} \
+      --context vercelUrl=${{ vars.VERCEL_URL }} \
+      --require-approval never
 ```
 
 API 側で動的に CORS ヘッダーを設定:
@@ -145,9 +161,8 @@ export const corsMiddleware = (allowedOrigins: string) => {
 };
 
 function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
-  return allowedOrigins.some((allowed) => {
-    if (allowed.includes('*')) {
-      const pattern = allowed.replace('*', '.*');
+  return allowedOrigins.some((allowed) => allowed === origin);
+}
       return new RegExp(`^${pattern}$`).test(origin);
     }
     return allowed === origin;

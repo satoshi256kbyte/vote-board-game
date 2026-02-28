@@ -66,27 +66,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         "Ref": "BatchFunction768110B6",
       },
     },
-    "DistributionDomainName": {
-      "Description": "CloudFront ドメイン名",
-      "Export": {
-        "Name": "VoteBoardGameDistributionDomain-dev",
-      },
-      "Value": {
-        "Fn::GetAtt": [
-          "WebDistribution59C46482",
-          "DomainName",
-        ],
-      },
-    },
-    "DistributionId": {
-      "Description": "CloudFront ディストリビューション ID",
-      "Export": {
-        "Name": "VoteBoardGameDistributionId-dev",
-      },
-      "Value": {
-        "Ref": "WebDistribution59C46482",
-      },
-    },
     "Environment": {
       "Description": "デプロイ環境",
       "Value": "dev",
@@ -188,15 +167,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         "Ref": "UserPool6BA7E5F2",
       },
     },
-    "WebBucketName": {
-      "Description": "フロントエンド用 S3 バケット名",
-      "Export": {
-        "Name": "VoteBoardGameWebBucketName-dev",
-      },
-      "Value": {
-        "Ref": "WebBucket12880F5B",
-      },
-    },
   },
   "Parameters": {
     "BootstrapVersion": {
@@ -237,7 +207,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "bb4392aac9957cb9e006a86f83062edc2f73ef758152b93bfeea60357a2687f9.zip",
+          "S3Key": "1926c15738db421c4940cddbab5cdc46e75b00bc12df0a850cd784aa2a76d885.zip",
         },
         "Environment": {
           "Variables": {
@@ -531,7 +501,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "bb4392aac9957cb9e006a86f83062edc2f73ef758152b93bfeea60357a2687f9.zip",
+          "S3Key": "1926c15738db421c4940cddbab5cdc46e75b00bc12df0a850cd784aa2a76d885.zip",
         },
         "Environment": {
           "Variables": {
@@ -966,20 +936,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             "OPTIONS",
           ],
           "AllowOrigins": [
-            {
-              "Fn::Join": [
-                "",
-                [
-                  "https://",
-                  {
-                    "Fn::GetAtt": [
-                      "WebDistribution59C46482",
-                      "DomainName",
-                    ],
-                  },
-                ],
-              ],
-            },
+            "http://localhost:3000",
           ],
           "MaxAge": 3600,
         },
@@ -1511,35 +1468,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
                 "Ref": "AWS::AccountId",
               },
             ],
-          ],
-        },
-        "CorsConfiguration": {
-          "CorsRules": [
-            {
-              "AllowedHeaders": [
-                "*",
-              ],
-              "AllowedMethods": [
-                "PUT",
-              ],
-              "AllowedOrigins": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "https://",
-                      {
-                        "Fn::GetAtt": [
-                          "WebDistribution59C46482",
-                          "DomainName",
-                        ],
-                      },
-                    ],
-                  ],
-                },
-              ],
-              "MaxAge": 3000,
-            },
           ],
         },
         "LoggingConfiguration": {
@@ -2328,306 +2256,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       "Type": "AWS::DynamoDB::Table",
       "UpdateReplacePolicy": "Delete",
     },
-    "WebBucket12880F5B": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "BucketEncryption": {
-          "ServerSideEncryptionConfiguration": [
-            {
-              "ServerSideEncryptionByDefault": {
-                "SSEAlgorithm": "AES256",
-              },
-            },
-          ],
-        },
-        "BucketName": {
-          "Fn::Join": [
-            "",
-            [
-              "vbg-dev-s3-web-",
-              {
-                "Ref": "AWS::AccountId",
-              },
-            ],
-          ],
-        },
-        "LoggingConfiguration": {
-          "DestinationBucketName": {
-            "Ref": "LogBucketCC3B17E8",
-          },
-          "LogFilePrefix": "web-bucket-logs/",
-        },
-        "PublicAccessBlockConfiguration": {
-          "BlockPublicAcls": true,
-          "BlockPublicPolicy": true,
-          "IgnorePublicAcls": true,
-          "RestrictPublicBuckets": true,
-        },
-        "Tags": [
-          {
-            "Key": "aws-cdk:auto-delete-objects",
-            "Value": "true",
-          },
-        ],
-      },
-      "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "WebBucketAutoDeleteObjectsCustomResource9C1A079F": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "WebBucketPolicy95D08FAA",
-      ],
-      "Properties": {
-        "BucketName": {
-          "Ref": "WebBucket12880F5B",
-        },
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::S3AutoDeleteObjects",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "WebBucketPolicy95D08FAA": {
-      "Properties": {
-        "Bucket": {
-          "Ref": "WebBucket12880F5B",
-        },
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "s3:*",
-              "Condition": {
-                "Bool": {
-                  "aws:SecureTransport": "false",
-                },
-              },
-              "Effect": "Deny",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "WebBucket12880F5B",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "WebBucket12880F5B",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": [
-                "s3:PutBucketPolicy",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-              ],
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::GetAtt": [
-                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
-                    "Arn",
-                  ],
-                },
-              },
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "WebBucket12880F5B",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "WebBucket12880F5B",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": "s3:GetObject",
-              "Condition": {
-                "StringEquals": {
-                  "AWS:SourceArn": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":cloudfront::",
-                        {
-                          "Ref": "AWS::AccountId",
-                        },
-                        ":distribution/",
-                        {
-                          "Ref": "WebDistribution59C46482",
-                        },
-                      ],
-                    ],
-                  },
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "cloudfront.amazonaws.com",
-              },
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "WebBucket12880F5B",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
-                  ],
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::S3::BucketPolicy",
-    },
-    "WebDistribution59C46482": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-CFR1",
-              "is_reason_encoded": true,
-              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
-            },
-            {
-              "id": "AwsSolutions-CFR2",
-              "is_reason_encoded": true,
-              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
-            },
-            {
-              "id": "AwsSolutions-CFR4",
-              "is_reason_encoded": true,
-              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "DistributionConfig": {
-          "CustomErrorResponses": [
-            {
-              "ErrorCode": 404,
-              "ResponseCode": 200,
-              "ResponsePagePath": "/404.html",
-            },
-          ],
-          "DefaultCacheBehavior": {
-            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
-            "Compress": true,
-            "TargetOriginId": "TestStackWebDistributionOrigin18DCD5D1F",
-            "ViewerProtocolPolicy": "redirect-to-https",
-          },
-          "DefaultRootObject": "index.html",
-          "Enabled": true,
-          "HttpVersion": "http2",
-          "IPV6Enabled": true,
-          "Logging": {
-            "Bucket": {
-              "Fn::GetAtt": [
-                "LogBucketCC3B17E8",
-                "RegionalDomainName",
-              ],
-            },
-            "Prefix": "cloudfront-logs/",
-          },
-          "Origins": [
-            {
-              "DomainName": {
-                "Fn::GetAtt": [
-                  "WebBucket12880F5B",
-                  "RegionalDomainName",
-                ],
-              },
-              "Id": "TestStackWebDistributionOrigin18DCD5D1F",
-              "OriginAccessControlId": {
-                "Fn::GetAtt": [
-                  "WebDistributionOrigin1S3OriginAccessControl83AD2F73",
-                  "Id",
-                ],
-              },
-              "S3OriginConfig": {
-                "OriginAccessIdentity": "",
-              },
-            },
-          ],
-        },
-      },
-      "Type": "AWS::CloudFront::Distribution",
-    },
-    "WebDistributionOrigin1S3OriginAccessControl83AD2F73": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-CFR1",
-              "is_reason_encoded": true,
-              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
-            },
-            {
-              "id": "AwsSolutions-CFR2",
-              "is_reason_encoded": true,
-              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
-            },
-            {
-              "id": "AwsSolutions-CFR4",
-              "is_reason_encoded": true,
-              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "OriginAccessControlConfig": {
-          "Name": "TestStackWebDistributionOrigin1S3OriginAccessControl6862C29B",
-          "OriginAccessControlOriginType": "s3",
-          "SigningBehavior": "always",
-          "SigningProtocol": "sigv4",
-        },
-      },
-      "Type": "AWS::CloudFront::OriginAccessControl",
-    },
   },
   "Rules": {
     "CheckBootstrapVersion": {
@@ -2732,27 +2360,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       },
       "Value": {
         "Ref": "CriticalAlertTopicA6C95D9D",
-      },
-    },
-    "DistributionDomainName": {
-      "Description": "CloudFront ドメイン名",
-      "Export": {
-        "Name": "VoteBoardGameDistributionDomain-prod",
-      },
-      "Value": {
-        "Fn::GetAtt": [
-          "WebDistribution59C46482",
-          "DomainName",
-        ],
-      },
-    },
-    "DistributionId": {
-      "Description": "CloudFront ディストリビューション ID",
-      "Export": {
-        "Name": "VoteBoardGameDistributionId-prod",
-      },
-      "Value": {
-        "Ref": "WebDistribution59C46482",
       },
     },
     "Environment": {
@@ -2865,15 +2472,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         "Ref": "WarningAlertTopicF3646732",
       },
     },
-    "WebBucketName": {
-      "Description": "フロントエンド用 S3 バケット名",
-      "Export": {
-        "Name": "VoteBoardGameWebBucketName-prod",
-      },
-      "Value": {
-        "Ref": "WebBucket12880F5B",
-      },
-    },
   },
   "Parameters": {
     "BootstrapVersion": {
@@ -2914,11 +2512,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "bb4392aac9957cb9e006a86f83062edc2f73ef758152b93bfeea60357a2687f9.zip",
+          "S3Key": "1926c15738db421c4940cddbab5cdc46e75b00bc12df0a850cd784aa2a76d885.zip",
         },
         "Environment": {
           "Variables": {
-            "ALLOWED_ORIGINS": "https://vote-board-game.example.com",
+            "ALLOWED_ORIGINS": "",
             "CDN_DOMAIN": {
               "Fn::GetAtt": [
                 "IconDistribution6DC53514",
@@ -3417,7 +3015,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "bb4392aac9957cb9e006a86f83062edc2f73ef758152b93bfeea60357a2687f9.zip",
+          "S3Key": "1926c15738db421c4940cddbab5cdc46e75b00bc12df0a850cd784aa2a76d885.zip",
         },
         "Environment": {
           "Variables": {
@@ -3947,20 +3545,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             "OPTIONS",
           ],
           "AllowOrigins": [
-            {
-              "Fn::Join": [
-                "",
-                [
-                  "https://",
-                  {
-                    "Fn::GetAtt": [
-                      "WebDistribution59C46482",
-                      "DomainName",
-                    ],
-                  },
-                ],
-              ],
-            },
+            "",
           ],
           "MaxAge": 3600,
         },
@@ -4473,35 +4058,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
                 "Ref": "AWS::AccountId",
               },
             ],
-          ],
-        },
-        "CorsConfiguration": {
-          "CorsRules": [
-            {
-              "AllowedHeaders": [
-                "*",
-              ],
-              "AllowedMethods": [
-                "PUT",
-              ],
-              "AllowedOrigins": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "https://",
-                      {
-                        "Fn::GetAtt": [
-                          "WebDistribution59C46482",
-                          "DomainName",
-                        ],
-                      },
-                    ],
-                  ],
-                },
-              ],
-              "MaxAge": 3000,
-            },
           ],
         },
         "LoggingConfiguration": {
@@ -5343,242 +4899,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         "TopicName": "vbg-prod-warning-alerts",
       },
       "Type": "AWS::SNS::Topic",
-    },
-    "WebBucket12880F5B": {
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "BucketEncryption": {
-          "ServerSideEncryptionConfiguration": [
-            {
-              "ServerSideEncryptionByDefault": {
-                "SSEAlgorithm": "AES256",
-              },
-            },
-          ],
-        },
-        "BucketName": {
-          "Fn::Join": [
-            "",
-            [
-              "vbg-prod-s3-web-",
-              {
-                "Ref": "AWS::AccountId",
-              },
-            ],
-          ],
-        },
-        "LoggingConfiguration": {
-          "DestinationBucketName": {
-            "Ref": "LogBucketCC3B17E8",
-          },
-          "LogFilePrefix": "web-bucket-logs/",
-        },
-        "PublicAccessBlockConfiguration": {
-          "BlockPublicAcls": true,
-          "BlockPublicPolicy": true,
-          "IgnorePublicAcls": true,
-          "RestrictPublicBuckets": true,
-        },
-      },
-      "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "WebBucketPolicy95D08FAA": {
-      "Properties": {
-        "Bucket": {
-          "Ref": "WebBucket12880F5B",
-        },
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": "s3:*",
-              "Condition": {
-                "Bool": {
-                  "aws:SecureTransport": "false",
-                },
-              },
-              "Effect": "Deny",
-              "Principal": {
-                "AWS": "*",
-              },
-              "Resource": [
-                {
-                  "Fn::GetAtt": [
-                    "WebBucket12880F5B",
-                    "Arn",
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "WebBucket12880F5B",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": "s3:GetObject",
-              "Condition": {
-                "StringEquals": {
-                  "AWS:SourceArn": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":cloudfront::",
-                        {
-                          "Ref": "AWS::AccountId",
-                        },
-                        ":distribution/",
-                        {
-                          "Ref": "WebDistribution59C46482",
-                        },
-                      ],
-                    ],
-                  },
-                },
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "cloudfront.amazonaws.com",
-              },
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    {
-                      "Fn::GetAtt": [
-                        "WebBucket12880F5B",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
-                  ],
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::S3::BucketPolicy",
-    },
-    "WebDistribution59C46482": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-CFR1",
-              "is_reason_encoded": true,
-              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
-            },
-            {
-              "id": "AwsSolutions-CFR2",
-              "is_reason_encoded": true,
-              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
-            },
-            {
-              "id": "AwsSolutions-CFR4",
-              "is_reason_encoded": true,
-              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "DistributionConfig": {
-          "CustomErrorResponses": [
-            {
-              "ErrorCode": 404,
-              "ResponseCode": 200,
-              "ResponsePagePath": "/404.html",
-            },
-          ],
-          "DefaultCacheBehavior": {
-            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
-            "Compress": true,
-            "TargetOriginId": "TestStackWebDistributionOrigin18DCD5D1F",
-            "ViewerProtocolPolicy": "redirect-to-https",
-          },
-          "DefaultRootObject": "index.html",
-          "Enabled": true,
-          "HttpVersion": "http2",
-          "IPV6Enabled": true,
-          "Logging": {
-            "Bucket": {
-              "Fn::GetAtt": [
-                "LogBucketCC3B17E8",
-                "RegionalDomainName",
-              ],
-            },
-            "Prefix": "cloudfront-logs/",
-          },
-          "Origins": [
-            {
-              "DomainName": {
-                "Fn::GetAtt": [
-                  "WebBucket12880F5B",
-                  "RegionalDomainName",
-                ],
-              },
-              "Id": "TestStackWebDistributionOrigin18DCD5D1F",
-              "OriginAccessControlId": {
-                "Fn::GetAtt": [
-                  "WebDistributionOrigin1S3OriginAccessControl83AD2F73",
-                  "Id",
-                ],
-              },
-              "S3OriginConfig": {
-                "OriginAccessIdentity": "",
-              },
-            },
-          ],
-        },
-      },
-      "Type": "AWS::CloudFront::Distribution",
-    },
-    "WebDistributionOrigin1S3OriginAccessControl83AD2F73": {
-      "Metadata": {
-        "cdk_nag": {
-          "rules_to_suppress": [
-            {
-              "id": "AwsSolutions-CFR1",
-              "is_reason_encoded": true,
-              "reason": "TVZQIOOBp+OBryBHZW8gcmVzdHJpY3Rpb24g44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr5b+F6KaB44Gr5b+c44GY44Gm5a6f6KOF44CC",
-            },
-            {
-              "id": "AwsSolutions-CFR2",
-              "is_reason_encoded": true,
-              "reason": "TVZQIOOBp+OBryBXQUYg44Gv5LiN6KaB44CC5bCG5p2l55qE44Gr44OI44Op44OV44Kj44OD44Kv5aKX5Yqg5pmC44Gr5a6f6KOF44CC",
-            },
-            {
-              "id": "AwsSolutions-CFR4",
-              "is_reason_encoded": true,
-              "reason": "44OH44OV44Kp44Or44OIIENsb3VkRnJvbnQg6Ki85piO5pu444KS5L2/55So44CC44Kr44K544K/44Og44OJ44Oh44Kk44Oz5a6f6KOF5pmC44GrIEFDTSDoqLzmmI7mm7jjgaflr77lv5zjgII=",
-            },
-          ],
-        },
-      },
-      "Properties": {
-        "OriginAccessControlConfig": {
-          "Name": "TestStackWebDistributionOrigin1S3OriginAccessControl6862C29B",
-          "OriginAccessControlOriginType": "s3",
-          "SigningBehavior": "always",
-          "SigningProtocol": "sigv4",
-        },
-      },
-      "Type": "AWS::CloudFront::OriginAccessControl",
     },
   },
   "Rules": {

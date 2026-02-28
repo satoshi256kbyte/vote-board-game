@@ -85,7 +85,7 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
   - すべてのテストが通過することを確認
   - ユーザーに質問があれば確認
 
-- [ ] 5. GitHub Actions ワークフローの更新
+- [x] 5. GitHub Actions ワークフローの更新
   - [x] 5.1 deploy-reusable.yml からフロントエンド関連ステップを削除
     - `.github/workflows/deploy-reusable.yml` を更新
     - "Build Web with API URL" ステップを削除
@@ -113,7 +113,7 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - _要件: 5.5_
 
 - [ ] 6. ドキュメントの更新
-  - [ ] 6.1 デプロイ手順のドキュメントを作成
+  - [x] 6.1 デプロイ手順のドキュメントを作成
     - `docs/deployment-vercel.md` を作成
     - Vercel プロジェクトの作成手順を記載
     - GitHub Variables の設定手順を記載（`VERCEL_PRODUCTION_URL`）
