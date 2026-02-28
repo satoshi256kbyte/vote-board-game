@@ -17,19 +17,19 @@ export class LoginPage {
 
   // Actions
   async fillEmail(email: string): Promise<void> {
-    const emailInput = this.page.getByTestId('login-email-input');
+    const emailInput = this.page.getByLabel('メールアドレス');
     await expect(emailInput).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await emailInput.fill(email);
   }
 
   async fillPassword(password: string): Promise<void> {
-    const passwordInput = this.page.getByTestId('login-password-input');
+    const passwordInput = this.page.getByLabel('パスワード');
     await expect(passwordInput).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await passwordInput.fill(password);
   }
 
   async clickSubmit(): Promise<void> {
-    const submitButton = this.page.getByTestId('login-submit-button');
+    const submitButton = this.page.getByRole('button', { name: 'ログイン' });
     await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await submitButton.click();
 
@@ -44,7 +44,9 @@ export class LoginPage {
   }
 
   async clickForgotPassword(): Promise<void> {
-    const forgotPasswordLink = this.page.getByTestId('login-forgot-password-link');
+    const forgotPasswordLink = this.page.getByRole('link', {
+      name: 'パスワードをお忘れですか？',
+    });
     await expect(forgotPasswordLink).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await forgotPasswordLink.click();
   }
@@ -52,7 +54,7 @@ export class LoginPage {
   // Assertions
   async expectErrorMessage(message: string): Promise<void> {
     await retryAssertion(async () => {
-      const errorElement = this.page.getByTestId('login-error-message');
+      const errorElement = this.page.getByRole('alert');
       await expect(errorElement).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
       if (message) {
         await expect(errorElement).toContainText(message);
