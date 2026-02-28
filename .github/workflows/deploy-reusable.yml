@@ -107,11 +107,13 @@ jobs:
           echo "Environment: ${{ inputs.environment }}"
           echo "Short environment name: ${ENV_NAME}"
           echo "Vercel URL from vars: ${{ vars.VERCEL_URL }}"
+          echo "Vercel Preview URL from vars: ${{ vars.VERCEL_PREVIEW_URL }}"
 
           pnpm cdk deploy --require-approval never --outputs-file cdk-outputs.json \
             --context appName=vbg \
             --context environment=$ENV_NAME \
-            --context vercelUrl=${{ vars.VERCEL_URL }}
+            --context vercelUrl=${{ vars.VERCEL_URL }} \
+            --context vercelPreviewUrl=${{ vars.VERCEL_PREVIEW_URL }}
         env:
           CDK_DEFAULT_ACCOUNT: ${{ steps.aws-account.outputs.account-id }}
           CDK_DEFAULT_REGION: ap-northeast-1

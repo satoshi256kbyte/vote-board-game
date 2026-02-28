@@ -939,7 +939,6 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           ],
           "AllowOrigins": [
             "http://localhost:3000",
-            "https://vote-board-game-*-satoshi256kbytes-projects.vercel.app",
           ],
           "MaxAge": 3600,
         },
@@ -2519,7 +2518,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
         "Environment": {
           "Variables": {
-            "ALLOWED_ORIGINS": "",
+            "ALLOWED_ORIGINS": "https://vote-board-game.vercel.app",
             "CDN_DOMAIN": {
               "Fn::GetAtt": [
                 "IconDistribution6DC53514",
@@ -3550,7 +3549,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             "OPTIONS",
           ],
           "AllowOrigins": [
-            "",
+            "https://vote-board-game.vercel.app",
           ],
           "MaxAge": 3600,
         },

@@ -251,23 +251,53 @@ export class VoteBoardGameStack extends cdk.Stack {
 
     // Vercel URL を CDK context から取得
     const vercelUrl = this.node.tryGetContext('vercelUrl') || '';
+    const vercelPreviewUrl = this.node.tryGetContext('vercelPreviewUrl') || '';
 
-    // ALLOWED_ORIGINS を環境ごとに設定
+    // ALLOWED_ORIGINS を環境ごとに設定（Lambda の CORS ミドルウェア用）
     // Vercel のプレビューデプロイメント用にワイルドカードパターンを追加
     const allowedOrigins = (() => {
       switch (environment) {
         case 'dev':
-          return vercelUrl
-            ? `http://localhost:3000,${vercelUrl},https://vote-board-game-*-satoshi256kbytes-projects.vercel.app`
-            : 'http://localhost:3000,https://vote-board-game-*-satoshi256kbytes-projects.vercel.app';
+          return [
+            'http://localhost:3000',
+            vercelUrl,
+            vercelPreviewUrl,
+            'https://vote-board-game-*-satoshi256kbytes-projects.vercel.app',
+          ]
+            .filter(Boolean)
+            .join(',');
         case 'stg':
-          return vercelUrl
-            ? `${vercelUrl},https://vote-board-game-*-satoshi256kbytes-projects.vercel.app`
-            : 'https://vote-board-game-*-satoshi256kbytes-projects.vercel.app';
+          return [
+            vercelUrl,
+            vercelPreviewUrl,
+            'https://vote-board-game-*-satoshi256kbytes-projects.vercel.app',
+          ]
+            .filter(Boolean)
+            .join(',');
         case 'prod':
           return vercelUrl || '';
         default:
           return 'http://localhost:3000,https://vote-board-game-*-satoshi256kbytes-projects.vercel.app';
+      }
+    })();
+
+    // API Gateway の CORS 設定用（ワイルドカードを除外）
+    const apiGatewayCorsOrigins = (() => {
+      switch (environment) {
+        case 'dev':
+          return ['http://localhost:3000', vercelUrl, vercelPreviewUrl].filter(Boolean);
+        case 'stg':
+          return [vercelUrl, vercelPreviewUrl].filter(Boolean);
+        case 'prod':
+          // prod環境では vercelUrl が必須（ワイルドカードは使用しない）
+          if (!vercelUrl) {
+            throw new Error(
+              'vercelUrl context is required for production environment. Please provide it via --context vercelUrl=<url>'
+            );
+          }
+          return [vercelUrl];
+        default:
+          return ['http://localhost:3000'];
       }
     })();
 
@@ -340,11 +370,13 @@ export class VoteBoardGameStack extends cdk.Stack {
     );
 
     // API Gateway HTTP API
+    // CORS はプリフライトリクエスト用に具体的な URL のみ指定
+    // ワイルドカードパターンは Lambda の CORS ミドルウェアで処理
     const httpApi = new apigatewayv2.HttpApi(this, 'HttpApi', {
       apiName: `${appName}-${environment}-apigateway-main`,
       description: `Vote Board Game API - ${environment}`,
       corsPreflight: {
-        allowOrigins: allowedOrigins.split(','),
+        allowOrigins: apiGatewayCorsOrigins,
         allowMethods: [
           apigatewayv2.CorsHttpMethod.GET,
           apigatewayv2.CorsHttpMethod.POST,

@@ -83,6 +83,8 @@ describe('VoteBoardGameStack', () => {
   describe('Production environment', () => {
     it('should create DynamoDB table with production configuration', () => {
       const app = new cdk.App();
+      // prod環境では vercelUrl が必須なので context で渡す
+      app.node.setContext('vercelUrl', 'https://vote-board-game.vercel.app');
       const stack = new VoteBoardGameStack(app, 'TestStack', {
         appName: 'vbg',
         environment: 'prod',
@@ -322,6 +324,8 @@ describe('VoteBoardGameStack', () => {
 
     it('should match CloudFormation template snapshot for prod environment', () => {
       const app = new cdk.App();
+      // prod環境では vercelUrl が必須なので context で渡す
+      app.node.setContext('vercelUrl', 'https://vote-board-game.vercel.app');
       const stack = new VoteBoardGameStack(app, 'TestStack', {
         appName: 'vbg',
         environment: 'prod',
@@ -415,6 +419,8 @@ describe('VoteBoardGameStack', () => {
 
     it('should set Lambda environment variables for prod environment', () => {
       const app = new cdk.App();
+      // prod環境では vercelUrl が必須なので context で渡す
+      app.node.setContext('vercelUrl', 'https://vote-board-game.vercel.app');
       const stack = new VoteBoardGameStack(app, 'TestStack', {
         appName: 'vbg',
         environment: 'prod',
@@ -435,8 +441,8 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            // prod環境ではvercelUrlが設定されていない場合は空文字列
-            ALLOWED_ORIGINS: Match.anyValue(),
+            // prod環境では vercelUrl が設定される
+            ALLOWED_ORIGINS: 'https://vote-board-game.vercel.app',
             NODE_OPTIONS: '--enable-source-maps',
           },
         },
@@ -455,10 +461,8 @@ describe('VoteBoardGameStack', () => {
         Name: 'vbg-dev-apigateway-main',
         ProtocolType: 'HTTP',
         CorsConfiguration: {
-          AllowOrigins: [
-            'http://localhost:3000',
-            'https://vote-board-game-*-satoshi256kbytes-projects.vercel.app',
-          ],
+          // dev環境ではlocalhost のみ（vercelUrl/vercelPreviewUrl は context で指定されない限り空）
+          AllowOrigins: ['http://localhost:3000'],
           AllowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
           AllowHeaders: ['Content-Type', 'Authorization'],
           AllowCredentials: true,
