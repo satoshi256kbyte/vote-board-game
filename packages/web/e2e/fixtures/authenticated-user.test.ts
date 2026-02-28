@@ -110,7 +110,7 @@ describe('Authenticated User Fixture', () => {
       vi.mocked(testUserModule.loginUser).mockRejectedValue(error);
 
       // Verify error is propagated
-      await expect(testUserModule.loginUser({} as any, mockTestUser)).rejects.toThrow(
+      await expect(testUserModule.loginUser({} as never, mockTestUser)).rejects.toThrow(
         'Failed to login'
       );
     });

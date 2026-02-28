@@ -102,7 +102,7 @@ describe('Network Error Helpers', () => {
     });
 
     it('should navigate successfully when no error occurs', async () => {
-      vi.mocked(mockPage.goto).mockResolvedValue(null as any);
+      vi.mocked(mockPage.goto).mockResolvedValue(null as never);
 
       await navigateWithErrorHandling(mockPage, '/test-page');
 

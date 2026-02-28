@@ -48,7 +48,7 @@ async function checkAPIAvailability(apiURL: string): Promise<void> {
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     // Try to access API health endpoint or root
-    const response = await fetch(apiURL, {
+    const _response = await fetch(apiURL, {
       signal: controller.signal,
     });
 

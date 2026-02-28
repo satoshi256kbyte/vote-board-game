@@ -18,9 +18,7 @@ export default tseslint.config(
     ],
   },
   {
-    files: ['**/e2e/**/*.ts', '**/e2e/**/*.js'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -28,7 +26,11 @@ export default tseslint.config(
           varsIgnorePattern: '^_',
         },
       ],
-      'no-empty-pattern': 'off',
+    },
+  },
+  {
+    files: ['**/*.js'],
+    rules: {
       'no-undef': 'off',
     },
   }
