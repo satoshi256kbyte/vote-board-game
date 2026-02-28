@@ -4,9 +4,11 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <p className="text-center text-sm text-gray-600">© {currentYear} 投票ボドゲ</p>
+    <footer className="bg-gray-50 border-t border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="text-center text-sm text-gray-600">
+          <p>&copy; {currentYear} 投票ボドゲ. All rights reserved.</p>
+        </div>
       </div>
     </footer>
   );

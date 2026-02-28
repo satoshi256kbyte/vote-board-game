@@ -84,9 +84,7 @@ describe('Home (Game List Screen)', () => {
       expect(screen.getByText('投票対局')).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByText('AI vs 集合知で次の一手を決める投票型ボードゲーム')
-    ).toBeInTheDocument();
+    expect(screen.getByText('みんなで投票して次の一手を決めよう')).toBeInTheDocument();
     expect(screen.getByTestId('game-list')).toBeInTheDocument();
     expect(screen.getByTestId('game-game-1')).toBeInTheDocument();
     expect(screen.getByTestId('game-game-2')).toBeInTheDocument();
@@ -95,10 +93,9 @@ describe('Home (Game List Screen)', () => {
   it('should display loading state initially', () => {
     vi.mocked(apiClient.fetchGames).mockImplementation(() => new Promise(() => {}));
 
-    render(<Home />);
+    const { container } = render(<Home />);
 
-    expect(screen.getByRole('main')).toBeInTheDocument();
-    const skeletons = screen.getAllByRole('main')[0].querySelectorAll('.animate-pulse');
+    const skeletons = container.querySelectorAll('.animate-pulse');
     expect(skeletons.length).toBeGreaterThan(0);
   });
 
