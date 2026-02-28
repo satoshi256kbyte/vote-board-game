@@ -114,11 +114,7 @@ describe('CORS Middleware', () => {
       expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true');
 
       // Context の header メソッドは OPTIONS リクエストでは呼ばれない（直接 Response に設定）
-      expect(mockContext.header).toHaveBeenCalledWith(
-        'Access-Control-Allow-Origin',
-        'https://vote-board-game-web.vercel.app'
-      );
-      expect(mockContext.header).toHaveBeenCalledWith('Access-Control-Allow-Credentials', 'true');
+      expect(mockContext.header).not.toHaveBeenCalled();
     });
 
     it('should reject requests from unauthorized origins', async () => {

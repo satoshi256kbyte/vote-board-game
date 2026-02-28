@@ -13,12 +13,6 @@ export const corsMiddleware = (allowedOrigins: string) => {
   return async (c: Context, next: Next) => {
     const origin = c.req.header('Origin');
 
-    // オリジンが許可されている場合、CORS ヘッダーを設定
-    if (origin && isOriginAllowed(origin, origins)) {
-      c.header('Access-Control-Allow-Origin', origin);
-      c.header('Access-Control-Allow-Credentials', 'true');
-    }
-
     // プリフライトリクエスト（OPTIONS）の処理
     if (c.req.method === 'OPTIONS') {
       // Construct Response with headers
@@ -32,6 +26,12 @@ export const corsMiddleware = (allowedOrigins: string) => {
       headers.set('Access-Control-Max-Age', '3600');
 
       return new Response(null, { status: 204, headers });
+    }
+
+    // オリジンが許可されている場合、CORS ヘッダーを設定（非OPTIONS リクエスト用）
+    if (origin && isOriginAllowed(origin, origins)) {
+      c.header('Access-Control-Allow-Origin', origin);
+      c.header('Access-Control-Allow-Credentials', 'true');
     }
 
     await next();
