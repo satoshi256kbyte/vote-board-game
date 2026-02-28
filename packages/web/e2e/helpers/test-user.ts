@@ -14,19 +14,17 @@ import {
 export interface TestUser {
   email: string;
   password: string;
-  username: string;
   userId?: string;
 }
 
 /**
- * Generates a test user with unique email, secure password, and username
+ * Generates a test user with unique email and secure password
  *
  * Requirements:
  * - 4.1: Email must be unique using timestamp
  * - 4.2: Password must meet security requirements (8+ characters, uppercase, lowercase, numbers)
- * - 4.3: Username must be non-empty string
  *
- * @returns TestUser object with email, password, and username
+ * @returns TestUser object with email and password
  */
 export function generateTestUser(): TestUser {
   // Use timestamp with additional random component for uniqueness
@@ -43,12 +41,9 @@ export function generateTestUser(): TestUser {
   // - At least one number
   const password = `TestPass${timestamp}`;
 
-  const username = `testuser${timestamp}`;
-
   return {
     email,
     password,
-    username,
   };
 }
 
