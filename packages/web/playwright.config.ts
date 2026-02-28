@@ -33,7 +33,12 @@ export function createPlaywrightConfig(
     workers: isCI ? 1 : undefined,
 
     // レポーター設定
-    reporter: [['html', { outputFolder: 'playwright-report' }], ['list']],
+    reporter: [
+      ['html', { outputFolder: 'playwright-report' }],
+      ['list'],
+      // CI環境では詳細なログを出力
+      ...(isCI ? [['github'] as const] : []),
+    ],
 
     // 共通設定
     use: {
