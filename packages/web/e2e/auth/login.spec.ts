@@ -20,7 +20,7 @@ import { LoginPage } from '../page-objects';
 import { createTestUser, cleanupTestUser } from '../helpers';
 
 test.describe('User Login Flow', () => {
-  test.only('should successfully login with valid credentials and redirect to game list', async ({
+  test('should successfully login with valid credentials and redirect to game list', async ({
     page,
   }) => {
     const loginPage = new LoginPage(page);
