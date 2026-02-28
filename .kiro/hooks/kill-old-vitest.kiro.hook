@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Kill Old Vitest Processes",
+  "description": "Checks for vitest processes running longer than 5 minutes and terminates them before running tests",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "shell"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "ps -eo pid,etime,command | grep '[v]itest' | awk '{ n=split($2, t, \":\"); if (index($2, \"-\") || n > 2 || (n == 2 && t[1] >= 5)) print $1 }' | xargs kill -9 2>/dev/null || true",
+    "timeout": 10
+  },
+  "workspaceFolderName": "vote-board-game",
+  "shortName": "kill-old-vitest"
+}
