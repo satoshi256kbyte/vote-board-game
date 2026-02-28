@@ -17,8 +17,8 @@ export function createPlaywrightConfig(
     // グローバルセットアップ（サービス可用性チェック）
     globalSetup: './e2e/global-setup.ts',
 
-    // 各テストのタイムアウト
-    timeout: 15 * 1000,
+    // 各テストのタイムアウト（プロパティベーステストを考慮して延長）
+    timeout: 60 * 1000,
 
     // すべてのテストを並列実行
     fullyParallel: true,
