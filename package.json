@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "type-check": "pnpm -r type-check",
-    "test": "pnpm -r test",
+    "test": "pkill -f 'vitest' || true && pnpm -r test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
