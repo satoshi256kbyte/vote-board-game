@@ -86,12 +86,12 @@ test.describe('User Login Flow', () => {
       console.log(`[Test] Console messages:`, consoleMessages.slice(-10));
       console.log(`[Test] Console errors:`, consoleErrors);
 
-      // Check localStorage state
+      // Check localStorage state (use correct keys)
       const localStorageState = await page.evaluate(() => {
         return {
-          accessToken: localStorage.getItem('accessToken'),
-          refreshToken: localStorage.getItem('refreshToken'),
-          user: localStorage.getItem('user'),
+          accessToken: localStorage.getItem('vbg_access_token'),
+          refreshToken: localStorage.getItem('vbg_refresh_token'),
+          user: localStorage.getItem('vbg_user'),
           allKeys: Object.keys(localStorage),
         };
       });
