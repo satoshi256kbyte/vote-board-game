@@ -163,11 +163,6 @@ export const corsMiddleware = (allowedOrigins: string) => {
 function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
   return allowedOrigins.some((allowed) => allowed === origin);
 }
-      return new RegExp(`^${pattern}$`).test(origin);
-    }
-    return allowed === origin;
-  });
-}
 ```
 
 ### 3. AWS CDK スタックの更新
@@ -304,7 +299,7 @@ const httpApi = new apigatewayv2.HttpApi(this, 'HttpApi', {
 
 `deploy-reusable.yml` に以下のステップを追加:
 
-**環境変数ファイルの生成とアップロード**
+##### 環境変数ファイルの生成とアップロード
 
 ```yaml
 - name: Generate Vercel environment files
