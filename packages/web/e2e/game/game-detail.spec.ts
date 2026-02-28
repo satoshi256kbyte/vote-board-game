@@ -3,13 +3,10 @@
  * Tests game detail display including board state, move history, and AI commentary
  */
 
-import { test, expect } from '@playwright/test';
-import { authenticatedUser } from '../fixtures/authenticated-user';
-import { testGame } from '../fixtures/test-game';
+import { test, expect } from "../fixtures";;
 import { GameDetailPage } from '../page-objects/game-detail-page';
 
 // Merge fixtures
-const gameDetailTest = authenticatedUser.extend(testGame);
 
 test.describe('Game Detail Page', () => {
   test('should display current board state', async ({ authenticatedPage, game }) => {

@@ -3,12 +3,9 @@
  * Tests OGP meta tags and image validity for social sharing
  */
 
-import { test, expect } from '@playwright/test';
-import { authenticatedUser } from '../fixtures/authenticated-user';
-import { testGame } from '../fixtures/test-game';
+import { test, expect } from "../fixtures";;
 
 // Merge fixtures
-const ogpTest = authenticatedUser.extend(testGame);
 
 test.describe('OGP Meta Tags Validation', () => {
   test('should have OGP meta tags in game detail page', async ({ authenticatedPage, game }) => {

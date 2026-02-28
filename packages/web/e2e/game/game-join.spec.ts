@@ -3,14 +3,11 @@
  * Tests joining a game and accessing the voting interface
  */
 
-import { test, expect } from '@playwright/test';
-import { authenticatedUser } from '../fixtures/authenticated-user';
-import { testGame } from '../fixtures/test-game';
+import { test, expect } from "../fixtures";;
 import { GameDetailPage } from '../page-objects/game-detail-page';
 import { VotingPage } from '../page-objects/voting-page';
 
 // Merge fixtures
-const gameJoinTest = authenticatedUser.extend(testGame);
 
 test.describe('Game Join Functionality', () => {
   test('should display join button on game detail page', async ({ authenticatedPage, game }) => {

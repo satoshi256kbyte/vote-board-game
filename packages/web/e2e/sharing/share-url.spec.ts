@@ -3,14 +3,11 @@
  * Tests share URL generation and shared content display
  */
 
-import { test, expect } from '@playwright/test';
-import { authenticatedUser } from '../fixtures/authenticated-user';
-import { testGame } from '../fixtures/test-game';
+import { test, expect } from "../fixtures";;
 import { GameDetailPage } from '../page-objects/game-detail-page';
 import { VotingPage } from '../page-objects/voting-page';
 
 // Merge fixtures
-const shareTest = authenticatedUser.extend(testGame);
 
 test.describe('Share URL Generation', () => {
   test('should generate share URL when clicking share button', async ({

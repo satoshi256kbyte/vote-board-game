@@ -3,13 +3,10 @@
  * Tests game viewing and navigation functionality
  */
 
-import { test, expect } from '@playwright/test';
-import { authenticatedUser } from '../fixtures/authenticated-user';
-import { testGame } from '../fixtures/test-game';
+import { test, expect } from "../fixtures";;
 import { GameListPage } from '../page-objects/game-list-page';
 
 // Merge fixtures
-const gameListTest = authenticatedUser.extend(testGame);
 
 test.describe('Game List Page', () => {
   test('should display at least one active game', async ({ authenticatedPage, game }) => {

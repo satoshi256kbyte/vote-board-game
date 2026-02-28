@@ -3,14 +3,11 @@
  * Tests duplicate vote prevention and voting period validation
  */
 
-import { test, expect } from '@playwright/test';
-import { authenticatedUser } from '../fixtures/authenticated-user';
-import { testGame } from '../fixtures/test-game';
+import { test, expect } from "../fixtures";;
 import { VotingPage } from '../page-objects/voting-page';
 import { createTestCandidate } from '../helpers/test-data';
 
 // Merge fixtures
-const votingTest = authenticatedUser.extend(testGame);
 
 test.describe('Vote Validation', () => {
   test('should prevent duplicate votes in same voting period', async ({

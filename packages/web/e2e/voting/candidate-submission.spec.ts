@@ -3,13 +3,10 @@
  * Tests submitting new move candidates
  */
 
-import { test, expect } from '@playwright/test';
-import { authenticatedUser } from '../fixtures/authenticated-user';
-import { testGame } from '../fixtures/test-game';
+import { test, expect } from "../fixtures";;
 import { VotingPage } from '../page-objects/voting-page';
 
 // Merge fixtures
-const votingTest = authenticatedUser.extend(testGame);
 
 test.describe('Candidate Submission', () => {
   test('should submit new candidate successfully', async ({ authenticatedPage, game }) => {

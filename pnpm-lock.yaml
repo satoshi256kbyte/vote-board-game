@@ -189,6 +189,12 @@ importers:
       '@aws-sdk/client-cognito-identity-provider':
         specifier: ^3.995.0
         version: 3.995.0
+      '@aws-sdk/client-dynamodb':
+        specifier: ^3.993.0
+        version: 3.993.0
+      '@aws-sdk/lib-dynamodb':
+        specifier: ^3.993.0
+        version: 3.993.0(@aws-sdk/client-dynamodb@3.993.0)
       '@eslint/eslintrc':
         specifier: ^3.2.0
         version: 3.3.3
