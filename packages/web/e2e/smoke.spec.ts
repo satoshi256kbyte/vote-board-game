@@ -21,8 +21,8 @@ test.describe('Smoke Tests', () => {
     await expect(heading).toBeVisible();
     await expect(heading).toContainText('投票対局');
 
-    // 説明文が存在することを確認
-    const description = page.locator('p');
+    // 説明文が存在することを確認（最初のp要素を取得）
+    const description = page.locator('p').first();
     await expect(description).toBeVisible();
   });
 });

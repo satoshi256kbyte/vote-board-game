@@ -23,7 +23,7 @@ export class LoginPage {
   }
 
   async fillPassword(password: string): Promise<void> {
-    const passwordInput = this.page.getByLabel('パスワード');
+    const passwordInput = this.page.getByRole('textbox', { name: 'パスワード' });
     await expect(passwordInput).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await passwordInput.fill(password);
   }
