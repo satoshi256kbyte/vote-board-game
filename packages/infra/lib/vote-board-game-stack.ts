@@ -287,6 +287,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       role: apiLambdaRole,
       environment: {
         NODE_ENV: environment,
+        NODE_OPTIONS: '--enable-source-maps',
         TABLE_NAME: table.tableName,
         USER_POOL_ID: userPool.userPoolId,
         USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
@@ -475,6 +476,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       role: batchLambdaRole,
       environment: {
         NODE_ENV: environment,
+        NODE_OPTIONS: '--enable-source-maps',
         TABLE_NAME: table.tableName,
       },
       logGroup: batchLogGroup,
