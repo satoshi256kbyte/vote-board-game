@@ -9,53 +9,10 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    outputs:
-      markdown-only: ${{ steps.check-files.outputs.markdown-only }}
-      needs-test: ${{ steps.check-files.outputs.needs-test }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check changed files
-        id: check-files
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
-          else
-            FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          fi
-
-          # 変更ファイルがない場合は全チェック実行
-          if [ -z "$FILES" ]; then
-            echo "markdown-only=false" >> $GITHUB_OUTPUT
-            echo "needs-test=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # マークダウンファイル以外が含まれているかチェック
-          NON_MD_FILES=$(echo "$FILES" | grep -v '\.md$' || true)
-
-          if [ -z "$NON_MD_FILES" ]; then
-            echo "markdown-only=true" >> $GITHUB_OUTPUT
-            echo "needs-test=false" >> $GITHUB_OUTPUT
-            echo "Only markdown files changed, will skip code checks"
-          else
-            echo "markdown-only=false" >> $GITHUB_OUTPUT
-            
-            # テスト実行が必要なファイルパターン
-            TEST_FILES=$(echo "$FILES" | grep -E '\.(ts|tsx)$|vitest\.config\.ts$|tsconfig\.json$|package\.json$|pnpm-lock\.yaml$' | grep -E '^packages/.*/src/|^packages/.*/test/|package\.json$|pnpm-lock\.yaml$' || true)
-            
-            if [ -n "$TEST_FILES" ]; then
-              echo "needs-test=true" >> $GITHUB_OUTPUT
-              echo "Test-related files changed, will run tests"
-            else
-              echo "needs-test=false" >> $GITHUB_OUTPUT
-              echo "No test-related files changed, will skip tests"
-            fi
-          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -85,25 +42,20 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Format check
-        if: steps.check-files.outputs.markdown-only == 'false'
         run: pnpm format:check
 
       - name: ESLint
-        if: steps.check-files.outputs.markdown-only == 'false'
         run: pnpm lint
 
       - name: Type check
-        if: steps.check-files.outputs.markdown-only == 'false'
         run: pnpm type-check
 
       - name: Test
-        if: steps.check-files.outputs.needs-test == 'true'
         run: pnpm test
 
   build:
     runs-on: ubuntu-latest
     needs: lint-and-test
-    if: needs.lint-and-test.outputs.markdown-only != 'true'
 
     steps:
       - name: Checkout

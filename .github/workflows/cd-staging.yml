@@ -17,37 +17,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check-deployment-needed:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    outputs:
-      should-deploy: ${{ steps.check.outputs.should-deploy }}
-    steps:
-      - name: Check if deployment is needed
-        id: check
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: ${{ github.event.workflow_run.id }}
-            });
-
-            const hasApiArtifact = artifacts.data.artifacts.some(a => a.name === 'api-dist');
-            const hasInfraArtifact = artifacts.data.artifacts.some(a => a.name === 'infra-dist');
-
-            if (!hasApiArtifact || !hasInfraArtifact) {
-              console.log('Markdown-only changes detected, skipping deployment');
-              core.setOutput('should-deploy', 'false');
-            } else {
-              console.log('Code changes detected, proceeding with deployment');
-              core.setOutput('should-deploy', 'true');
-            }
-
   deploy-staging:
-    needs: check-deployment-needed
-    if: needs.check-deployment-needed.outputs.should-deploy == 'true'
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/deploy-reusable.yml
     with:
       environment: staging
