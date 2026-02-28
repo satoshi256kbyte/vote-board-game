@@ -116,7 +116,7 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
   - [x] 6.1 デプロイ手順のドキュメントを作成
     - `docs/deployment-vercel.md` を作成
     - Vercel プロジェクトの作成手順を記載
-    - GitHub Variables の設定手順を記載（`VERCEL_PRODUCTION_URL`）
+    - GitHub Variables の設定手順を記載（`VERCEL_URL`）
     - GitHub Actions から生成される環境変数ファイルのダウンロード手順を記載
     - Vercel への環境変数インポート手順を記載
     - デプロイの検証手順を記載
@@ -131,7 +131,7 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - S3 + CloudFront に関する古い情報を削除
     - _要件: 8.1_
 
-- [-] 7. チェックポイント - 最終確認
+- [x] 7. チェックポイント - 最終確認
   - すべてのテストが通過することを確認
   - ユーザーに質問があれば確認
 
@@ -169,7 +169,7 @@ GitHub リポジトリに Vercel URL を各環境ごとに設定:
      - Name: `VERCEL_URL`
      - Value: `https://vote-board-game-web-dev.vercel.app`
 
-**注意**: 変数名は `VERCEL_URL` です（`VERCEL_PRODUCTION_URL` ではありません）。
+**注意**: 変数名は `VERCEL_URL` です（`VERCEL_URL` ではありません）。
 
 ### 環境変数の設定
 

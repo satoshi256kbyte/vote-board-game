@@ -347,7 +347,7 @@ CDK デプロイコマンドに Vercel URL を渡すように更新:
     pnpm cdk deploy \
       --context appName=vbg \
       --context environment=${{ inputs.environment }} \
-      --context vercelProductionUrl=${{ vars.VERCEL_PRODUCTION_URL }} \
+      --context vercelProductionUrl=${{ vars.VERCEL_URL }} \
       --require-approval never \
       --outputs-file packages/infra/cdk-outputs.json
 ```
@@ -368,7 +368,7 @@ CDK デプロイコマンドに Vercel URL を渡すように更新:
   id: vercel-url
   run: |
     # GitHub Variables から Vercel の本番 URL を取得
-    VERCEL_URL="${{ vars.VERCEL_PRODUCTION_URL }}"
+    VERCEL_URL="${{ vars.VERCEL_URL }}"
     echo "url=$VERCEL_URL" >> $GITHUB_OUTPUT
     echo "Vercel URL: $VERCEL_URL"
 
@@ -794,7 +794,7 @@ GitHub リポジトリに Vercel URL を設定:
 1. GitHub リポジトリ → Settings → Secrets and variables → Actions → Variables
 2. "New repository variable" をクリック
 3. 変数を追加:
-   - Name: `VERCEL_PRODUCTION_URL`
+   - Name: `VERCEL_URL`
    - Value: `https://vote-board-game-web.vercel.app`
 
 ### 4. CDK スタックのデプロイ
