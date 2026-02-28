@@ -35,7 +35,7 @@ describe('RegistrationPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await registrationPage.fillEmail('test@example.com');
 
@@ -49,7 +49,7 @@ describe('RegistrationPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await registrationPage.fillPassword('password123');
 
@@ -63,7 +63,7 @@ describe('RegistrationPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await registrationPage.fillConfirmPassword('password123');
 
@@ -77,7 +77,7 @@ describe('RegistrationPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await registrationPage.clickSubmit();
 
@@ -92,7 +92,7 @@ describe('RegistrationPage', () => {
         fill: vi.fn().mockResolvedValue(undefined),
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await registrationPage.register('test@example.com', 'password123');
 

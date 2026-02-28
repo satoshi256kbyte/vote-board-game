@@ -30,7 +30,7 @@ describe('GameDetailPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await gameDetailPage.clickJoinGame();
 
@@ -44,7 +44,7 @@ describe('GameDetailPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await gameDetailPage.clickShare();
 
@@ -64,9 +64,9 @@ describe('GameDetailPage', () => {
       };
 
       vi.mocked(mockPage.getByTestId).mockImplementation((testId: string) => {
-        if (testId === 'game-share-button') return mockShareButton as any;
-        if (testId === 'game-share-url') return mockShareUrl as any;
-        return {} as any;
+        if (testId === 'game-share-button') return mockShareButton as never;
+        if (testId === 'game-share-url') return mockShareUrl as never;
+        return {} as never;
       });
 
       const url = await gameDetailPage.getShareUrl();
@@ -81,7 +81,7 @@ describe('GameDetailPage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await gameDetailPage.expectBoardStateVisible();
 
@@ -94,7 +94,7 @@ describe('GameDetailPage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await gameDetailPage.expectMoveHistoryVisible();
 
@@ -107,7 +107,7 @@ describe('GameDetailPage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await gameDetailPage.expectAICommentaryVisible();
 
@@ -120,7 +120,7 @@ describe('GameDetailPage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await gameDetailPage.expectJoinButtonVisible();
 

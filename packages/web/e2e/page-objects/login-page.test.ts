@@ -51,7 +51,7 @@ describe('LoginPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await loginPage.fillPassword('password123');
 
@@ -65,7 +65,7 @@ describe('LoginPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await loginPage.clickSubmit();
 
@@ -80,7 +80,7 @@ describe('LoginPage', () => {
         fill: vi.fn().mockResolvedValue(undefined),
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await loginPage.login('test@example.com', 'password123');
 
@@ -95,7 +95,7 @@ describe('LoginPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await loginPage.clickForgotPassword();
 

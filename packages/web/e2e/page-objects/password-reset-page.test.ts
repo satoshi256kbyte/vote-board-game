@@ -30,7 +30,7 @@ describe('PasswordResetPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.fillEmail('test@example.com');
 
@@ -44,7 +44,7 @@ describe('PasswordResetPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.clickSubmit();
 
@@ -58,7 +58,7 @@ describe('PasswordResetPage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.expectConfirmationMessage();
 
@@ -72,7 +72,7 @@ describe('PasswordResetPage', () => {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
         toContainText: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.expectErrorMessage('Invalid email');
 
@@ -85,7 +85,7 @@ describe('PasswordResetPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.fillConfirmationCode('123456');
 
@@ -99,7 +99,7 @@ describe('PasswordResetPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.fillNewPassword('NewPassword123!');
 
@@ -113,7 +113,7 @@ describe('PasswordResetPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.fillConfirmPassword('NewPassword123!');
 
@@ -127,7 +127,7 @@ describe('PasswordResetPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.clickConfirmSubmit();
 
@@ -142,7 +142,7 @@ describe('PasswordResetPage', () => {
         fill: vi.fn().mockResolvedValue(undefined),
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.submitPasswordReset('test@example.com', '123456', 'NewPassword123!');
 
@@ -158,7 +158,7 @@ describe('PasswordResetPage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await passwordResetPage.expectSuccessMessage();
 

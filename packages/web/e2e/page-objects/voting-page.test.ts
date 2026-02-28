@@ -30,7 +30,7 @@ describe('VotingPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.selectCandidate('candidate-1');
 
@@ -44,7 +44,7 @@ describe('VotingPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.submitVote();
 
@@ -58,7 +58,7 @@ describe('VotingPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.vote('candidate-1');
 
@@ -72,7 +72,7 @@ describe('VotingPage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.fillCandidateDescription('Test description');
 
@@ -87,7 +87,7 @@ describe('VotingPage', () => {
         fill: vi.fn().mockResolvedValue(undefined),
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.submitNewCandidate('New candidate');
 
@@ -108,8 +108,8 @@ describe('VotingPage', () => {
       };
 
       vi.mocked(mockPage.getByTestId).mockImplementation((testId) => {
-        if (testId === 'vote-candidates-list') return mockContainer as any;
-        return mockCandidates as any;
+        if (testId === 'vote-candidates-list') return mockContainer as never;
+        return mockCandidates as never;
       });
 
       await votingPage.expectCandidatesVisible();
@@ -124,7 +124,7 @@ describe('VotingPage', () => {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
         toContainText: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.expectCandidateDescription('candidate-1', 'Test description');
 
@@ -137,7 +137,7 @@ describe('VotingPage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.expectSuccessMessage();
 
@@ -151,7 +151,7 @@ describe('VotingPage', () => {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
         toContainText: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.expectErrorMessage('Error occurred');
 
@@ -165,7 +165,7 @@ describe('VotingPage', () => {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
         toContainText: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await votingPage.expectCandidateInList('New candidate');
 

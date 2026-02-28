@@ -30,7 +30,7 @@ describe('GameListPage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await gameListPage.clickGame('game-123');
 
@@ -54,7 +54,7 @@ describe('GameListPage', () => {
         all: vi.fn().mockResolvedValue(mockCards),
       };
 
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockLocator as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockLocator as never);
 
       const gameIds = await gameListPage.getActiveGames();
 
@@ -66,7 +66,7 @@ describe('GameListPage', () => {
         all: vi.fn().mockResolvedValue([]),
       };
 
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockLocator as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockLocator as never);
 
       const gameIds = await gameListPage.getActiveGames();
 
@@ -83,7 +83,7 @@ describe('GameListPage', () => {
         count: vi.fn().mockResolvedValue(3),
       };
 
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockLocator as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockLocator as never);
 
       await gameListPage.expectAtLeastOneGame();
 
@@ -96,7 +96,7 @@ describe('GameListPage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await gameListPage.expectGameVisible('game-123');
 

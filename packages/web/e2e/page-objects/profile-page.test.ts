@@ -30,7 +30,7 @@ describe('ProfilePage', () => {
       const mockElement = {
         fill: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await profilePage.fillDisplayName('John Doe');
 
@@ -44,7 +44,7 @@ describe('ProfilePage', () => {
       const mockElement = {
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await profilePage.submitUpdate();
 
@@ -59,7 +59,7 @@ describe('ProfilePage', () => {
         fill: vi.fn().mockResolvedValue(undefined),
         click: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await profilePage.updateProfile({ displayName: 'Jane Doe' });
 
@@ -74,7 +74,7 @@ describe('ProfilePage', () => {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
         toContainText: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await profilePage.expectProfileDataVisible({ displayName: 'John Doe' });
 
@@ -86,7 +86,7 @@ describe('ProfilePage', () => {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
         toContainText: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await profilePage.expectProfileDataVisible({ displayName: '' });
 
@@ -100,7 +100,7 @@ describe('ProfilePage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await profilePage.expectVotingHistoryVisible();
 
@@ -113,7 +113,7 @@ describe('ProfilePage', () => {
       const mockElement = {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await profilePage.expectSuccessMessage();
 
@@ -127,7 +127,7 @@ describe('ProfilePage', () => {
         toBeVisible: vi.fn().mockResolvedValue(undefined),
         toContainText: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as never);
 
       await profilePage.expectErrorMessage('Update failed');
 

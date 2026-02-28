@@ -144,9 +144,9 @@ describe('Network Error Helpers', () => {
     });
 
     it('should abort route when called', async () => {
-      let routeHandler: any;
+      let routeHandler: never;
       vi.mocked(mockPage.route).mockImplementation((pattern, handler) => {
-        routeHandler = handler;
+        routeHandler = handler as never;
         return Promise.resolve();
       });
 
@@ -180,9 +180,9 @@ describe('Network Error Helpers', () => {
     it('should delay and continue route when called', async () => {
       vi.useFakeTimers();
 
-      let routeHandler: any;
+      let routeHandler: never;
       vi.mocked(mockPage.route).mockImplementation((pattern, handler) => {
-        routeHandler = handler;
+        routeHandler = handler as never;
         return Promise.resolve();
       });
 
