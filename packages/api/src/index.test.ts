@@ -24,6 +24,9 @@ describe('API', () => {
   });
 
   it('should include CORS headers in responses', async () => {
+    // デバッグ: 環境変数を確認
+    console.log('ALLOWED_ORIGINS:', process.env.ALLOWED_ORIGINS);
+
     const res = await app.request('/health', {
       headers: {
         Origin: 'http://localhost:3000',

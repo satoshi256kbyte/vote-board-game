@@ -8,6 +8,7 @@ export default defineConfig({
       COGNITO_USER_POOL_ID: 'ap-northeast-1_TestPool',
       ICON_BUCKET_NAME: 'test-icon-bucket',
       CDN_DOMAIN: 'test-cdn.example.com',
+      ALLOWED_ORIGINS: 'http://localhost:3000,https://*.vercel.app',
     },
     testTimeout: 15000,
     coverage: {
