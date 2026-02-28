@@ -71,9 +71,9 @@ describe('Playwright Config', () => {
   });
 
   describe('Configuration settings', () => {
-    it('should set timeout to 15 seconds', () => {
+    it('should set timeout to 60 seconds', () => {
       const config = createPlaywrightConfig('https://example.com', false);
-      expect(config.timeout).toBe(15000);
+      expect(config.timeout).toBe(60000);
     });
 
     it('should enable fullyParallel', () => {
