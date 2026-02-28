@@ -16,13 +16,13 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
 - [ ] 1. CORS ミドルウェアの実装
   - [ ] 1.1 CORS ミドルウェアの実装
     - `packages/api/src/middleware/cors.ts` を作成
-    - ワイルドカードオリジン（`*.vercel.app`）のサポートを実装
+    - 明示的なオリジンのみを許可（ワイルドカードパターンは使用しない）
     - プリフライトリクエスト（OPTIONS）の処理を実装
     - _要件: 3.1, 3.2, 3.3, 3.4, 3.5_
   - [ ]\* 1.2 CORS ミドルウェアのユニットテストを作成
     - `packages/api/src/middleware/cors.test.ts` を作成
     - Vercel 本番ドメインからのリクエストを許可するテスト
-    - Vercel プレビュードメインからのリクエストを許可するテスト
+    - 明示的な Vercel URL からのリクエストを許可するテスト
     - プリフライトリクエストの処理テスト
     - 未承認オリジンからのリクエストを拒否するテスト
     - _要件: 3.1, 3.2, 3.5_
@@ -30,10 +30,12 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - `packages/api/src/middleware/cors.property.test.ts` を作成
     - **Property 1: CORS ヘッダーの許可**
     - **検証: 要件 3.1, 3.2**
-    - **Property 2: HTTP メソッドの許可**
-    - **検証: 要件 3.3**
-    - **Property 4: プリフライトリクエストの処理**
-    - **検証: 要件 3.5**
+    - **Property 2: 不正なオリジンの拒否**
+    - **検証: 要件 3.1, 3.2**
+    - **Property 3: 複数オリジンの処理**
+    - **検証: 要件 3.1**
+    - **Property 4: 完全一致の検証**
+    - **検証: 要件 3.1**
     - _要件: 3.1, 3.2, 3.3, 3.5_
   - [ ] 1.4 API エントリーポイントに CORS ミドルウェアを統合
     - `packages/api/src/index.ts` を更新
@@ -52,7 +54,7 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - 不要な静的エクスポート関連のスクリプトを削除
     - _要件: 6.1_
 
-- [ ] 3. AWS CDK スタックの更新
+- [x] 3. AWS CDK スタックの更新
   - [x] 3.1 フロントエンド関連リソースを削除
     - `packages/infra/lib/vote-board-game-stack.ts` を更新
     - Web S3 Bucket (`webBucket`) を削除
@@ -61,29 +63,30 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - _要件: 4.1, 4.2, 4.3, 4.5_
   - [x] 3.2 CORS 設定を更新
     - `allowedOrigins` の計算ロジックを更新
-    - Vercel URL を CDK context パラメータ `vercelProductionUrl` から取得
-    - 開発環境: `http://localhost:3000,https://*.vercel.app`
-    - ステージング環境: `https://vote-board-game-web-stg.vercel.app,https://*.vercel.app`
-    - 本番環境: `{vercelProductionUrl},https://*.vercel.app`（context から取得）
+    - Vercel URL を CDK context パラメータ `vercelUrl` から取得（`vercelProductionUrl` から変更）
+    - 開発環境: `http://localhost:3000,{vercelUrl}`（vercelUrl が設定されている場合）
+    - ステージング環境: `{vercelUrl}`（context から取得）
+    - 本番環境: `{vercelUrl}`（context から取得）
+    - ワイルドカードパターンは使用しない（セキュリティ強化）
     - Lambda 関数の環境変数 `ALLOWED_ORIGINS` を更新
     - _要件: 3.1, 3.2_
-  - [ ] 3.3 API Gateway の CORS 設定を更新
+  - [x] 3.3 API Gateway の CORS 設定を更新
     - `httpApi` の `corsPreflight` 設定を更新
     - `allowOrigins` を動的に設定
     - `allowMethods`, `allowHeaders`, `allowCredentials` を設定
     - _要件: 3.1, 3.2, 3.3, 3.4_
-  - [ ]\* 3.4 CDK スタックのスナップショットテストを更新
+  - [x]\* 3.4 CDK スタックのスナップショットテストを更新
     - `packages/infra/test/vote-board-game-stack.test.ts` を更新
     - フロントエンド関連リソースが削除されていることを確認
     - バックエンドリソースが保持されていることを確認
     - _要件: 4.4, 4.5_
 
-- [ ] 4. チェックポイント - CDK デプロイの確認
+- [x] 4. チェックポイント - CDK デプロイの確認
   - すべてのテストが通過することを確認
   - ユーザーに質問があれば確認
 
 - [ ] 5. GitHub Actions ワークフローの更新
-  - [ ] 5.1 deploy-reusable.yml からフロントエンド関連ステップを削除
+  - [x] 5.1 deploy-reusable.yml からフロントエンド関連ステップを削除
     - `.github/workflows/deploy-reusable.yml` を更新
     - "Build Web with API URL" ステップを削除
     - "Deploy Web to S3" ステップを削除
@@ -92,8 +95,9 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - _要件: 5.1, 5.2, 5.3, 5.4_
   - [ ] 5.2 CDK デプロイコマンドに Vercel URL を渡すように更新
     - `.github/workflows/deploy-reusable.yml` の CDK デプロイステップを更新
-    - `--context vercelProductionUrl=${{ vars.VERCEL_PRODUCTION_URL }}` を追加
+    - `--context vercelUrl=${{ vars.VERCEL_URL }}` を追加（`vercelProductionUrl` から変更）
     - GitHub Variables から Vercel URL を取得
+    - 各環境（production, staging, development）に `VERCEL_URL` を設定
     - _要件: 3.1, 3.2_
   - [ ] 5.3 Vercel 環境変数ファイルを生成するステップを追加
     - `.github/workflows/deploy-reusable.yml` に新しいステップを追加
@@ -150,13 +154,22 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
 
 ### GitHub Variables の設定
 
-GitHub リポジトリに Vercel URL を設定:
+GitHub リポジトリに Vercel URL を各環境ごとに設定:
 
-1. GitHub リポジトリ → Settings → Secrets and variables → Actions → Variables
-2. "New repository variable" をクリック
-3. 変数を追加:
-   - Name: `VERCEL_PRODUCTION_URL`
-   - Value: `https://vote-board-game-web.vercel.app`
+1. GitHub リポジトリ → Settings → Environments
+2. 各環境（production, staging, development）を作成または選択
+3. Environment variables を追加:
+   - **Production 環境**:
+     - Name: `VERCEL_URL`
+     - Value: `https://vote-board-game-web.vercel.app`
+   - **Staging 環境**:
+     - Name: `VERCEL_URL`
+     - Value: `https://vote-board-game-web-stg.vercel.app`
+   - **Development 環境**:
+     - Name: `VERCEL_URL`
+     - Value: `https://vote-board-game-web-dev.vercel.app`
+
+**注意**: 変数名は `VERCEL_URL` です（`VERCEL_PRODUCTION_URL` ではありません）。
 
 ### 環境変数の設定
 
@@ -191,10 +204,14 @@ NEXT_PUBLIC_AWS_REGION=ap-northeast-1
 cd packages/infra
 
 # 開発環境にデプロイ
-pnpm cdk deploy --context appName=vbg --context environment=dev --context vercelProductionUrl=https://vote-board-game-web.vercel.app
+pnpm cdk deploy --context appName=vbg --context environment=dev --context vercelUrl=https://vote-board-game-web-dev.vercel.app
 
 # 本番環境にデプロイ
+pnpm cdk deploy --context appName=vbg --context environment=prod --context vercelUrl=https://vote-board-game-web.vercel.app
+```
+
 pnpm cdk deploy --context appName=vbg --context environment=prod --context vercelProductionUrl=https://vote-board-game-web.vercel.app
+
 ```
 
 ### デプロイの検証
@@ -211,3 +228,4 @@ pnpm cdk deploy --context appName=vbg --context environment=prod --context verce
 - 各タスクは具体的な要件を参照しています
 - チェックポイントで進捗を確認し、問題があれば早期に対処します
 - 手動作業は実装完了後にユーザーが実施します
+```

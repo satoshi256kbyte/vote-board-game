@@ -16,12 +16,9 @@ on:
         required: true
         description: 'AWS IAM Role ARN for OIDC authentication'
     outputs:
-      cloudfront-url:
-        description: 'CloudFront distribution URL'
-        value: ${{ jobs.deploy.outputs.cloudfront-url }}
-      distribution-id:
-        description: 'CloudFront distribution ID'
-        value: ${{ jobs.deploy.outputs.distribution-id }}
+      api-url:
+        description: 'API Gateway URL'
+        value: ${{ jobs.deploy.outputs.api-url }}
 
 permissions:
   id-token: write
@@ -32,8 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     outputs:
-      distribution-id: ${{ steps.cdk-outputs.outputs.distribution-id }}
-      cloudfront-url: ${{ steps.cdk-outputs.outputs.cloudfront-url }}
+      api-url: ${{ steps.cdk-outputs.outputs.api-url }}
 
     steps:
       - name: Checkout
@@ -118,35 +114,11 @@ jobs:
       - name: Extract CDK Outputs
         id: cdk-outputs
         run: |
-          BUCKET_NAME=$(jq -r '.[] | .WebBucketName' packages/infra/cdk-outputs.json)
-          DISTRIBUTION_ID=$(jq -r '.[] | .DistributionId' packages/infra/cdk-outputs.json)
           API_URL=$(jq -r '.[] | .ApiUrl' packages/infra/cdk-outputs.json)
           API_LAMBDA_NAME=$(jq -r '.[] | .ApiLambdaFunctionName' packages/infra/cdk-outputs.json)
-          DOMAIN_NAME=$(jq -r '.[] | .DistributionDomainName' packages/infra/cdk-outputs.json)
 
-          # Build CloudFront URL from distribution domain name
-          CLOUDFRONT_URL="https://${DOMAIN_NAME}"
-
-          echo "bucket-name=$BUCKET_NAME" >> $GITHUB_OUTPUT
-          echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
-          echo "cloudfront-url=$CLOUDFRONT_URL" >> $GITHUB_OUTPUT
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
           echo "api-lambda-name=$API_LAMBDA_NAME" >> $GITHUB_OUTPUT
-
-      - name: Build Web with API URL
-        working-directory: packages/web
-        run: pnpm build
-        env:
-          NEXT_PUBLIC_API_URL: ${{ steps.cdk-outputs.outputs.api-url }}
-
-      - name: Deploy Web to S3
-        run: |
-          aws s3 sync packages/web/out s3://${{ steps.cdk-outputs.outputs.bucket-name }} --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html"
-          aws s3 sync packages/web/out s3://${{ steps.cdk-outputs.outputs.bucket-name }} --delete --cache-control "public, max-age=0, must-revalidate" --include "*.html"
-
-      - name: Invalidate CloudFront cache
-        run: |
-          aws cloudfront create-invalidation --distribution-id ${{ steps.cdk-outputs.outputs.distribution-id }} --paths "/*"
 
       - name: Verify API health
         run: |
@@ -177,10 +149,6 @@ jobs:
           echo "#### AWS Resources" >> $GITHUB_STEP_SUMMARY
           echo "- AWS Account: ${{ steps.aws-account.outputs.account-id }}" >> $GITHUB_STEP_SUMMARY
           echo "- Region: ap-northeast-1" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Frontend" >> $GITHUB_STEP_SUMMARY
-          echo "- S3 Bucket: ${{ steps.cdk-outputs.outputs.bucket-name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- CloudFront Distribution: ${{ steps.cdk-outputs.outputs.distribution-id }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### API" >> $GITHUB_STEP_SUMMARY
           echo "- API URL: ${{ steps.cdk-outputs.outputs.api-url }}" >> $GITHUB_STEP_SUMMARY
