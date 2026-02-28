@@ -110,7 +110,6 @@ export class RateLimiter {
   /**
    * 次のリクエストまでの待機時間を取得（秒）
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getRetryAfter(_ipAddress: string, _action: string): Promise<number> {
     const now = Math.floor(Date.now() / 1000);
     const windowStart = now - (now % this.windowSeconds);
