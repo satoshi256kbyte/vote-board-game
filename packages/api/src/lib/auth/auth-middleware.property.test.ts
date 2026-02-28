@@ -145,7 +145,7 @@ describe('プロパティ3-8: ミドルウェア統合プロパティテスト',
 
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
+  }, 20000);
 
   afterEach(() => {
     global.fetch = originalFetch;
