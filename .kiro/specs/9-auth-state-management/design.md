@@ -2,7 +2,7 @@
 
 ## Overview
 
-本設計は、投票ボードゲーム（Vote Board Game）のフロントエンドにおける認証状態管理を定義する。
+本設計は、投票対局（Vote Board Game）のフロントエンドにおける認証状態管理を定義する。
 既存の `AuthContext` / `AuthProvider` / `useAuth` / `AuthService` / `StorageService` を拡張し、以下の機能を統合的に提供する。
 
 - ブラウザリロード時の認証状態復元（localStorage からのトークン・ユーザー情報読み込み）

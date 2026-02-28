@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: CandidateDetailPageProps): Pr
 
     if (!candidate) {
       return {
-        title: '候補が見つかりません - 投票ボードゲーム',
+        title: '候補が見つかりません - 投票対局',
         description: '指定された候補が見つかりませんでした。',
       };
     }
@@ -80,7 +80,7 @@ export async function generateMetadata({ params }: CandidateDetailPageProps): Pr
   } catch {
     // Fallback metadata if fetch fails
     return {
-      title: '候補詳細 - 投票ボードゲーム',
+      title: '候補詳細 - 投票対局',
       description: '次の一手候補の詳細を見る',
     };
   }

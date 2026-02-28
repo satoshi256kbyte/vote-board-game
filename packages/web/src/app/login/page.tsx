@@ -35,7 +35,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div>
           <h1 className="text-center text-3xl font-bold tracking-tight text-gray-900">ログイン</h1>
-          <p className="mt-2 text-center text-sm text-gray-600">投票ボードゲームへようこそ</p>
+          <p className="mt-2 text-center text-sm text-gray-600">投票対局へようこそ</p>
         </div>
         <LoginForm />
       </div>

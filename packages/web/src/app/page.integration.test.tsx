@@ -80,7 +80,7 @@ describe('Game List Screen Integration', () => {
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByText('投票ボードゲーム')).toBeInTheDocument();
+      expect(screen.getByText('投票対局')).toBeInTheDocument();
     });
 
     expect(screen.getByText('進行中')).toHaveClass('border-blue-500');

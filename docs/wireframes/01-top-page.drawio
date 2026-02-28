@@ -20,7 +20,7 @@
         </mxCell>
         
         <!-- メインコンテンツ -->
-        <mxCell id="main-title" value="投票ボードゲーム" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=32;fontStyle=1" vertex="1" parent="1">
+        <mxCell id="main-title" value="投票対局" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=32;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="400" y="140" width="400" height="40" as="geometry" />
         </mxCell>
         <mxCell id="main-subtitle" value="みんなで投票して次の一手を決めよう" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">

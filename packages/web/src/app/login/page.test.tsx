@@ -64,7 +64,7 @@ describe('LoginPage', () => {
 
       // ページタイトルが表示される
       expect(screen.getByText('ログイン')).toBeInTheDocument();
-      expect(screen.getByText('投票ボードゲームへようこそ')).toBeInTheDocument();
+      expect(screen.getByText('投票対局へようこそ')).toBeInTheDocument();
 
       // LoginFormが表示される
       expect(screen.getByTestId('login-form')).toBeInTheDocument();

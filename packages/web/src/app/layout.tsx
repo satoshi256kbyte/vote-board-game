@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/contexts/auth-context';
 
 export const metadata: Metadata = {
-  title: '投票ボードゲーム',
+  title: '投票対局',
   description: 'AI vs 集合知で次の一手を決める投票型ボードゲーム',
 };
 

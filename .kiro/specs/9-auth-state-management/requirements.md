@@ -2,7 +2,7 @@
 
 ## Introduction
 
-投票ボードゲーム（Vote Board Game）のフロントエンド認証状態管理機能の要件定義。
+投票対局（Vote Board Game）のフロントエンド認証状態管理機能の要件定義。
 Next.js 16 App Router 上で、Amazon Cognito + JWT トークンベースの認証状態をクライアントサイドで管理する。
 既存の AuthContext / AuthProvider / useAuth フック / AuthService / StorageService を拡張・改善し、トークンライフサイクル管理、自動リフレッシュ、アクセス制御、ログアウトを統合的に提供する。
 

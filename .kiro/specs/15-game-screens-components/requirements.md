@@ -2,7 +2,7 @@
 
 ## Introduction
 
-対局周りの画面・コンポーネントは、投票ボードゲームアプリケーションのフロントエンド実装の中核機能です。ユーザーが対局を閲覧、作成、参加し、次の一手候補に投票するための画面とコンポーネントを提供します。既存のGame API（spec 14）とOthelloゲームロジック（spec 13）を活用し、Next.js 16のApp RouterとReact 19のServer/Client Componentsを使用して、高速でアクセシブルなユーザー体験を実現します。
+対局周りの画面・コンポーネントは、投票対局アプリケーションのフロントエンド実装の中核機能です。ユーザーが対局を閲覧、作成、参加し、次の一手候補に投票するための画面とコンポーネントを提供します。既存のGame API（spec 14）とOthelloゲームロジック（spec 13）を活用し、Next.js 16のApp RouterとReact 19のServer/Client Componentsを使用して、高速でアクセシブルなユーザー体験を実現します。
 
 ## Glossary
 

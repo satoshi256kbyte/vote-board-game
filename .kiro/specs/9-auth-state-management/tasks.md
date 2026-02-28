@@ -2,7 +2,7 @@
 
 ## 概要
 
-本実装計画は、投票ボードゲームアプリケーションのフロントエンド認証状態管理機能を実装するためのタスクリストです。既存の AuthContext / AuthProvider / useAuth / AuthService / StorageService を拡張し、トークンライフサイクル管理、自動リフレッシュ、アクセス制御、ログアウト、認証付き API リクエストを統合的に提供します。実装は TypeScript、Next.js 16 App Router、React 19、Vitest、React Testing Library、fast-check を使用します。
+本実装計画は、投票対局アプリケーションのフロントエンド認証状態管理機能を実装するためのタスクリストです。既存の AuthContext / AuthProvider / useAuth / AuthService / StorageService を拡張し、トークンライフサイクル管理、自動リフレッシュ、アクセス制御、ログアウト、認証付き API リクエストを統合的に提供します。実装は TypeScript、Next.js 16 App Router、React 19、Vitest、React Testing Library、fast-check を使用します。
 
 ## タスク
 

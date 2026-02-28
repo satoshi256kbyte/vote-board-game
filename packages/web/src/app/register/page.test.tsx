@@ -64,7 +64,7 @@ describe('RegisterPage', () => {
 
       // ページタイトルが表示される
       expect(screen.getByText('アカウント作成')).toBeInTheDocument();
-      expect(screen.getByText('投票ボードゲームへようこそ')).toBeInTheDocument();
+      expect(screen.getByText('投票対局へようこそ')).toBeInTheDocument();
 
       // RegisterFormが表示される
       expect(screen.getByTestId('register-form')).toBeInTheDocument();

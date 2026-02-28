@@ -37,7 +37,7 @@ export default function RegisterPage() {
           <h1 className="text-center text-3xl font-bold tracking-tight text-gray-900">
             アカウント作成
           </h1>
-          <p className="mt-2 text-center text-sm text-gray-600">投票ボードゲームへようこそ</p>
+          <p className="mt-2 text-center text-sm text-gray-600">投票対局へようこそ</p>
         </div>
         <RegisterForm />
       </div>

@@ -1,6 +1,6 @@
 # Vote Board Game - Frontend
 
-投票ボードゲームのフロントエンドアプリケーション。Next.js 16 (App Router) + React 19 + TypeScript で構築されています。
+投票対局のフロントエンドアプリケーション。Next.js 16 (App Router) + React 19 + TypeScript で構築されています。
 
 ## 技術スタック
 

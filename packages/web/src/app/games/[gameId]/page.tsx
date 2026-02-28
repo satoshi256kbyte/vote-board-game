@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: GameDetailPageProps): Promise
   } catch {
     // Fallback metadata if game fetch fails
     return {
-      title: '対局詳細 - 投票ボードゲーム',
+      title: '対局詳細 - 投票対局',
       description: 'オセロの対局を見る',
     };
   }

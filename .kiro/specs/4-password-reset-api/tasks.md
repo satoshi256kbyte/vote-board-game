@@ -2,7 +2,7 @@
 
 ## 概要
 
-投票ボードゲームアプリケーションのパスワードリセットAPI機能を実装します。既存のAuth Routerを拡張し、`/auth/password-reset`と`/auth/password-reset/confirm`エンドポイントを追加します。
+投票対局アプリケーションのパスワードリセットAPI機能を実装します。既存のAuth Routerを拡張し、`/auth/password-reset`と`/auth/password-reset/confirm`エンドポイントを追加します。
 
 実装は以下の順序で進めます:
 

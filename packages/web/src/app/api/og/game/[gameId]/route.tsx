@@ -52,7 +52,7 @@ export async function GET(
             marginBottom: '20px',
           }}
         >
-          投票ボードゲーム
+          投票対局
         </div>
 
         {/* Game Info */}
