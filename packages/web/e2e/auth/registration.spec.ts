@@ -2,53 +2,113 @@
  * E2E Test: User Registration Flow
  *
  * Tests the complete user registration flow including:
- * - Navigation to registration page
- * - Form input and submission
- * - Redirect to home page
- * - Access token storage
- * - Error message validation
+ * - Successful registration with valid data
+ * - Registration failure with invalid data
+ * - Redirect to login page after registration
  *
- * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7
+ * Requirements: Requirement 1 (Authentication Flow Testing)
+ * - 1.1: Registration with valid data redirects to login page
  */
 
 import { test, expect } from '@playwright/test';
-import { generateTestUser, cleanupTestUser, navigateWithErrorHandling } from '../helpers';
+import { RegistrationPage } from '../page-objects';
+import { generateTestUser, cleanupTestUser } from '../helpers';
 
 test.describe('User Registration Flow', () => {
-  test('should successfully register a new user', async ({ page }) => {
-    // Generate unique test user
-    const testUser = generateTestUser();
+    test('should successfully register with valid data and redirect to login page', async ({ page }) => {
+        const registrationPage = new RegistrationPage(page);
+        const testUser = generateTestUser();
 
-    try {
-      // Requirement 1.1: Navigate to registration page
-      await navigateWithErrorHandling(page, '/register');
+        try {
+            // Navigate to registration page
+            await registrationPage.goto();
 
-      // Requirement 1.2: Verify page title contains "アカウント作成"
-      await expect(page.locator('h1')).toContainText('アカウント作成');
+            // Fill registration form with valid data
+            await registrationPage.register(testUser.email, testUser.password);
 
-      // Requirement 1.3: Fill registration form with valid test user data
-      await page.fill('input[name="username"]', testUser.username);
-      await page.fill('input[name="email"]', testUser.email);
-      await page.fill('input[name="password"]', testUser.password);
-      await page.fill('input[name="confirmPassword"]', testUser.password);
+            // Verify redirect to login page
+            await registrationPage.expectRedirectToLogin();
 
-      // Requirement 1.4: Submit form and create user in Cognito
-      await page.click('button[type="submit"]');
+            // Verify we're on the login page
+            expect(page.url()).toContain('/login');
+        } finally {
+            // Clean up test user
+            await cleanupTestUser(testUser.email);
+        }
+    });
 
-      // Requirement 1.5: Should redirect to home page "/"
-      await page.waitForURL('/');
+    test('should show error message with invalid email', async ({ page }) => {
+        const registrationPage = new RegistrationPage(page);
 
-      // Requirement 1.6: Access token should exist in localStorage
-      const accessToken = await page.evaluate(() => localStorage.getItem('accessToken'));
-      expect(accessToken).toBeTruthy();
-      expect(accessToken).not.toBe('');
+        // Navigate to registration page
+        await registrationPage.goto();
 
-      // Requirement 1.7: No error messages should be displayed
-      const errorMessage = page.locator('[role="alert"]');
-      await expect(errorMessage).not.toBeVisible();
-    } finally {
-      // Clean up test user after test
-      await cleanupTestUser(testUser.email);
-    }
-  });
+        // Fill form with invalid email
+        await registrationPage.fillEmail('invalid-email');
+        await registrationPage.fillPassword('ValidPass123');
+        await registrationPage.fillConfirmPassword('ValidPass123');
+        await registrationPage.clickSubmit();
+
+        // Verify error message is displayed
+        await registrationPage.expectErrorMessage('');
+    });
+
+    test('should show error message with weak password', async ({ page }) => {
+        const registrationPage = new RegistrationPage(page);
+        const testUser = generateTestUser();
+
+        try {
+            // Navigate to registration page
+            await registrationPage.goto();
+
+            // Fill form with weak password
+            await registrationPage.fillEmail(testUser.email);
+            await registrationPage.fillPassword('weak');
+            await registrationPage.fillConfirmPassword('weak');
+            await registrationPage.clickSubmit();
+
+            // Verify error message is displayed
+            await registrationPage.expectErrorMessage('');
+        } finally {
+            await cleanupTestUser(testUser.email);
+        }
+    });
+
+    test('should show error message when passwords do not match', async ({ page }) => {
+        const registrationPage = new RegistrationPage(page);
+        const testUser = generateTestUser();
+
+        try {
+            // Navigate to registration page
+            await registrationPage.goto();
+
+            // Fill form with mismatched passwords
+            await registrationPage.fillEmail(testUser.email);
+            await registrationPage.fillPassword('ValidPass123');
+            await registrationPage.fillConfirmPassword('DifferentPass456');
+            await registrationPage.clickSubmit();
+
+            // Verify error message is displayed
+            await registrationPage.expectErrorMessage('');
+        } finally {
+            await cleanupTestUser(testUser.email);
+        }
+    });
+
+    test('should complete within 30 seconds', async ({ page }) => {
+        const startTime = Date.now();
+        const registrationPage = new RegistrationPage(page);
+        const testUser = generateTestUser();
+
+        try {
+            await registrationPage.goto();
+            await registrationPage.register(testUser.email, testUser.password);
+            await registrationPage.expectRedirectToLogin();
+
+            const duration = Date.now() - startTime;
+            expect(duration).toBeLessThan(30000);
+        } finally {
+            await cleanupTestUser(testUser.email);
+        }
+    });
 });

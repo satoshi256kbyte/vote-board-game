@@ -12,7 +12,7 @@ interface RequestCodeFormProps {
 }
 
 export function RequestCodeForm({ onCodeSent }: RequestCodeFormProps) {
-  const { requestCode, isLoading, error: apiError } = usePasswordReset();
+  const { requestCode, isLoading, error: apiError, successMessage } = usePasswordReset();
 
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<{ email?: string }>({});
@@ -50,7 +50,10 @@ export function RequestCodeForm({ onCodeSent }: RequestCodeFormProps) {
 
     const success = await requestCode(email);
     if (success) {
-      onCodeSent(email);
+      // Show confirmation message for 2 seconds before transitioning
+      setTimeout(() => {
+        onCodeSent(email);
+      }, 2000);
     }
   };
 
@@ -64,8 +67,18 @@ export function RequestCodeForm({ onCodeSent }: RequestCodeFormProps) {
         </p>
       </div>
 
+      {successMessage && (
+        <Alert
+          className="bg-green-50 border-green-200"
+          role="alert"
+          data-testid="password-reset-confirmation-message"
+        >
+          <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+        </Alert>
+      )}
+
       {apiError && (
-        <Alert variant="destructive" role="alert">
+        <Alert variant="destructive" role="alert" data-testid="password-reset-error-message">
           <AlertDescription>{apiError}</AlertDescription>
         </Alert>
       )}
@@ -90,6 +103,7 @@ export function RequestCodeForm({ onCodeSent }: RequestCodeFormProps) {
             aria-invalid={!!(touched.email && errors.email)}
             aria-describedby={touched.email && errors.email ? 'email-error' : undefined}
             className={touched.email && errors.email ? 'border-red-500' : ''}
+            data-testid="password-reset-email-input"
           />
           {touched.email && errors.email && (
             <p id="email-error" className="mt-1 text-sm text-red-600" role="alert">
@@ -105,6 +119,7 @@ export function RequestCodeForm({ onCodeSent }: RequestCodeFormProps) {
           disabled={isSubmitDisabled}
           aria-disabled={isSubmitDisabled}
           className="w-full"
+          data-testid="password-reset-submit-button"
         >
           {isLoading ? '送信中...' : '確認コードを送信'}
         </Button>

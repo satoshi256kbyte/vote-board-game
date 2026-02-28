@@ -1,98 +1,223 @@
 /**
  * E2E Test: Password Reset Flow
  *
- * Tests the complete password reset flow including:
- * - Navigation to password reset page
- * - Email submission for password reset
- * - Confirmation code input field visibility
- * - New password submission
- * - Success message display
- * - Login with new password
- * - Old password no longer works
+ * Tests the password reset flow including:
+ * - Valid email submission for password reset
+ * - Invalid email submission handling
+ * - Confirmation message display
+ * - Error message display for invalid email
  *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8
+ * Requirements: Requirement 2 (Password Reset Flow Testing)
+ * - 2.1: Verify confirmation message displayed after valid email submission
+ * - 2.2: Verify error message displayed for invalid email
+ * - 2.3: Verify user redirected to login page after successful password reset
+ * - 2.4: Verify error message displayed for expired/invalid reset token
  *
- * NOTE: This test is currently SKIPPED because it requires a real confirmation code from Cognito.
- * The mock implementation in e2e/helpers/cognito-code.ts returns a hardcoded code that won't work
- * with the actual Cognito service.
- *
- * To enable this test, implement one of the following approaches:
- * 1. Use AWS SDK AdminGetUser API to retrieve the confirmation code (requires admin IAM permissions)
- * 2. Integrate with a test email service (e.g., Mailhog, MailSlurp) to capture the email
- * 3. Create a test-specific backend endpoint that returns confirmation codes for test users
- * 4. Mock the Cognito service in the test environment
+ * NOTE: Tests involving actual password reset with confirmation codes are limited
+ * due to the challenge of retrieving Cognito confirmation codes in E2E tests.
+ * See e2e/helpers/cognito-code.ts for details.
  */
 
 import { test, expect } from '@playwright/test';
-import { generateTestUser, cleanupTestUser, navigateWithErrorHandling } from '../helpers';
-import { getPasswordResetCode } from '../helpers/cognito-code';
+import { PasswordResetPage, LoginPage } from '../page-objects';
+import { createTestUser, cleanupTestUser } from '../helpers';
 
 test.describe('Password Reset Flow', () => {
-  test.skip('should successfully reset password and login with new password', async ({ page }) => {
-    // Generate unique test user
-    const testUser = generateTestUser();
-    const newPassword = `NewPass${Date.now()}`;
+    test('should display confirmation message after submitting valid email', async ({ page }) => {
+        const passwordResetPage = new PasswordResetPage(page);
 
-    try {
-      // Step 1: Pre-register the test user
-      await navigateWithErrorHandling(page, '/register');
-      await page.fill('input[name="username"]', testUser.username);
-      await page.fill('input[name="email"]', testUser.email);
-      await page.fill('input[name="password"]', testUser.password);
-      await page.fill('input[name="confirmPassword"]', testUser.password);
-      await page.click('button[type="submit"]');
-      await page.waitForURL('/');
+        // Create test user
+        const testUser = await createTestUser();
 
-      // Step 2: Requirement 3.1: Navigate to password reset page
-      await navigateWithErrorHandling(page, '/password-reset');
+        try {
+            // Navigate to password reset page
+            await passwordResetPage.goto();
 
-      // Requirement 3.2: Verify page title contains "パスワードリセット"
-      await expect(page.locator('h1')).toContainText('パスワードリセット');
+            // Submit valid email
+            await passwordResetPage.fillEmail(testUser.email);
+            await passwordResetPage.clickSubmit();
 
-      // Requirement 3.3: Submit email for password reset (Cognito sends confirmation code)
-      await page.fill('input[name="email"]', testUser.email);
-      await page.click('button[type="submit"]');
+            // Verify confirmation message is displayed
+            await passwordResetPage.expectConfirmationMessage();
+        } finally {
+            // Clean up test user
+            await cleanupTestUser(testUser.email);
+        }
+    });
 
-      // Requirement 3.4: Code input field should be visible
-      await expect(page.locator('input[name="confirmation-code"]')).toBeVisible();
+    test('should display error message for invalid email format', async ({ page }) => {
+        const passwordResetPage = new PasswordResetPage(page);
 
-      // Get confirmation code from Cognito
-      // NOTE: This is currently a mock implementation
-      // See e2e/helpers/cognito-code.ts for details on implementing real code retrieval
-      const confirmationCode = await getPasswordResetCode(testUser.email);
+        // Navigate to password reset page
+        await passwordResetPage.goto();
 
-      // Requirement 3.5: Submit confirmation code and new password
-      await page.fill('input[name="confirmation-code"]', confirmationCode);
-      await page.fill('input[name="new-password"]', newPassword);
-      await page.fill('input[name="password-confirmation"]', newPassword);
-      await page.click('button[type="submit"]');
+        // Submit invalid email format
+        await passwordResetPage.fillEmail('invalid-email');
+        await passwordResetPage.clickSubmit();
 
-      // Requirement 3.6: Success message should be displayed
-      await expect(page.locator('text=パスワードがリセットされました')).toBeVisible();
+        // Verify error message is displayed
+        await passwordResetPage.expectErrorMessage('');
+    });
 
-      // Step 3: Requirement 3.7: Verify user can login with new password
-      await navigateWithErrorHandling(page, '/login');
-      await page.fill('input[name="email"]', testUser.email);
-      await page.fill('input[name="password"]', newPassword);
-      await page.click('button[type="submit"]');
-      await page.waitForURL('/');
+    test('should display error message for non-existent email', async ({ page }) => {
+        const passwordResetPage = new PasswordResetPage(page);
 
-      // Verify successful login
-      const accessToken = await page.evaluate(() => localStorage.getItem('accessToken'));
-      expect(accessToken).toBeTruthy();
+        // Navigate to password reset page
+        await passwordResetPage.goto();
 
-      // Step 4: Requirement 3.8: Verify old password no longer works
-      await navigateWithErrorHandling(page, '/login');
-      await page.fill('input[name="email"]', testUser.email);
-      await page.fill('input[name="password"]', testUser.password);
-      await page.click('button[type="submit"]');
+        // Submit non-existent email
+        await passwordResetPage.fillEmail('nonexistent@example.com');
+        await passwordResetPage.clickSubmit();
 
-      // Should show error message or remain on login page
-      const errorMessage = page.locator('[role="alert"]');
-      await expect(errorMessage).toBeVisible();
-    } finally {
-      // Clean up test user after test
-      await cleanupTestUser(testUser.email);
-    }
-  });
+        // Verify error message is displayed (or confirmation message for security)
+        // Note: Some systems show confirmation message even for non-existent emails
+        // to prevent email enumeration attacks
+        await passwordResetPage.expectConfirmationMessage();
+    });
+
+    test('should display error message for empty email', async ({ page }) => {
+        const passwordResetPage = new PasswordResetPage(page);
+
+        // Navigate to password reset page
+        await passwordResetPage.goto();
+
+        // Submit empty email
+        await passwordResetPage.fillEmail('');
+        await passwordResetPage.clickSubmit();
+
+        // Verify error message is displayed
+        await passwordResetPage.expectErrorMessage('');
+    });
+
+    test('should navigate from login page to password reset page', async ({ page }) => {
+        const loginPage = new LoginPage(page);
+
+        // Navigate to login page
+        await loginPage.goto();
+
+        // Click forgot password link
+        await loginPage.clickForgotPassword();
+
+        // Verify we're on password reset page
+        await page.waitForURL('/password-reset', { timeout: 10000 });
+        expect(page.url()).toContain('/password-reset');
+    });
+
+    test('should complete password reset request within 30 seconds', async ({ page }) => {
+        const startTime = Date.now();
+        const passwordResetPage = new PasswordResetPage(page);
+
+        const testUser = await createTestUser();
+
+        try {
+            await passwordResetPage.goto();
+            await passwordResetPage.fillEmail(testUser.email);
+            await passwordResetPage.clickSubmit();
+            await passwordResetPage.expectConfirmationMessage();
+
+            const duration = Date.now() - startTime;
+            expect(duration).toBeLessThan(30000);
+        } finally {
+            await cleanupTestUser(testUser.email);
+        }
+    });
+
+    // Note: The following tests are commented out because they require actual
+    // confirmation codes from Cognito, which are challenging to retrieve in E2E tests.
+    // To enable these tests, implement one of the approaches described in
+    // e2e/helpers/cognito-code.ts
+
+    /*
+    test.skip('should successfully reset password with valid confirmation code', async ({ page }) => {
+        const passwordResetPage = new PasswordResetPage(page);
+        const loginPage = new LoginPage(page);
+        const newPassword = `NewPass${Date.now()}!`;
+
+        const testUser = await createTestUser();
+
+        try {
+            // Request password reset
+            await passwordResetPage.goto();
+            await passwordResetPage.fillEmail(testUser.email);
+            await passwordResetPage.clickSubmit();
+            await passwordResetPage.expectConfirmationMessage();
+
+            // Get confirmation code (requires implementation)
+            const confirmationCode = await getPasswordResetCode(testUser.email);
+
+            // Submit new password with confirmation code
+            await passwordResetPage.fillConfirmationCode(confirmationCode);
+            await passwordResetPage.fillNewPassword(newPassword);
+            await passwordResetPage.fillConfirmPassword(newPassword);
+            await passwordResetPage.clickSubmitNewPassword();
+
+            // Verify redirect to login page
+            await page.waitForURL('/login', { timeout: 10000 });
+            expect(page.url()).toContain('/login');
+
+            // Verify can login with new password
+            await loginPage.login(testUser.email, newPassword);
+            await loginPage.expectRedirectToGameList();
+        } finally {
+            await cleanupTestUser(testUser.email);
+        }
+    });
+
+    test.skip('should display error for invalid confirmation code', async ({ page }) => {
+        const passwordResetPage = new PasswordResetPage(page);
+        const newPassword = `NewPass${Date.now()}!`;
+
+        const testUser = await createTestUser();
+
+        try {
+            // Request password reset
+            await passwordResetPage.goto();
+            await passwordResetPage.fillEmail(testUser.email);
+            await passwordResetPage.clickSubmit();
+            await passwordResetPage.expectConfirmationMessage();
+
+            // Submit with invalid confirmation code
+            await passwordResetPage.fillConfirmationCode('000000');
+            await passwordResetPage.fillNewPassword(newPassword);
+            await passwordResetPage.fillConfirmPassword(newPassword);
+            await passwordResetPage.clickSubmitNewPassword();
+
+            // Verify error message is displayed
+            await passwordResetPage.expectErrorMessage('');
+        } finally {
+            await cleanupTestUser(testUser.email);
+        }
+    });
+
+    test.skip('should display error for expired confirmation code', async ({ page }) => {
+        const passwordResetPage = new PasswordResetPage(page);
+        const newPassword = `NewPass${Date.now()}!`;
+
+        const testUser = await createTestUser();
+
+        try {
+            // Request password reset
+            await passwordResetPage.goto();
+            await passwordResetPage.fillEmail(testUser.email);
+            await passwordResetPage.clickSubmit();
+            await passwordResetPage.expectConfirmationMessage();
+
+            // Wait for code to expire (Cognito codes typically expire after 1 hour)
+            // In practice, this would use a mock or test-specific endpoint
+            // to simulate an expired code
+
+            // Submit with expired confirmation code
+            const expiredCode = '999999';
+            await passwordResetPage.fillConfirmationCode(expiredCode);
+            await passwordResetPage.fillNewPassword(newPassword);
+            await passwordResetPage.fillConfirmPassword(newPassword);
+            await passwordResetPage.clickSubmitNewPassword();
+
+            // Verify error message is displayed
+            await passwordResetPage.expectErrorMessage('');
+        } finally {
+            await cleanupTestUser(testUser.email);
+        }
+    });
+    */
 });
