@@ -47,9 +47,9 @@ export async function waitForVisible(
     try {
       await expect(locator).toBeVisible({ timeout });
       return;
-    } catch {
+    } catch (err) {
       if (attempt === retries) {
-        throw error;
+        throw err;
       }
       await new Promise((resolve) => setTimeout(resolve, RETRY_CONFIG.DELAY_MS));
     }
@@ -133,8 +133,8 @@ export async function retryAssertion<T>(
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await assertion();
-    } catch {
-      lastError = error as Error;
+    } catch (err) {
+      lastError = err as Error;
       if (attempt < maxAttempts) {
         console.log(`[RetryAssertion] Attempt ${attempt} failed, retrying...`);
         await new Promise((resolve) => setTimeout(resolve, delayMs));

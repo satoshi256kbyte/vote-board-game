@@ -4,6 +4,13 @@ import { RegistrationPage } from '../page-objects/registration-page';
 import { VotingPage } from '../page-objects/voting-page';
 import { ProfilePage } from '../page-objects/profile-page';
 import { GameDetailPage } from '../page-objects/game-detail-page';
+import {
+  createTestUser,
+  loginUser,
+  cleanupTestUser,
+  createTestGame,
+  cleanupTestGame,
+} from '../helpers';
 
 /**
  * Validation Error E2E Tests
