@@ -3,7 +3,7 @@
  * Tests submitting new move candidates
  */
 
-import { test, expect } from "../fixtures";;
+import { test, expect } from '../fixtures';
 import { VotingPage } from '../page-objects/voting-page';
 
 // Merge fixtures

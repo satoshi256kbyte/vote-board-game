@@ -3,7 +3,7 @@
  * Tests game detail display including board state, move history, and AI commentary
  */
 
-import { test, expect } from "../fixtures";;
+import { test, expect } from '../fixtures';
 import { GameDetailPage } from '../page-objects/game-detail-page';
 
 // Merge fixtures

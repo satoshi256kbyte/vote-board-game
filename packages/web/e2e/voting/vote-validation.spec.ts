@@ -3,7 +3,7 @@
  * Tests duplicate vote prevention and voting period validation
  */
 
-import { test, expect } from "../fixtures";;
+import { test, expect } from '../fixtures';
 import { VotingPage } from '../page-objects/voting-page';
 import { createTestCandidate } from '../helpers/test-data';
 

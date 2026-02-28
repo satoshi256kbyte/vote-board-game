@@ -3,7 +3,7 @@
  * Tests share URL generation and shared content display
  */
 
-import { test, expect } from "../fixtures";;
+import { test, expect } from '../fixtures';
 import { GameDetailPage } from '../page-objects/game-detail-page';
 import { VotingPage } from '../page-objects/voting-page';
 

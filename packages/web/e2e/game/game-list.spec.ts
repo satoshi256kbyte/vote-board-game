@@ -3,7 +3,7 @@
  * Tests game viewing and navigation functionality
  */
 
-import { test, expect } from "../fixtures";;
+import { test, expect } from '../fixtures';
 import { GameListPage } from '../page-objects/game-list-page';
 
 // Merge fixtures

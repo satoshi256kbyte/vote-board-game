@@ -22,49 +22,49 @@ import { createTestGame, cleanupTestGame, type TestGame } from '../helpers/test-
  * ```
  */
 export const test = base.extend<{
-    authenticatedPage: Page;
-    testUser: TestUser;
-    game: TestGame;
+  authenticatedPage: Page;
+  testUser: TestUser;
+  game: TestGame;
 }>({
-    authenticatedPage: async ({ page }, use) => {
-        let testUser: TestUser | null = null;
+  authenticatedPage: async ({ page }, use) => {
+    let testUser: TestUser | null = null;
 
-        try {
-            testUser = await createTestUser();
-            await loginUser(page, testUser);
-            await use(page);
-        } finally {
-            if (testUser) {
-                await cleanupTestUser(testUser.email);
-            }
-        }
-    },
+    try {
+      testUser = await createTestUser();
+      await loginUser(page, testUser);
+      await use(page);
+    } finally {
+      if (testUser) {
+        await cleanupTestUser(testUser.email);
+      }
+    }
+  },
 
-    testUser: async ({ }, use) => {
-        let testUser: TestUser | null = null;
+  testUser: async ({}, use) => {
+    let testUser: TestUser | null = null;
 
-        try {
-            testUser = await createTestUser();
-            await use(testUser);
-        } finally {
-            if (testUser) {
-                await cleanupTestUser(testUser.email);
-            }
-        }
-    },
+    try {
+      testUser = await createTestUser();
+      await use(testUser);
+    } finally {
+      if (testUser) {
+        await cleanupTestUser(testUser.email);
+      }
+    }
+  },
 
-    game: async ({ }, use) => {
-        let game: TestGame | null = null;
+  game: async ({}, use) => {
+    let game: TestGame | null = null;
 
-        try {
-            game = await createTestGame();
-            await use(game);
-        } finally {
-            if (game) {
-                await cleanupTestGame(game);
-            }
-        }
-    },
+    try {
+      game = await createTestGame();
+      await use(game);
+    } finally {
+      if (game) {
+        await cleanupTestGame(game);
+      }
+    }
+  },
 });
 
 export { expect } from '@playwright/test';

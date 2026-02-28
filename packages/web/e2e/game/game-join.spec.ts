@@ -3,7 +3,7 @@
  * Tests joining a game and accessing the voting interface
  */
 
-import { test, expect } from "../fixtures";;
+import { test, expect } from '../fixtures';
 import { GameDetailPage } from '../page-objects/game-detail-page';
 import { VotingPage } from '../page-objects/voting-page';
 

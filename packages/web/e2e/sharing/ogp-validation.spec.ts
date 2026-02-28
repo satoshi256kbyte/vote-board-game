@@ -3,7 +3,7 @@
  * Tests OGP meta tags and image validity for social sharing
  */
 
-import { test, expect } from "../fixtures";;
+import { test, expect } from '../fixtures';
 
 // Merge fixtures
 
