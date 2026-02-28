@@ -26,6 +26,7 @@ packages/
 - [URL設計](docs/5-url-design.md)
 - [ログ設計](docs/6-logging-design.md)
 - [画面設計](docs/7-screen-design.md)
+- [Vercel デプロイメント](docs/deployment-vercel.md)
 
 ## セットアップ
 
@@ -172,12 +173,22 @@ ISC
 2. AWS 認証（OIDC）
 3. AWS Account ID を自動取得
 4. インフラとAPIをデプロイ（CDK）
-5. CDK Outputs から S3 バケット名と CloudFront Distribution ID を取得
-6. フロントエンドをS3にデプロイ
-   - HTMLファイル: `max-age=0`（常に最新）
-   - JS/CSS等: `max-age=31536000`（1年間キャッシュ）
-7. CloudFront キャッシュ無効化
+5. CDK Outputs から環境変数を取得
+6. Vercel 用の環境変数ファイルを生成（`.env.production`, `.env.preview`）
+7. 環境変数ファイルを Artifacts にアップロード
 8. デプロイサマリーを表示
+
+**注意**: フロントエンドは Vercel で自動デプロイされます。GitHub Actions は AWS インフラ（API、DynamoDB等）のデプロイと、Vercel で使用する環境変数ファイルの生成を担当します。
+
+### フロントエンドデプロイ（Vercel）
+
+フロントエンドアプリケーションは Vercel にデプロイされます。詳細は [Vercel デプロイメントガイド](docs/deployment-vercel.md) を参照してください。
+
+- Vercel が GitHub リポジトリと連携し、自動デプロイを実行
+- `main` ブランチ → Production 環境
+- その他のブランチ → Preview 環境
+- 動的ルート（`[gameId]`, `[candidateId]`）が正常に動作
+- SSR/ISR 機能を活用
 
 ### ブランチ戦略
 
@@ -207,15 +218,26 @@ CD パイプラインは OIDC を使用した IAM ロール認証を使用しま
 
 **メリット:**
 
-- 環境ごとに同じ変数名`AWS_ROLE_ARN`を使用
+- 環境ごとに同じ変数名を使用
 - 環境ごとに異なる保護ルールを設定可能
-- Secretsの管理が簡潔
+- Secretsと変数の管理が簡潔
 
-その他の情報（AWS Account ID、S3バケット名、CloudFront Distribution ID）は、デプロイ時に自動的に取得されます：
+#### Vercel URL の設定
+
+各環境に `VERCEL_URL` Variable を追加：
+
+1. 各環境を選択
+2. "Environment variables" セクションで "Add variable" をクリック
+3. 以下を設定：
+   - Development: `VERCEL_URL` = `https://vote-board-game-web-dev.vercel.app`
+   - Staging: `VERCEL_URL` = `https://vote-board-game-web-stg.vercel.app`
+   - Production: `VERCEL_URL` = `https://vote-board-game-web.vercel.app`
+
+その他の情報（AWS Account ID、API URL、Cognito 設定）は、デプロイ時に自動的に取得されます：
 
 - AWS Account ID: `aws sts get-caller-identity` で取得
-- S3バケット名: CDK Outputs から取得
-- CloudFront Distribution ID: CDK Outputs から取得
+- API URL: CDK Outputs から取得
+- Cognito 設定: CDK Outputs から取得
 
 #### GitHub Environments 設定（推奨）
 
@@ -248,8 +270,6 @@ OIDC プロバイダーと IAM ロールを手動で作成する必要があり�
 2. 環境ごとに以下のポリシーを持つ IAM ロールを作成：
    - CDK デプロイ権限（CloudFormation、IAM、Lambda等）
    - Lambda 更新権限
-   - S3 書き込み権限
-   - CloudFront キャッシュ無効化権限
 3. 各ロールの ARN を対応する Secret に設定
 
 詳細は [AWS ドキュメント](https://docs.github.com/ja/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services) を参照してください。

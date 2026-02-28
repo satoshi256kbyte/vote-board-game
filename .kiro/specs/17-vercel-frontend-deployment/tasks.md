@@ -123,7 +123,7 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - ロールバック手順を記載
     - トラブルシューティングを記載
     - _要件: 8.1, 8.2, 8.3, 8.4, 8.5_
-  - [ ] 6.2 README.md を更新
+  - [x] 6.2 README.md を更新
     - プロジェクトルートの `README.md` を更新
     - Vercel デプロイに関する情報を追加
     - GitHub Variables の設定方法を記載
