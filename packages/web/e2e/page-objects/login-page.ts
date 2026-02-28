@@ -34,7 +34,7 @@ export class LoginPage {
     await submitButton.click();
 
     // Wait for network request to complete
-    await waitForNetworkIdle(this.page, '/api/auth', { timeout: TIMEOUTS.LONG });
+    await waitForNetworkIdle(this.page, '/auth/login', { timeout: TIMEOUTS.LONG });
   }
 
   async login(email: string, password: string): Promise<void> {
