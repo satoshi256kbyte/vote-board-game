@@ -190,5 +190,54 @@ describe('CORS Middleware', () => {
 
       expect(isOriginAllowed(origin, allowedOrigins)).toBe(true);
     });
+
+    it('should match wildcard pattern for Vercel preview deployments', () => {
+      const allowedOrigins = ['https://vote-board-game-*-satoshi256kbytes-projects.vercel.app'];
+
+      expect(
+        isOriginAllowed(
+          'https://vote-board-game-1biedqxq8-satoshi256kbytes-projects.vercel.app',
+          allowedOrigins
+        )
+      ).toBe(true);
+      expect(
+        isOriginAllowed(
+          'https://vote-board-game-abc123-satoshi256kbytes-projects.vercel.app',
+          allowedOrigins
+        )
+      ).toBe(true);
+      expect(
+        isOriginAllowed(
+          'https://vote-board-game-feature-test-satoshi256kbytes-projects.vercel.app',
+          allowedOrigins
+        )
+      ).toBe(true);
+    });
+
+    it('should not match wildcard pattern for different domains', () => {
+      const allowedOrigins = ['https://vote-board-game-*-satoshi256kbytes-projects.vercel.app'];
+
+      expect(isOriginAllowed('https://malicious-site.com', allowedOrigins)).toBe(false);
+      expect(isOriginAllowed('https://vote-board-game-test.vercel.app', allowedOrigins)).toBe(
+        false
+      );
+      expect(isOriginAllowed('https://example.com', allowedOrigins)).toBe(false);
+    });
+
+    it('should match multiple wildcard patterns', () => {
+      const allowedOrigins = [
+        'https://vote-board-game-*-satoshi256kbytes-projects.vercel.app',
+        'https://my-app-*.netlify.app',
+      ];
+
+      expect(
+        isOriginAllowed(
+          'https://vote-board-game-test-satoshi256kbytes-projects.vercel.app',
+          allowedOrigins
+        )
+      ).toBe(true);
+      expect(isOriginAllowed('https://my-app-preview.netlify.app', allowedOrigins)).toBe(true);
+      expect(isOriginAllowed('https://my-app.other.com', allowedOrigins)).toBe(false);
+    });
   });
 });

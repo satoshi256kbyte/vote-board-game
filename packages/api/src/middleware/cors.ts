@@ -45,8 +45,12 @@ export function isOriginAllowed(origin: string, allowedOrigins: string[]): boole
     if (allowed.includes('*')) {
       // ワイルドカードを正規表現パターンに変換
       // 例: "https://*.vercel.app" -> "^https://.*\.vercel\.app$"
-      const escaped = allowed.replace(/[.+?^${}()|[\]\\]/g, (match) => `\\${match}`);
-      const pattern = escaped.replace(/\\\*/g, '.*');
+      // まず * を一時的なプレースホルダーに置換
+      const withPlaceholder = allowed.replace(/\*/g, '___WILDCARD___');
+      // 正規表現の特殊文字をエスケープ
+      const escaped = withPlaceholder.replace(/[.+?^${}()|[\]\\]/g, (match) => `\\${match}`);
+      // プレースホルダーを .* に置換
+      const pattern = escaped.replace(/___WILDCARD___/g, '.*');
       return new RegExp(`^${pattern}$`).test(origin);
     }
     // 完全一致の場合

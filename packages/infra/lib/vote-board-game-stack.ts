@@ -253,16 +253,21 @@ export class VoteBoardGameStack extends cdk.Stack {
     const vercelUrl = this.node.tryGetContext('vercelUrl') || '';
 
     // ALLOWED_ORIGINS を環境ごとに設定
+    // Vercel のプレビューデプロイメント用にワイルドカードパターンを追加
     const allowedOrigins = (() => {
       switch (environment) {
         case 'dev':
-          return vercelUrl ? `http://localhost:3000,${vercelUrl}` : 'http://localhost:3000';
+          return vercelUrl
+            ? `http://localhost:3000,${vercelUrl},https://vote-board-game-*-satoshi256kbytes-projects.vercel.app`
+            : 'http://localhost:3000,https://vote-board-game-*-satoshi256kbytes-projects.vercel.app';
         case 'stg':
-          return vercelUrl || '';
+          return vercelUrl
+            ? `${vercelUrl},https://vote-board-game-*-satoshi256kbytes-projects.vercel.app`
+            : 'https://vote-board-game-*-satoshi256kbytes-projects.vercel.app';
         case 'prod':
           return vercelUrl || '';
         default:
-          return 'http://localhost:3000';
+          return 'http://localhost:3000,https://vote-board-game-*-satoshi256kbytes-projects.vercel.app';
       }
     })();
 
