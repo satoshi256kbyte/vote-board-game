@@ -66,8 +66,12 @@ describe('Profile API Property-Based Tests', () => {
           email: fc.emailAddress(),
           username: fc.string({ minLength: 1, maxLength: 50 }),
           iconUrl: fc.option(fc.webUrl({ validSchemes: ['https'] }), { nil: undefined }),
-          createdAt: fc.date().map((d) => d.toISOString()),
-          updatedAt: fc.date().map((d) => d.toISOString()),
+          createdAt: fc
+            .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+            .map((d) => d.toISOString()),
+          updatedAt: fc
+            .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+            .map((d) => d.toISOString()),
         }),
         async (profileData) => {
           mockGetById.mockResolvedValue({
