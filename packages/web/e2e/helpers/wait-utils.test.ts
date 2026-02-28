@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { type Page, type Locator } from '@playwright/test';
 import {
-  waitForVisible,
   waitForNetworkIdle,
   waitForLoadingComplete,
   retryAssertion,
@@ -65,22 +64,6 @@ describe('wait-utils', () => {
       await expect(retryAssertion(assertion, { delayMs: 10 })).rejects.toThrow('Fails');
 
       expect(assertion).toHaveBeenCalledTimes(RETRY_CONFIG.MAX_ATTEMPTS);
-    });
-  });
-
-  describe('waitForVisible', () => {
-    let mockLocator: Locator;
-
-    beforeEach(() => {
-      mockLocator = {
-        isVisible: vi.fn().mockResolvedValue(true),
-      } as unknown as Locator;
-    });
-
-    it('should wait for element to be visible', async () => {
-      // This is a simplified test - actual implementation uses expect().toBeVisible()
-      // which is harder to mock in unit tests
-      expect(mockLocator).toBeDefined();
     });
   });
 

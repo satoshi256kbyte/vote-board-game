@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { LoginPage } from '../page-objects/login-page';
 import { VotingPage } from '../page-objects/voting-page';
 import { GameDetailPage } from '../page-objects/game-detail-page';
 import { simulateNetworkError } from '../helpers/network-error';

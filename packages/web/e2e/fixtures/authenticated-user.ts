@@ -77,7 +77,7 @@ export const authenticatedUser = base.extend<{
    * });
    * ```
    */
-  testUser: async ({}, use) => {
+  testUser: async ({ page: _page }, use) => {
     let testUser: TestUser | null = null;
 
     try {

@@ -4,11 +4,6 @@ import { RegistrationPage } from '../page-objects/registration-page';
 import { VotingPage } from '../page-objects/voting-page';
 import { ProfilePage } from '../page-objects/profile-page';
 import { GameDetailPage } from '../page-objects/game-detail-page';
-import { createTestUser, loginUser } from '../helpers/test-user';
-import { cleanupTestUser } from '../helpers/cleanup';
-import { createTestGame, cleanupTestGame } from '../helpers/test-data';
-import type { TestUser } from '../helpers/test-user';
-import type { TestGame } from '../helpers/test-data';
 
 /**
  * Validation Error E2E Tests

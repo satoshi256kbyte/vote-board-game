@@ -16,7 +16,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { LoginPage, GameListPage } from '../page-objects';
+import { LoginPage } from '../page-objects';
 import { createTestUser, cleanupTestUser } from '../helpers';
 
 test.describe('User Login Flow', () => {
@@ -24,7 +24,6 @@ test.describe('User Login Flow', () => {
     page,
   }) => {
     const loginPage = new LoginPage(page);
-    const gameListPage = new GameListPage(page);
 
     // Create test user
     const testUser = await createTestUser();

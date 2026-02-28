@@ -40,7 +40,7 @@ export const test = base.extend<{
     }
   },
 
-  testUser: async ({}, use) => {
+  testUser: async ({ page: _page }, use) => {
     let testUser: TestUser | null = null;
 
     try {
@@ -53,7 +53,7 @@ export const test = base.extend<{
     }
   },
 
-  game: async ({}, use) => {
+  game: async ({ page: _page }, use) => {
     let game: TestGame | null = null;
 
     try {

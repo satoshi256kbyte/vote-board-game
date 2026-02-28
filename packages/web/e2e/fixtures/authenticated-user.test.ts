@@ -3,7 +3,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { test as base } from '@playwright/test';
 import * as testUserModule from '../helpers/test-user';
 import * as cleanupModule from '../helpers/cleanup';
 

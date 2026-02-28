@@ -33,7 +33,7 @@ export const testGame = base.extend<{
    * });
    * ```
    */
-  game: async ({}, use) => {
+  game: async ({ page: _page }, use) => {
     let game: TestGame | null = null;
 
     try {

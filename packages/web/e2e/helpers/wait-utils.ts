@@ -47,7 +47,7 @@ export async function waitForVisible(
     try {
       await expect(locator).toBeVisible({ timeout });
       return;
-    } catch (error) {
+    } catch {
       if (attempt === retries) {
         throw error;
       }
@@ -109,7 +109,7 @@ export async function waitForLoadingComplete(
       // Wait for it to disappear
       await expect(loadingElement).toBeHidden({ timeout });
     }
-  } catch (error) {
+  } catch {
     // Loading indicator might not exist, which is fine
     console.log('[WaitForLoadingComplete] No loading indicator found or already hidden');
   }
@@ -133,7 +133,7 @@ export async function retryAssertion<T>(
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await assertion();
-    } catch (error) {
+    } catch {
       lastError = error as Error;
       if (attempt < maxAttempts) {
         console.log(`[RetryAssertion] Attempt ${attempt} failed, retrying...`);
