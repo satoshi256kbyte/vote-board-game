@@ -51,7 +51,7 @@ test.describe('User Login Flow', () => {
           let body: string | undefined;
           try {
             body = await response.text();
-          } catch (e) {
+          } catch {
             body = 'Could not read response body';
           }
           apiRequests.push({
@@ -103,8 +103,9 @@ test.describe('User Login Flow', () => {
         throw new Error('Login API was not called');
       }
       if (loginRequest.status !== 200) {
+        console.log(`[Test] Login API response body:`, loginRequest.body);
         throw new Error(
-          `Login API failed with status ${loginRequest.status}. Console errors: ${consoleErrors.join(', ')}`
+          `Login API failed with status ${loginRequest.status}. Response: ${loginRequest.body}. Console errors: ${consoleErrors.join(', ')}`
         );
       }
 
