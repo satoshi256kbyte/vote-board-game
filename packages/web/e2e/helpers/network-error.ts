@@ -58,7 +58,7 @@ export function formatNetworkError(error: unknown, url: string): string {
     '  • Application is not deployed or not running',
     '  • Incorrect BASE_URL environment variable',
     '  • Network connectivity issues',
-    '  • CloudFront distribution is not accessible',
+    '  • Vercel deployment is not accessible',
     '',
     `Original error: ${originalMessage}`,
   ].join('\n');

@@ -17,7 +17,7 @@ describe('Playwright Config', () => {
     it('should accept different URL formats', () => {
       const urls = [
         'http://localhost:3000',
-        'https://d1234567890.cloudfront.net',
+        'https://vote-board-game-dev.vercel.app',
         'https://example.com:8080',
       ];
 
