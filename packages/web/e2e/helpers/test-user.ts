@@ -59,8 +59,12 @@ export async function createTestUser(): Promise<TestUser> {
       throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
     }
 
-    // Generate username from email (before @ symbol)
-    const username = testUser.email.split('@')[0];
+    // Generate username (max 20 characters)
+    // Use last 10 digits of timestamp + 4 digit random = 14 chars + 'test' prefix = 18 chars
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    const shortTimestamp = timestamp.toString().slice(-10); // Last 10 digits
+    const username = `test${shortTimestamp}${random}`;
 
     // Call registration API
     const response = await fetch(`${apiUrl}/auth/register`, {
