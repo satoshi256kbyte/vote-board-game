@@ -15,7 +15,7 @@ describe('CORS Middleware', () => {
         method: 'GET',
       } as unknown as Context['req'],
       header: vi.fn(),
-      text: vi.fn(),
+      body: vi.fn(() => new Response(null, { status: 204 })),
     };
     mockNext = vi.fn();
   });
@@ -92,7 +92,7 @@ describe('CORS Middleware', () => {
       (mockContext.req!.header as MockFn).mockReturnValue('https://vote-board-game-web.vercel.app');
       mockContext.req!.method = 'OPTIONS';
 
-      await middleware(mockContext as Context, mockNext);
+      const result = await middleware(mockContext as Context, mockNext);
 
       expect(mockContext.header).toHaveBeenCalledWith(
         'Access-Control-Allow-Origin',
@@ -108,7 +108,6 @@ describe('CORS Middleware', () => {
       );
       expect(mockContext.header).toHaveBeenCalledWith('Access-Control-Max-Age', '3600');
       // Response オブジェクトが返されることを確認
-      const result = await middleware(mockContext as Context, mockNext);
       expect(result).toBeInstanceOf(Response);
       expect(mockNext).not.toHaveBeenCalled();
     });
