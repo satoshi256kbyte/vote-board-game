@@ -15,6 +15,8 @@ export default tseslint.config(
       '**/*.config.mjs',
       '**/*.config.ts',
       '**/next-env.d.ts',
+      '**/.eslintrc.cjs',
+      '**/build.mjs',
     ],
   },
   {

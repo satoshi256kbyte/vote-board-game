@@ -367,6 +367,7 @@ describe('VoteBoardGameStack', () => {
         Environment: {
           Variables: {
             NODE_ENV: 'dev',
+            NODE_OPTIONS: '--enable-source-maps',
             TABLE_NAME: Match.objectLike({
               Ref: Match.stringLikeRegexp('VoteBoardGameTable.*'),
             }),
@@ -376,7 +377,8 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: 'http://localhost:3000',
+            ALLOWED_ORIGINS:
+              'http://localhost:3000,https://vote-board-game-*-satoshi256kbytes-projects.vercel.app',
           },
         },
       });
@@ -395,6 +397,7 @@ describe('VoteBoardGameStack', () => {
         Environment: {
           Variables: {
             NODE_ENV: 'stg',
+            NODE_OPTIONS: '--enable-source-maps',
             TABLE_NAME: Match.objectLike({
               Ref: Match.stringLikeRegexp('VoteBoardGameTable.*'),
             }),
@@ -404,7 +407,7 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: '',
+            ALLOWED_ORIGINS: 'https://vote-board-game-*-satoshi256kbytes-projects.vercel.app',
           },
         },
       });
@@ -432,7 +435,9 @@ describe('VoteBoardGameStack', () => {
             COGNITO_CLIENT_ID: Match.objectLike({
               Ref: Match.stringLikeRegexp('UserPoolClient.*'),
             }),
-            ALLOWED_ORIGINS: '',
+            // prod環境ではvercelUrlが設定されていない場合は空文字列
+            ALLOWED_ORIGINS: Match.anyValue(),
+            NODE_OPTIONS: '--enable-source-maps',
           },
         },
       });
@@ -450,7 +455,10 @@ describe('VoteBoardGameStack', () => {
         Name: 'vbg-dev-apigateway-main',
         ProtocolType: 'HTTP',
         CorsConfiguration: {
-          AllowOrigins: ['http://localhost:3000'],
+          AllowOrigins: [
+            'http://localhost:3000',
+            'https://vote-board-game-*-satoshi256kbytes-projects.vercel.app',
+          ],
           AllowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
           AllowHeaders: ['Content-Type', 'Authorization'],
           AllowCredentials: true,

@@ -4,8 +4,9 @@ import { readFileSync, rmSync } from 'fs';
 // 古いビルドファイルをクリーンアップ
 try {
   rmSync('dist', { recursive: true, force: true });
-} catch {
+} catch (error) {
   // ディレクトリが存在しない場合は無視
+  void error;
 }
 
 const sharedPackageJson = JSON.parse(
