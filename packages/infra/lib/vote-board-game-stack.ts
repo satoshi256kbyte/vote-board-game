@@ -46,19 +46,6 @@ export class VoteBoardGameStack extends cdk.Stack {
       objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
     });
 
-    // S3 バケット (フロントエンド用)
-    const webBucket = new s3.Bucket(this, 'WebBucket', {
-      bucketName: `${appName}-${environment}-s3-web-${this.account}`,
-      publicReadAccess: false,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      removalPolicy: isProduction ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: !isProduction,
-      serverAccessLogsBucket: logBucket,
-      serverAccessLogsPrefix: 'web-bucket-logs/',
-      enforceSSL: true,
-    });
-
     // S3 バケット (アイコン画像用)
     const iconBucket = new s3.Bucket(this, 'IconBucket', {
       bucketName: `${appName}-${environment}-s3-icons-${this.account}`,
@@ -71,47 +58,6 @@ export class VoteBoardGameStack extends cdk.Stack {
       serverAccessLogsPrefix: 'icon-bucket-logs/',
       enforceSSL: true,
     });
-
-    // CloudFront Distribution
-    const distribution = new cloudfront.Distribution(this, 'WebDistribution', {
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(webBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-      },
-      defaultRootObject: 'index.html',
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/404.html',
-        },
-      ],
-      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-      enableLogging: true,
-      logBucket: logBucket,
-      logFilePrefix: 'cloudfront-logs/',
-    });
-
-    // cdk-nag suppressions for CloudFront
-    NagSuppressions.addResourceSuppressions(
-      distribution,
-      [
-        {
-          id: 'AwsSolutions-CFR1',
-          reason: 'MVP では Geo restriction は不要。将来的に必要に応じて実装。',
-        },
-        {
-          id: 'AwsSolutions-CFR2',
-          reason: 'MVP では WAF は不要。将来的にトラフィック増加時に実装。',
-        },
-        {
-          id: 'AwsSolutions-CFR4',
-          reason: 'デフォルト CloudFront 証明書を使用。カスタムドメイン実装時に ACM 証明書で対応。',
-        },
-      ],
-      true
-    );
 
     // CloudFront Distribution for Icon Bucket
     const iconDistribution = new cloudfront.Distribution(this, 'IconDistribution', {
@@ -147,17 +93,6 @@ export class VoteBoardGameStack extends cdk.Stack {
       ],
       true
     );
-
-    // CloudFront のドメイン名を CORS 用に準備
-    const frontendOrigin = `https://${distribution.distributionDomainName}`;
-
-    // アイコンバケットにCORS設定を追加
-    iconBucket.addCorsRule({
-      allowedMethods: [s3.HttpMethods.PUT],
-      allowedOrigins: [frontendOrigin],
-      allowedHeaders: ['*'],
-      maxAge: 3000,
-    });
 
     // DynamoDB テーブル (Single Table Design)
     const table = new dynamodb.Table(this, 'VoteBoardGameTable', {
@@ -324,7 +259,7 @@ export class VoteBoardGameStack extends cdk.Stack {
         case 'prod':
           return 'https://vote-board-game.example.com';
         default:
-          return frontendOrigin;
+          return 'http://localhost:3000';
       }
     })();
 
@@ -400,7 +335,7 @@ export class VoteBoardGameStack extends cdk.Stack {
       apiName: `${appName}-${environment}-apigateway-main`,
       description: `Vote Board Game API - ${environment}`,
       corsPreflight: {
-        allowOrigins: [frontendOrigin],
+        allowOrigins: [allowedOrigins],
         allowMethods: [
           apigatewayv2.CorsHttpMethod.GET,
           apigatewayv2.CorsHttpMethod.POST,
@@ -1100,28 +1035,10 @@ export class VoteBoardGameStack extends cdk.Stack {
       exportName: `VoteBoardGameTableArn-${environment}`,
     });
 
-    new cdk.CfnOutput(this, 'WebBucketName', {
-      value: webBucket.bucketName,
-      description: 'フロントエンド用 S3 バケット名',
-      exportName: `VoteBoardGameWebBucketName-${environment}`,
-    });
-
     new cdk.CfnOutput(this, 'IconBucketName', {
       value: iconBucket.bucketName,
       description: 'アイコン画像用 S3 バケット名',
       exportName: `VoteBoardGameIconBucketName-${environment}`,
-    });
-
-    new cdk.CfnOutput(this, 'DistributionId', {
-      value: distribution.distributionId,
-      description: 'CloudFront ディストリビューション ID',
-      exportName: `VoteBoardGameDistributionId-${environment}`,
-    });
-
-    new cdk.CfnOutput(this, 'DistributionDomainName', {
-      value: distribution.distributionDomainName,
-      description: 'CloudFront ドメイン名',
-      exportName: `VoteBoardGameDistributionDomain-${environment}`,
     });
 
     new cdk.CfnOutput(this, 'IconDistributionId', {

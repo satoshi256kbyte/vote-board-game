@@ -41,19 +41,19 @@ Next.js フロントエンドアプリケーションを AWS S3 + CloudFront か
     - すべてのルートに CORS ミドルウェアを適用
     - _要件: 3.1, 3.2_
 
-- [ ] 2. Next.js 設定の更新
-  - [ ] 2.1 Next.js 設定ファイルを更新
+- [x] 2. Next.js 設定の更新
+  - [x] 2.1 Next.js 設定ファイルを更新
     - `packages/web/next.config.ts` から `output: 'export'` を削除
     - SSR/ISR を有効化
     - 画像最適化の設定を追加
     - _要件: 6.1, 6.2, 6.4_
-  - [ ] 2.2 package.json のビルドスクリプトを確認
+  - [x] 2.2 package.json のビルドスクリプトを確認
     - `packages/web/package.json` のビルドコマンドが Vercel と互換性があることを確認
     - 不要な静的エクスポート関連のスクリプトを削除
     - _要件: 6.1_
 
 - [ ] 3. AWS CDK スタックの更新
-  - [ ] 3.1 フロントエンド関連リソースを削除
+  - [x] 3.1 フロントエンド関連リソースを削除
     - `packages/infra/lib/vote-board-game-stack.ts` を更新
     - Web S3 Bucket (`webBucket`) を削除
     - Web CloudFront Distribution (`distribution`) を削除
