@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { gamesRouter } from './routes/games.js';
 import { candidatesRouter } from './routes/candidates.js';
@@ -7,6 +6,7 @@ import { votesRouter } from './routes/votes.js';
 import { authRouter } from './routes/auth.js';
 import { profileRouter } from './routes/profile.js';
 import { createAuthMiddleware } from './lib/auth/auth-middleware.js';
+import { corsMiddleware } from './middleware/cors.js';
 import type { AuthVariables } from './lib/auth/types.js';
 
 // 環境変数チェック（起動時にフェイルファスト）
@@ -36,13 +36,7 @@ const app = new Hono<{ Variables: AuthVariables }>();
 
 // ミドルウェア
 app.use('*', logger());
-app.use(
-  '*',
-  cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
-    credentials: true,
-  })
-);
+app.use('*', corsMiddleware(process.env.ALLOWED_ORIGINS || ''));
 
 // 保護対象ルートにミドルウェアを適用（ルート登録前に適用）
 app.use('/api/votes/*', authMiddleware);
