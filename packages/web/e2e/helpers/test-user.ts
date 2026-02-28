@@ -4,12 +4,6 @@
  */
 
 import type { Page } from '@playwright/test';
-import {
-  CognitoIdentityProviderClient,
-  AdminCreateUserCommand,
-  AdminSetUserPasswordCommand,
-  MessageActionType,
-} from '@aws-sdk/client-cognito-identity-provider';
 
 export interface TestUser {
   email: string;
@@ -48,11 +42,11 @@ export function generateTestUser(): TestUser {
 }
 
 /**
- * Creates a test user in Cognito User Pool
+ * Creates a test user using the registration API
  *
  * Requirements:
  * - 7.3: Test users should be created with unique identifiers
- * - 7.4: Test users should be automatically confirmed (no email verification needed)
+ * - 7.4: Test users should be created in both Cognito and DynamoDB
  *
  * @returns Promise that resolves to TestUser object with userId
  */
@@ -60,38 +54,36 @@ export async function createTestUser(): Promise<TestUser> {
   const testUser = generateTestUser();
 
   try {
-    const userPoolId = process.env.USER_POOL_ID;
-    if (!userPoolId) {
-      throw new Error('USER_POOL_ID environment variable is not set');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
     }
 
-    const client = new CognitoIdentityProviderClient({
-      region: process.env.AWS_REGION || 'ap-northeast-1',
+    // Generate username from email (before @ symbol)
+    const username = testUser.email.split('@')[0];
+
+    // Call registration API
+    const response = await fetch(`${apiUrl}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: testUser.email,
+        password: testUser.password,
+        username,
+      }),
     });
 
-    // Create user in Cognito
-    const createCommand = new AdminCreateUserCommand({
-      UserPoolId: userPoolId,
-      Username: testUser.email,
-      UserAttributes: [
-        { Name: 'email', Value: testUser.email },
-        { Name: 'email_verified', Value: 'true' },
-      ],
-      MessageAction: MessageActionType.SUPPRESS, // Don't send welcome email
-    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `Registration API failed with status ${response.status}: ${JSON.stringify(errorData)}`
+      );
+    }
 
-    const createResponse = await client.send(createCommand);
-    const userId = createResponse.User?.Username || testUser.email;
-
-    // Set permanent password (skip temporary password flow)
-    const setPasswordCommand = new AdminSetUserPasswordCommand({
-      UserPoolId: userPoolId,
-      Username: testUser.email,
-      Password: testUser.password,
-      Permanent: true,
-    });
-
-    await client.send(setPasswordCommand);
+    const data = await response.json();
+    const userId = data.userId;
 
     console.log(`[CreateTestUser] Successfully created test user: ${testUser.email}`);
 
