@@ -101,6 +101,90 @@ GitHub Actions から CDK デプロイ時に Vercel URL を渡すため、GitHub
 
 ### 3. AWS CDK のデプロイ
 
+バックエンド API をデプロイし、環境変数ファイルを生成します。
+
+#### 3.1 GitHub Actions でのデプロイ
+
+1. GitHub リポジトリの適切なブランチにプッシュ
+   - `develop` ブランチ → Development 環境
+   - `main` ブランチ → Production 環境
+
+2. GitHub Actions が自動的に実行され、以下が行われます：
+   - AWS CDK デプロイ（API Gateway、Lambda、DynamoDB など）
+   - 環境変数ファイル（`.env.{environment}`）の生成
+   - アーティファクトとしてアップロード
+
+#### 3.2 環境変数ファイルのダウンロード
+
+1. GitHub リポジトリ → **Actions** タブ
+2. 最新の CD ワークフロー実行を選択
+3. **Artifacts** セクションから `vercel-env-{environment}` をダウンロード
+   - 例: `vercel-env-development`、`vercel-env-production`
+
+4. ダウンロードした ZIP ファイルを解凍すると、`.env.{environment}` ファイルが含まれています
+
+**生成される環境変数の例:**
+
+```env
+NEXT_PUBLIC_API_URL=https://xxxxx.execute-api.ap-northeast-1.amazonaws.com
+NEXT_PUBLIC_APP_URL=https://vote-board-game-web.vercel.app
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=ap-northeast-1_xxxxx
+NEXT_PUBLIC_COGNITO_CLIENT_ID=xxxxxxxxxxxxx
+NEXT_PUBLIC_AWS_REGION=ap-northeast-1
+```
+
+### 4. Vercel への環境変数設定
+
+**重要**: Next.js の `NEXT_PUBLIC_*` 環境変数はビルド時にコードに埋め込まれます。環境変数を設定した後は、必ず再デプロイが必要です。
+
+#### 4.1 環境変数の追加
+
+1. Vercel Dashboard → プロジェクト選択
+2. **Settings** → **Environment Variables** をクリック
+3. 以下の方法で環境変数を追加：
+
+方法 1: 個別に追加
+
+各環境変数を個別に追加します：
+
+| Variable Name                      | Value                                                    | Environment         |
+| ---------------------------------- | -------------------------------------------------------- | ------------------- |
+| `NEXT_PUBLIC_API_URL`              | `https://xxxxx.execute-api.ap-northeast-1.amazonaws.com` | Production, Preview |
+| `NEXT_PUBLIC_APP_URL`              | `https://vote-board-game-web.vercel.app`                 | Production          |
+| `NEXT_PUBLIC_APP_URL`              | `https://$VERCEL_URL`                                    | Preview             |
+| `NEXT_PUBLIC_COGNITO_USER_POOL_ID` | `ap-northeast-1_xxxxx`                                   | Production, Preview |
+| `NEXT_PUBLIC_COGNITO_CLIENT_ID`    | `xxxxxxxxxxxxx`                                          | Production, Preview |
+| `NEXT_PUBLIC_AWS_REGION`           | `ap-northeast-1`                                         | Production, Preview |
+
+方法 2: .env ファイルからインポート
+
+1. ダウンロードした `.env.{environment}` ファイルをテキストエディタで開く
+2. 内容をコピー
+3. Vercel の Environment Variables ページで **"Paste .env"** をクリック
+4. コピーした内容を貼り付け
+5. Environment を選択（Production または Preview）
+6. **"Add"** をクリック
+
+#### 4.2 環境の選択
+
+- **Production**: 本番環境（`main` ブランチからのデプロイ）
+- **Preview**: プレビュー環境（PR やブランチからのデプロイ）
+
+**注意**: Preview 環境では `NEXT_PUBLIC_APP_URL` に `https://$VERCEL_URL` を設定することで、各プレビューデプロイの URL が自動的に使用されます。
+
+#### 4.3 再デプロイ
+
+環境変数を設定した後、必ず再デプロイを実行します：
+
+1. Vercel Dashboard → プロジェクト → **Deployments** タブ
+2. 最新のデプロイメントの右側にある **"..."** メニューをクリック
+3. **"Redeploy"** を選択
+4. **"Redeploy"** ボタンをクリック
+
+または、GitHub にプッシュして自動デプロイをトリガーします。
+
+### 5. デプロイの検証
+
 Vercel URL を CORS 設定に含めるため、CDK スタックをデプロイします。
 
 #### 3.1 開発環境へのデプロイ
@@ -316,6 +400,7 @@ pnpm cdk deploy \
 **症状:**
 
 - ブラウザのコンソールに以下のようなエラーが表示される:
+
   ```text
   Access to fetch at 'https://api.example.com' from origin 'https://vote-board-game-web.vercel.app' has been blocked by CORS policy
   ```
@@ -340,6 +425,7 @@ pnpm cdk deploy \
    - `ALLOWED_ORIGINS` に Vercel URL が含まれていることを確認
 
 3. **再デプロイ**
+
    ```bash
    pnpm cdk deploy \
      --context appName=vbg \
@@ -403,6 +489,7 @@ pnpm cdk deploy \
    - Vercel ダッシュボードで **Deployments** → 最新のデプロイメント → **"Redeploy"** をクリック
 
 3. **ローカルでの確認**
+
    ```bash
    cd packages/web
    echo $NEXT_PUBLIC_API_URL
@@ -440,6 +527,7 @@ pnpm cdk deploy \
    - **Node.js Version** が `24.x` になっていることを確認
 
 4. **依存関係の更新**
+
    ```bash
    pnpm install
    pnpm update

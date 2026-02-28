@@ -35,6 +35,10 @@ export class ApiError extends Error {
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL;
   if (!url) {
+    // Development fallback
+    if (process.env.NODE_ENV === 'development') {
+      return 'http://localhost:3001';
+    }
     throw new Error('NEXT_PUBLIC_API_URL is not defined');
   }
   return url;

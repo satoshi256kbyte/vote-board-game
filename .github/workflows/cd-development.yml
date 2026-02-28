@@ -67,21 +67,21 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @vote-board-game/web playwright:install
 
-      - name: Get CloudFront URL
-        id: cloudfront-url
+      - name: Get Vercel URL
+        id: vercel-url
         run: |
-          CLOUDFRONT_URL="${{ needs.deploy-development.outputs.cloudfront-url }}"
-          if [ -z "$CLOUDFRONT_URL" ]; then
-            echo "Error: CloudFront URL not found"
+          VERCEL_URL="${{ vars.VERCEL_URL }}"
+          if [ -z "$VERCEL_URL" ]; then
+            echo "Error: Vercel URL not found"
             exit 1
           fi
-          echo "url=$CLOUDFRONT_URL" >> $GITHUB_OUTPUT
-          echo "CloudFront URL: $CLOUDFRONT_URL"
+          echo "url=$VERCEL_URL" >> $GITHUB_OUTPUT
+          echo "Vercel URL: $VERCEL_URL"
 
       - name: Run E2E tests
         run: pnpm --filter @vote-board-game/web test:e2e
         env:
-          BASE_URL: ${{ steps.cloudfront-url.outputs.url }}
+          BASE_URL: ${{ steps.vercel-url.outputs.url }}
         # Note: This step will fail the job and workflow if tests fail (requirement 3.5)
         # No continue-on-error is set, ensuring test failures are properly reported
 
@@ -116,4 +116,4 @@ jobs:
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Test URL: ${{ steps.cloudfront-url.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Test URL: ${{ steps.vercel-url.outputs.url }}" >> $GITHUB_STEP_SUMMARY
