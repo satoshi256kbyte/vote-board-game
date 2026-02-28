@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { RequestCodeForm } from './request-code-form';
 import * as usePasswordResetModule from '@/lib/hooks/use-password-reset';
@@ -181,8 +181,15 @@ describe('RequestCodeForm - API Integration', () => {
 
     await waitFor(() => {
       expect(mockRequestCode).toHaveBeenCalledWith('test@example.com');
-      expect(onCodeSent).toHaveBeenCalledWith('test@example.com');
     });
+
+    // onCodeSent is called after 2 second delay - wait for it
+    await waitFor(
+      () => {
+        expect(onCodeSent).toHaveBeenCalledWith('test@example.com');
+      },
+      { timeout: 3000 }
+    );
   });
 
   it('should not call onCodeSent when requestCode fails', async () => {
@@ -209,8 +216,12 @@ describe('RequestCodeForm - API Integration', () => {
 
     await waitFor(() => {
       expect(mockRequestCode).toHaveBeenCalledWith('test@example.com');
-      expect(onCodeSent).not.toHaveBeenCalled();
     });
+
+    // Wait a bit to ensure onCodeSent would have been called if it was going to be
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+
+    expect(onCodeSent).not.toHaveBeenCalled();
   });
 
   it('should display API error message when requestCode fails', async () => {
@@ -590,8 +601,15 @@ describe('RequestCodeForm - Success Flow (Task 4.5)', () => {
 
     await waitFor(() => {
       expect(mockRequestCode).toHaveBeenCalledWith('user@example.com');
-      expect(onCodeSent).toHaveBeenCalledWith('user@example.com');
     });
+
+    // onCodeSent is called after 2 second delay - wait for it
+    await waitFor(
+      () => {
+        expect(onCodeSent).toHaveBeenCalledWith('user@example.com');
+      },
+      { timeout: 3000 }
+    );
   });
 });
 

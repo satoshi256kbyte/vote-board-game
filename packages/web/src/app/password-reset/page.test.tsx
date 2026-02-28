@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import React from 'react';
 import PasswordResetPage from './page';
@@ -66,13 +66,16 @@ describe('PasswordResetPage - Step Transition (Task 8.2)', () => {
       expect(mockRequestCode).toHaveBeenCalledWith('test@example.com');
     });
 
-    // Check for ConfirmResetForm elements
-    await waitFor(() => {
-      expect(screen.getByLabelText('確認コード')).toBeInTheDocument();
-      expect(screen.getByLabelText('新しいパスワード')).toBeInTheDocument();
-      expect(screen.getByLabelText('新しいパスワード確認')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'パスワードをリセット' })).toBeInTheDocument();
-    });
+    // Check for ConfirmResetForm elements - wait for the 2 second delay
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('確認コード')).toBeInTheDocument();
+        expect(screen.getByLabelText('新しいパスワード')).toBeInTheDocument();
+        expect(screen.getByLabelText('新しいパスワード確認')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'パスワードをリセット' })).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     // RequestCodeForm should no longer be visible
     expect(
@@ -130,10 +133,13 @@ describe('PasswordResetPage - Email Preservation (Task 8.2)', () => {
       expect(mockRequestCode).toHaveBeenCalledWith(testEmail);
     });
 
-    // Wait for transition to ConfirmResetForm
-    await waitFor(() => {
-      expect(screen.getByLabelText('確認コード')).toBeInTheDocument();
-    });
+    // Wait for transition to ConfirmResetForm (includes 2 second delay)
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('確認コード')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     // Fill in confirmation form and submit
     const confirmationCodeInput = screen.getByLabelText('確認コード');
@@ -179,10 +185,13 @@ describe('PasswordResetPage - Email Preservation (Task 8.2)', () => {
       expect(mockRequestCode).toHaveBeenCalledWith(testEmail);
     });
 
-    // Wait for transition to ConfirmResetForm
-    await waitFor(() => {
-      expect(screen.getByLabelText('確認コード')).toBeInTheDocument();
-    });
+    // Wait for transition to ConfirmResetForm (includes 2 second delay)
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('確認コード')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     // Click resend code link
     const resendLink = screen.getByRole('button', { name: '確認コードを再送信' });
@@ -235,10 +244,13 @@ describe('PasswordResetPage - Data Cleanup on Unmount (Task 8.2)', () => {
       expect(mockRequestCode).toHaveBeenCalledWith(testEmail);
     });
 
-    // Wait for transition to ConfirmResetForm
-    await waitFor(() => {
-      expect(screen.getByLabelText('確認コード')).toBeInTheDocument();
-    });
+    // Wait for transition to ConfirmResetForm (includes 2 second delay)
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('確認コード')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     // Unmount the component (this triggers the cleanup function)
     cleanup();
