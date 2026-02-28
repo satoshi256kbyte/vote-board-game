@@ -151,13 +151,17 @@ export function ConfirmResetForm({ email }: ConfirmResetFormProps) {
   return (
     <form onSubmit={handleSubmit} className="mt-8 space-y-6" noValidate>
       {successMessage && (
-        <Alert className="bg-green-50 border-green-200" role="alert">
+        <Alert
+          className="bg-green-50 border-green-200"
+          role="alert"
+          data-testid="password-reset-success-message"
+        >
           <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
         </Alert>
       )}
 
       {apiError && (
-        <Alert variant="destructive" role="alert">
+        <Alert variant="destructive" role="alert" data-testid="password-reset-error-message">
           <AlertDescription>{apiError}</AlertDescription>
         </Alert>
       )}
@@ -188,6 +192,7 @@ export function ConfirmResetForm({ email }: ConfirmResetFormProps) {
                 : undefined
             }
             className={touched.confirmationCode && errors.confirmationCode ? 'border-red-500' : ''}
+            data-testid="password-reset-confirmation-code-input"
           />
           {touched.confirmationCode && errors.confirmationCode && (
             <p id="confirmation-code-error" className="mt-1 text-sm text-red-600" role="alert">
@@ -220,6 +225,7 @@ export function ConfirmResetForm({ email }: ConfirmResetFormProps) {
               className={
                 touched.newPassword && errors.newPassword ? 'border-red-500 pr-10' : 'pr-10'
               }
+              data-testid="password-reset-new-password-input"
             />
             <button
               type="button"
@@ -271,6 +277,7 @@ export function ConfirmResetForm({ email }: ConfirmResetFormProps) {
                   ? 'border-red-500 pr-10'
                   : 'pr-10'
               }
+              data-testid="password-reset-confirm-password-input"
             />
             <button
               type="button"
@@ -302,6 +309,7 @@ export function ConfirmResetForm({ email }: ConfirmResetFormProps) {
           disabled={isSubmitDisabled}
           aria-disabled={isSubmitDisabled}
           className="w-full"
+          data-testid="password-reset-confirm-submit-button"
         >
           {isLoading ? 'リセット中...' : 'パスワードをリセット'}
         </Button>

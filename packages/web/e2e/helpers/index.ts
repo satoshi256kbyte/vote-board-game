@@ -6,24 +6,36 @@
 export { generateTestUser, createTestUser, loginUser, type TestUser } from './test-user';
 export { cleanupTestUser } from './cleanup';
 export {
-    isNetworkError,
-    formatNetworkError,
-    navigateWithErrorHandling,
-    simulateNetworkError,
-    simulateSlowNetwork,
+  isNetworkError,
+  formatNetworkError,
+  navigateWithErrorHandling,
+  simulateNetworkError,
+  simulateSlowNetwork,
 } from './network-error';
 export {
-    isCognitoAvailable,
-    checkCognitoAvailability,
-    waitForCognitoAvailability,
-    formatCognitoUnavailableWarning,
-    skipIfCognitoUnavailable,
+  isCognitoAvailable,
+  checkCognitoAvailability,
+  waitForCognitoAvailability,
+  formatCognitoUnavailableWarning,
+  skipIfCognitoUnavailable,
 } from './cognito-availability';
 export { isUserAlreadyExistsError, registerWithRetry } from './existing-user';
 export {
-    createTestGame,
-    createTestCandidate,
-    cleanupTestGame,
-    type TestGame,
-    type TestCandidate,
+  createTestGame,
+  createTestCandidate,
+  cleanupTestGame,
+  type TestGame,
+  type TestCandidate,
 } from './test-data';
+export {
+  waitForVisible,
+  waitForNetworkIdle,
+  waitForLoadingComplete,
+  retryAssertion,
+  waitForDynamicContent,
+  waitForStable,
+  waitForApiResponse,
+  waitForNavigation,
+  TIMEOUTS,
+  RETRY_CONFIG,
+} from './wait-utils';

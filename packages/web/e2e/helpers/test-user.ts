@@ -5,17 +5,17 @@
 
 import type { Page } from '@playwright/test';
 import {
-    CognitoIdentityProviderClient,
-    AdminCreateUserCommand,
-    AdminSetUserPasswordCommand,
-    MessageActionType,
+  CognitoIdentityProviderClient,
+  AdminCreateUserCommand,
+  AdminSetUserPasswordCommand,
+  MessageActionType,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 export interface TestUser {
-    email: string;
-    password: string;
-    username: string;
-    userId?: string;
+  email: string;
+  password: string;
+  username: string;
+  userId?: string;
 }
 
 /**
@@ -29,27 +29,27 @@ export interface TestUser {
  * @returns TestUser object with email, password, and username
  */
 export function generateTestUser(): TestUser {
-    // Use timestamp with additional random component for uniqueness
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000);
-    const uniqueId = `${timestamp}-${random}`;
+  // Use timestamp with additional random component for uniqueness
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  const uniqueId = `${timestamp}-${random}`;
 
-    const email = `test-${uniqueId}@example.com`;
+  const email = `test-${uniqueId}@example.com`;
 
-    // Generate password that meets security requirements:
-    // - 8+ characters
-    // - At least one uppercase letter
-    // - At least one lowercase letter
-    // - At least one number
-    const password = `TestPass${timestamp}`;
+  // Generate password that meets security requirements:
+  // - 8+ characters
+  // - At least one uppercase letter
+  // - At least one lowercase letter
+  // - At least one number
+  const password = `TestPass${timestamp}`;
 
-    const username = `testuser${timestamp}`;
+  const username = `testuser${timestamp}`;
 
-    return {
-        email,
-        password,
-        username,
-    };
+  return {
+    email,
+    password,
+    username,
+  };
 }
 
 /**
@@ -62,52 +62,52 @@ export function generateTestUser(): TestUser {
  * @returns Promise that resolves to TestUser object with userId
  */
 export async function createTestUser(): Promise<TestUser> {
-    const testUser = generateTestUser();
+  const testUser = generateTestUser();
 
-    try {
-        const userPoolId = process.env.USER_POOL_ID;
-        if (!userPoolId) {
-            throw new Error('USER_POOL_ID environment variable is not set');
-        }
-
-        const client = new CognitoIdentityProviderClient({
-            region: process.env.AWS_REGION || 'ap-northeast-1',
-        });
-
-        // Create user in Cognito
-        const createCommand = new AdminCreateUserCommand({
-            UserPoolId: userPoolId,
-            Username: testUser.email,
-            UserAttributes: [
-                { Name: 'email', Value: testUser.email },
-                { Name: 'email_verified', Value: 'true' },
-            ],
-            MessageAction: MessageActionType.SUPPRESS, // Don't send welcome email
-        });
-
-        const createResponse = await client.send(createCommand);
-        const userId = createResponse.User?.Username || testUser.email;
-
-        // Set permanent password (skip temporary password flow)
-        const setPasswordCommand = new AdminSetUserPasswordCommand({
-            UserPoolId: userPoolId,
-            Username: testUser.email,
-            Password: testUser.password,
-            Permanent: true,
-        });
-
-        await client.send(setPasswordCommand);
-
-        console.log(`[CreateTestUser] Successfully created test user: ${testUser.email}`);
-
-        return {
-            ...testUser,
-            userId,
-        };
-    } catch (error) {
-        console.error(`[CreateTestUser] Failed to create test user: ${testUser.email}`, error);
-        throw error;
+  try {
+    const userPoolId = process.env.USER_POOL_ID;
+    if (!userPoolId) {
+      throw new Error('USER_POOL_ID environment variable is not set');
     }
+
+    const client = new CognitoIdentityProviderClient({
+      region: process.env.AWS_REGION || 'ap-northeast-1',
+    });
+
+    // Create user in Cognito
+    const createCommand = new AdminCreateUserCommand({
+      UserPoolId: userPoolId,
+      Username: testUser.email,
+      UserAttributes: [
+        { Name: 'email', Value: testUser.email },
+        { Name: 'email_verified', Value: 'true' },
+      ],
+      MessageAction: MessageActionType.SUPPRESS, // Don't send welcome email
+    });
+
+    const createResponse = await client.send(createCommand);
+    const userId = createResponse.User?.Username || testUser.email;
+
+    // Set permanent password (skip temporary password flow)
+    const setPasswordCommand = new AdminSetUserPasswordCommand({
+      UserPoolId: userPoolId,
+      Username: testUser.email,
+      Password: testUser.password,
+      Permanent: true,
+    });
+
+    await client.send(setPasswordCommand);
+
+    console.log(`[CreateTestUser] Successfully created test user: ${testUser.email}`);
+
+    return {
+      ...testUser,
+      userId,
+    };
+  } catch (error) {
+    console.error(`[CreateTestUser] Failed to create test user: ${testUser.email}`, error);
+    throw error;
+  }
 }
 
 /**
@@ -122,23 +122,23 @@ export async function createTestUser(): Promise<TestUser> {
  * @param user - Test user credentials
  */
 export async function loginUser(page: Page, user: TestUser): Promise<void> {
-    try {
-        // Navigate to login page
-        await page.goto('/login');
+  try {
+    // Navigate to login page
+    await page.goto('/login');
 
-        // Fill in credentials
-        await page.fill('input[name="email"]', user.email);
-        await page.fill('input[name="password"]', user.password);
+    // Fill in credentials
+    await page.fill('input[name="email"]', user.email);
+    await page.fill('input[name="password"]', user.password);
 
-        // Submit form
-        await page.click('button[type="submit"]');
+    // Submit form
+    await page.click('button[type="submit"]');
 
-        // Wait for successful login (redirect to home page)
-        await page.waitForURL('/', { timeout: 10000 });
+    // Wait for successful login (redirect to home page)
+    await page.waitForURL('/', { timeout: 10000 });
 
-        console.log(`[LoginUser] Successfully logged in user: ${user.email}`);
-    } catch (error) {
-        console.error(`[LoginUser] Failed to login user: ${user.email}`, error);
-        throw error;
-    }
+    console.log(`[LoginUser] Successfully logged in user: ${user.email}`);
+  } catch (error) {
+    console.error(`[LoginUser] Failed to login user: ${user.email}`, error);
+    throw error;
+  }
 }

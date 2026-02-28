@@ -1,0 +1,113 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: ['main', 'develop', 'feature/**']
+  pull_request:
+    branches: ['main', 'develop']
+  workflow_dispatch:
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @vote-board-game/web exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Build application
+        run: pnpm --filter @vote-board-game/web build
+
+      - name: Start application
+        run: |
+          pnpm --filter @vote-board-game/web start &
+          echo $! > .app-pid
+        env:
+          NODE_ENV: production
+
+      - name: Wait for application to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+      - name: Run E2E tests
+        run: pnpm --filter @vote-board-game/web test:e2e --project=${{ matrix.browser }}
+        env:
+          BASE_URL: http://localhost:3000
+          CI: true
+          AWS_REGION: ${{ secrets.AWS_REGION || 'ap-northeast-1' }}
+          COGNITO_USER_POOL_ID: ${{ secrets.TEST_COGNITO_USER_POOL_ID }}
+          COGNITO_CLIENT_ID: ${{ secrets.TEST_COGNITO_CLIENT_ID }}
+
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -f .app-pid ]; then
+            kill $(cat .app-pid) || true
+            rm .app-pid
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: packages/web/playwright-report/
+          retention-days: 7
+
+      - name: Upload screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots-${{ matrix.browser }}
+          path: packages/web/test-results/
+          retention-days: 7
+
+  e2e-summary:
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.e2e-tests.result }}" == "failure" ]; then
+            echo "E2E tests failed on one or more browsers"
+            exit 1
+          fi
+          echo "All E2E tests passed!"

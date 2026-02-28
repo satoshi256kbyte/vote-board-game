@@ -3,118 +3,116 @@ import { LoginPage } from './login-page';
 import type { Page } from '@playwright/test';
 
 describe('LoginPage', () => {
-    let mockPage: Page;
-    let loginPage: LoginPage;
+  let mockPage: Page;
+  let loginPage: LoginPage;
 
-    beforeEach(() => {
-        mockPage = {
-            goto: vi.fn().mockResolvedValue(undefined),
-            waitForLoadState: vi.fn().mockResolvedValue(undefined),
-            waitForURL: vi.fn().mockResolvedValue(undefined),
-            url: vi.fn().mockReturnValue('http://localhost:3000/games'),
-            getByTestId: vi.fn().mockReturnValue({
-                fill: vi.fn().mockResolvedValue(undefined),
-                click: vi.fn().mockResolvedValue(undefined),
-                toBeVisible: vi.fn().mockResolvedValue(undefined),
-                toContainText: vi.fn().mockResolvedValue(undefined),
-            }),
-        } as unknown as Page;
+  beforeEach(() => {
+    mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      waitForLoadState: vi.fn().mockResolvedValue(undefined),
+      waitForURL: vi.fn().mockResolvedValue(undefined),
+      url: vi.fn().mockReturnValue('http://localhost:3000/games'),
+      getByTestId: vi.fn().mockReturnValue({
+        fill: vi.fn().mockResolvedValue(undefined),
+        click: vi.fn().mockResolvedValue(undefined),
+        toBeVisible: vi.fn().mockResolvedValue(undefined),
+        toContainText: vi.fn().mockResolvedValue(undefined),
+      }),
+    } as unknown as Page;
 
-        loginPage = new LoginPage(mockPage);
+    loginPage = new LoginPage(mockPage);
+  });
+
+  describe('goto', () => {
+    it('should navigate to login page', async () => {
+      await loginPage.goto();
+
+      expect(mockPage.goto).toHaveBeenCalledWith('/login');
+      expect(mockPage.waitForLoadState).toHaveBeenCalledWith('networkidle');
     });
+  });
 
-    describe('goto', () => {
-        it('should navigate to login page', async () => {
-            await loginPage.goto();
+  describe('fillEmail', () => {
+    it('should fill email input', async () => {
+      const mockElement = {
+        fill: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
 
-            expect(mockPage.goto).toHaveBeenCalledWith('/login');
-            expect(mockPage.waitForLoadState).toHaveBeenCalledWith('networkidle');
-        });
+      await loginPage.fillEmail('test@example.com');
+
+      expect(mockPage.getByTestId).toHaveBeenCalledWith('login-email-input');
+      expect(mockElement.fill).toHaveBeenCalledWith('test@example.com');
     });
+  });
 
-    describe('fillEmail', () => {
-        it('should fill email input', async () => {
-            const mockElement = {
-                fill: vi.fn().mockResolvedValue(undefined),
-            };
-            vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+  describe('fillPassword', () => {
+    it('should fill password input', async () => {
+      const mockElement = {
+        fill: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
 
-            await loginPage.fillEmail('test@example.com');
+      await loginPage.fillPassword('password123');
 
-            expect(mockPage.getByTestId).toHaveBeenCalledWith('login-email-input');
-            expect(mockElement.fill).toHaveBeenCalledWith('test@example.com');
-        });
+      expect(mockPage.getByTestId).toHaveBeenCalledWith('login-password-input');
+      expect(mockElement.fill).toHaveBeenCalledWith('password123');
     });
+  });
 
-    describe('fillPassword', () => {
-        it('should fill password input', async () => {
-            const mockElement = {
-                fill: vi.fn().mockResolvedValue(undefined),
-            };
-            vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+  describe('clickSubmit', () => {
+    it('should click submit button', async () => {
+      const mockElement = {
+        click: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
 
-            await loginPage.fillPassword('password123');
+      await loginPage.clickSubmit();
 
-            expect(mockPage.getByTestId).toHaveBeenCalledWith('login-password-input');
-            expect(mockElement.fill).toHaveBeenCalledWith('password123');
-        });
+      expect(mockPage.getByTestId).toHaveBeenCalledWith('login-submit-button');
+      expect(mockElement.click).toHaveBeenCalled();
     });
+  });
 
-    describe('clickSubmit', () => {
-        it('should click submit button', async () => {
-            const mockElement = {
-                click: vi.fn().mockResolvedValue(undefined),
-            };
-            vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+  describe('login', () => {
+    it('should fill email, password and submit', async () => {
+      const mockElement = {
+        fill: vi.fn().mockResolvedValue(undefined),
+        click: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
 
-            await loginPage.clickSubmit();
+      await loginPage.login('test@example.com', 'password123');
 
-            expect(mockPage.getByTestId).toHaveBeenCalledWith('login-submit-button');
-            expect(mockElement.click).toHaveBeenCalled();
-        });
+      expect(mockPage.getByTestId).toHaveBeenCalledWith('login-email-input');
+      expect(mockPage.getByTestId).toHaveBeenCalledWith('login-password-input');
+      expect(mockPage.getByTestId).toHaveBeenCalledWith('login-submit-button');
     });
+  });
 
-    describe('login', () => {
-        it('should fill email, password and submit', async () => {
-            const mockElement = {
-                fill: vi.fn().mockResolvedValue(undefined),
-                click: vi.fn().mockResolvedValue(undefined),
-            };
-            vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+  describe('clickForgotPassword', () => {
+    it('should click forgot password link', async () => {
+      const mockElement = {
+        click: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
 
-            await loginPage.login('test@example.com', 'password123');
+      await loginPage.clickForgotPassword();
 
-            expect(mockPage.getByTestId).toHaveBeenCalledWith('login-email-input');
-            expect(mockPage.getByTestId).toHaveBeenCalledWith('login-password-input');
-            expect(mockPage.getByTestId).toHaveBeenCalledWith('login-submit-button');
-        });
+      expect(mockPage.getByTestId).toHaveBeenCalledWith('login-forgot-password-link');
+      expect(mockElement.click).toHaveBeenCalled();
     });
+  });
 
-    describe('clickForgotPassword', () => {
-        it('should click forgot password link', async () => {
-            const mockElement = {
-                click: vi.fn().mockResolvedValue(undefined),
-            };
-            vi.mocked(mockPage.getByTestId).mockReturnValue(mockElement as any);
+  describe('expectRedirectToGameList', () => {
+    it('should verify redirect to games page', async () => {
+      vi.mocked(mockPage.url).mockReturnValue('http://localhost:3000/games');
 
-            await loginPage.clickForgotPassword();
+      await loginPage.expectRedirectToGameList();
 
-            expect(mockPage.getByTestId).toHaveBeenCalledWith(
-                'login-forgot-password-link'
-            );
-            expect(mockElement.click).toHaveBeenCalled();
-        });
+      expect(mockPage.waitForURL).toHaveBeenCalledWith('/games', {
+        timeout: 10000,
+      });
     });
-
-    describe('expectRedirectToGameList', () => {
-        it('should verify redirect to games page', async () => {
-            vi.mocked(mockPage.url).mockReturnValue('http://localhost:3000/games');
-
-            await loginPage.expectRedirectToGameList();
-
-            expect(mockPage.waitForURL).toHaveBeenCalledWith('/games', {
-                timeout: 10000,
-            });
-        });
-    });
+  });
 });

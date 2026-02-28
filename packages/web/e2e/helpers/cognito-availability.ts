@@ -4,8 +4,8 @@
  */
 
 import {
-    CognitoIdentityProviderClient,
-    ListUserPoolsCommand,
+  CognitoIdentityProviderClient,
+  ListUserPoolsCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 /**
@@ -17,7 +17,7 @@ import {
  * @returns Promise that resolves to true if Cognito is available, false otherwise
  */
 export async function checkCognitoAvailability(): Promise<boolean> {
-    return isCognitoAvailable();
+  return isCognitoAvailable();
 }
 
 /**
@@ -29,26 +29,26 @@ export async function checkCognitoAvailability(): Promise<boolean> {
  * @returns Promise that resolves to true if Cognito is available, false otherwise
  */
 export async function isCognitoAvailable(): Promise<boolean> {
-    try {
-        const userPoolId = process.env.USER_POOL_ID;
-        if (!userPoolId) {
-            console.warn('[Cognito] USER_POOL_ID environment variable is not set');
-            return false;
-        }
-
-        const client = new CognitoIdentityProviderClient({
-            region: process.env.AWS_REGION || 'ap-northeast-1',
-        });
-
-        // Try to list user pools to verify Cognito is accessible
-        const command = new ListUserPoolsCommand({ MaxResults: 1 });
-        await client.send(command);
-
-        return true;
-    } catch (error) {
-        console.warn('[Cognito] Service is unavailable:', error);
-        return false;
+  try {
+    const userPoolId = process.env.USER_POOL_ID;
+    if (!userPoolId) {
+      console.warn('[Cognito] USER_POOL_ID environment variable is not set');
+      return false;
     }
+
+    const client = new CognitoIdentityProviderClient({
+      region: process.env.AWS_REGION || 'ap-northeast-1',
+    });
+
+    // Try to list user pools to verify Cognito is accessible
+    const command = new ListUserPoolsCommand({ MaxResults: 1 });
+    await client.send(command);
+
+    return true;
+  } catch (error) {
+    console.warn('[Cognito] Service is unavailable:', error);
+    return false;
+  }
 }
 
 /**
@@ -62,23 +62,23 @@ export async function isCognitoAvailable(): Promise<boolean> {
  * @throws Error if Cognito is not available within timeout
  */
 export async function waitForCognitoAvailability(timeout: number = 30000): Promise<void> {
-    const startTime = Date.now();
-    const checkInterval = 2000; // Check every 2 seconds
+  const startTime = Date.now();
+  const checkInterval = 2000; // Check every 2 seconds
 
-    while (Date.now() - startTime < timeout) {
-        const available = await isCognitoAvailable();
-        if (available) {
-            console.log('[Cognito] Service is available');
-            return;
-        }
-
-        // Wait before next check
-        await new Promise((resolve) => setTimeout(resolve, checkInterval));
+  while (Date.now() - startTime < timeout) {
+    const available = await isCognitoAvailable();
+    if (available) {
+      console.log('[Cognito] Service is available');
+      return;
     }
 
-    throw new Error(
-        `Cognito service is not available after ${timeout}ms. Please check your AWS configuration.`
-    );
+    // Wait before next check
+    await new Promise((resolve) => setTimeout(resolve, checkInterval));
+  }
+
+  throw new Error(
+    `Cognito service is not available after ${timeout}ms. Please check your AWS configuration.`
+  );
 }
 
 /**
@@ -90,17 +90,17 @@ export async function waitForCognitoAvailability(timeout: number = 30000): Promi
  * @returns Formatted warning message
  */
 export function formatCognitoUnavailableWarning(): string {
-    return [
-        '⚠️  Warning: Cognito service is unavailable',
-        '',
-        'Possible causes:',
-        '  • USER_POOL_ID environment variable is not set',
-        '  • AWS credentials are not configured',
-        '  • Cognito service is experiencing issues',
-        '  • Network connectivity problems',
-        '',
-        'Tests requiring Cognito will be skipped.',
-    ].join('\n');
+  return [
+    '⚠️  Warning: Cognito service is unavailable',
+    '',
+    'Possible causes:',
+    '  • USER_POOL_ID environment variable is not set',
+    '  • AWS credentials are not configured',
+    '  • Cognito service is experiencing issues',
+    '  • Network connectivity problems',
+    '',
+    'Tests requiring Cognito will be skipped.',
+  ].join('\n');
 }
 
 /**
@@ -113,10 +113,10 @@ export function formatCognitoUnavailableWarning(): string {
  * @param testInfo - Playwright TestInfo object
  */
 export async function skipIfCognitoUnavailable(testInfo: {
-    skip: (condition: boolean, description?: string) => void;
+  skip: (condition: boolean, description?: string) => void;
 }): Promise<void> {
-    const available = await isCognitoAvailable();
-    if (!available) {
-        testInfo.skip(true, 'Cognito service is unavailable');
-    }
+  const available = await isCognitoAvailable();
+  if (!available) {
+    testInfo.skip(true, 'Cognito service is unavailable');
+  }
 }

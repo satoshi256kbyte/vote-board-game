@@ -14,7 +14,13 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:all-browsers": "./e2e/scripts/test-all-browsers.sh",
+    "test:e2e:coverage": "node e2e/scripts/verify-coverage.js",
     "playwright:install": "playwright install --with-deps chromium",
+    "playwright:install:all": "playwright install --with-deps",
     "clean": "rm -rf .next out *.tsbuildinfo"
   },
   "dependencies": {

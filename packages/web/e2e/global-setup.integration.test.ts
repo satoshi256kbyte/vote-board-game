@@ -12,31 +12,29 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import globalSetup from './global-setup';
 
 describe('globalSetup integration', () => {
-    const originalEnv = process.env;
+  const originalEnv = process.env;
 
-    beforeEach(() => {
-        process.env = { ...originalEnv };
-    });
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
 
-    it('should fail when BASE_URL is not set', async () => {
-        delete process.env.BASE_URL;
+  it('should fail when BASE_URL is not set', async () => {
+    delete process.env.BASE_URL;
 
-        await expect(globalSetup()).rejects.toThrow(
-            'BASE_URL environment variable is required'
-        );
-    });
+    await expect(globalSetup()).rejects.toThrow('BASE_URL environment variable is required');
+  });
 
-    it('should fail when frontend is not accessible', async () => {
-        process.env.BASE_URL = 'http://localhost:9999'; // Non-existent port
+  it('should fail when frontend is not accessible', async () => {
+    process.env.BASE_URL = 'http://localhost:9999'; // Non-existent port
 
-        await expect(globalSetup()).rejects.toThrow('Frontend not accessible');
-    });
+    await expect(globalSetup()).rejects.toThrow('Frontend not accessible');
+  });
 
-    // This test will only pass if services are running
-    it.skip('should succeed when all services are available', async () => {
-        process.env.BASE_URL = 'http://localhost:3000';
-        process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3001';
+  // This test will only pass if services are running
+  it.skip('should succeed when all services are available', async () => {
+    process.env.BASE_URL = 'http://localhost:3000';
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3001';
 
-        await expect(globalSetup()).resolves.toBeUndefined();
-    });
+    await expect(globalSetup()).resolves.toBeUndefined();
+  });
 });
