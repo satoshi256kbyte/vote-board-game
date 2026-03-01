@@ -6,7 +6,7 @@
   "when": {
     "type": "preToolUse",
     "toolTypes": [
-      "pnpm test"
+      "shell"
     ]
   },
   "then": {
