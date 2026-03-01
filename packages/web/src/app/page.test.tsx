@@ -196,7 +196,8 @@ describe('Home (Game List Screen)', () => {
 
     // GameList component is rendered, but with empty games array
     expect(screen.getByTestId('game-list')).toBeInTheDocument();
-    // No individual game cards should be present
-    expect(screen.queryByTestId(/^game-/)).not.toBeInTheDocument();
+    // No individual game cards should be present (UUID pattern for gameId)
+    const gameCards = screen.queryAllByTestId(/^game-[a-f0-9-]{36}$/);
+    expect(gameCards).toHaveLength(0);
   });
 });
