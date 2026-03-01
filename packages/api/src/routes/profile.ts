@@ -108,8 +108,8 @@ profileRouter.put('/', async (c) => {
       if (error instanceof ZodError) {
         // バリデーションエラー（400）
         const fieldErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          const path = err.path.join('.');
+        error.issues.forEach((err) => {
+          const path = err.path.map(String).join('.');
           fieldErrors[path || 'root'] = err.message;
         });
 
@@ -209,8 +209,8 @@ profileRouter.post('/icon/upload-url', async (c) => {
       if (error instanceof ZodError) {
         // バリデーションエラー（400）
         const fieldErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          const path = err.path.join('.');
+        error.issues.forEach((err) => {
+          const path = err.path.map(String).join('.');
           fieldErrors[path || 'root'] = err.message;
         });
 

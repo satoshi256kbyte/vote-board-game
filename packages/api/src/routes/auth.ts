@@ -19,14 +19,14 @@ const authRouter = new Hono();
 const validationErrorHandler = (
   result: {
     success: boolean;
-    error?: { issues: Array<{ path: (string | number)[]; message: string }> };
+    error?: { issues: Array<{ path: PropertyKey[]; message: string }> };
   },
   c: Context
 ) => {
   if (!result.success) {
     const fields: Record<string, string> = {};
     result.error!.issues.forEach((issue) => {
-      const fieldName = issue.path.join('.');
+      const fieldName = issue.path.map(String).join('.');
       fields[fieldName] = issue.message;
     });
     return c.json(

@@ -25,9 +25,7 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 // Requirements: 3.2 (fileExtension png, jpg, jpeg, gif)
 export const uploadUrlRequestSchema = z.object({
   fileExtension: z.enum(['png', 'jpg', 'jpeg', 'gif'], {
-    errorMap: () => ({
-      message: 'File extension must be one of: png, jpg, jpeg, gif',
-    }),
+    message: 'File extension must be one of: png, jpg, jpeg, gif',
   }),
 });
 

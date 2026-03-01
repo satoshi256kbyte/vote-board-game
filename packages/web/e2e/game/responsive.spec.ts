@@ -5,8 +5,7 @@
  * Requirements: 7.1-7.7
  */
 
-import { test, expect } from '@playwright/test';
-import { test as _baseTest } from '../fixtures';
+import { test, expect } from '../fixtures';
 import { TIMEOUTS } from '../helpers/wait-utils';
 
 // Desktop viewport tests (Task 4.1)

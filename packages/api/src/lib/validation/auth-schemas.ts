@@ -18,12 +18,12 @@ const usernameRegex = /^[a-zA-Z0-9_-]+$/;
 
 export const registerSchema = z.object({
   email: z
-    .string({ required_error: 'Email is required' })
+    .string({ message: 'Email is required' })
     .min(1, 'Email is required')
     .regex(emailRegex, 'Invalid email format'),
 
   password: z
-    .string({ required_error: 'Password is required' })
+    .string({ message: 'Password is required' })
     .min(1, 'Password is required')
     .refine(validatePassword, {
       message:
@@ -31,7 +31,7 @@ export const registerSchema = z.object({
     }),
 
   username: z
-    .string({ required_error: 'Username is required' })
+    .string({ message: 'Username is required' })
     .min(3, 'Username must be at least 3 characters')
     .max(20, 'Username must be at most 20 characters')
     .regex(
@@ -44,8 +44,8 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 
 // ログインスキーマ
 export const loginSchema = z.object({
-  email: z.string({ required_error: 'Email is required' }).min(1, 'Email is required'),
-  password: z.string({ required_error: 'Password is required' }).min(1, 'Password is required'),
+  email: z.string({ message: 'Email is required' }).min(1, 'Email is required'),
+  password: z.string({ message: 'Password is required' }).min(1, 'Password is required'),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -53,7 +53,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 // トークンリフレッシュスキーマ
 export const refreshSchema = z.object({
   refreshToken: z
-    .string({ required_error: 'Refresh token is required' })
+    .string({ message: 'Refresh token is required' })
     .min(1, 'Refresh token is required'),
 });
 
@@ -62,7 +62,7 @@ export type RefreshInput = z.infer<typeof refreshSchema>;
 // パスワードリセット要求スキーマ
 export const passwordResetRequestSchema = z.object({
   email: z
-    .string({ required_error: 'Email is required' })
+    .string({ message: 'Email is required' })
     .min(1, 'Email is required')
     .regex(emailRegex, 'Invalid email format'),
 });
@@ -75,15 +75,15 @@ const confirmationCodeRegex = /^\d{6}$/;
 // パスワードリセット確認スキーマ
 export const passwordResetConfirmSchema = z.object({
   email: z
-    .string({ required_error: 'Email is required' })
+    .string({ message: 'Email is required' })
     .min(1, 'Email is required')
     .regex(emailRegex, 'Invalid email format'),
   confirmationCode: z
-    .string({ required_error: 'Confirmation code is required' })
+    .string({ message: 'Confirmation code is required' })
     .min(1, 'Confirmation code is required')
     .regex(confirmationCodeRegex, 'Confirmation code must be 6 digits'),
   newPassword: z
-    .string({ required_error: 'New password is required' })
+    .string({ message: 'New password is required' })
     .min(1, 'New password is required')
     .refine(validatePassword, {
       message:
