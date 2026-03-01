@@ -44,7 +44,7 @@ export class UserRepository extends BaseRepository {
       return user;
     } catch (error) {
       if (error instanceof Error && error.name === 'ConditionalCheckFailedException') {
-        throw new Error('User already exists');
+        throw new Error('User already exists', { cause: error });
       }
       console.error('Failed to create user:', error);
       throw error;

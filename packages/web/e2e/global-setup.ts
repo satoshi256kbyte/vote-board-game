@@ -30,12 +30,13 @@ async function checkFrontendAvailability(baseURL: string): Promise<void> {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         throw new Error(
-          `Frontend availability check timed out after ${TIMEOUT_MS / 1000} seconds at ${baseURL}`
+          `Frontend availability check timed out after ${TIMEOUT_MS / 1000} seconds at ${baseURL}`,
+          { cause: error }
         );
       }
-      throw new Error(`Frontend not accessible at ${baseURL}: ${error.message}`);
+      throw new Error(`Frontend not accessible at ${baseURL}: ${error.message}`, { cause: error });
     }
-    throw new Error(`Frontend not accessible at ${baseURL}`);
+    throw new Error(`Frontend not accessible at ${baseURL}`, { cause: error });
   }
 }
 
@@ -60,12 +61,13 @@ async function checkAPIAvailability(apiURL: string): Promise<void> {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         throw new Error(
-          `API availability check timed out after ${TIMEOUT_MS / 1000} seconds at ${apiURL}`
+          `API availability check timed out after ${TIMEOUT_MS / 1000} seconds at ${apiURL}`,
+          { cause: error }
         );
       }
-      throw new Error(`API not accessible at ${apiURL}: ${error.message}`);
+      throw new Error(`API not accessible at ${apiURL}: ${error.message}`, { cause: error });
     }
-    throw new Error(`API not accessible at ${apiURL}`);
+    throw new Error(`API not accessible at ${apiURL}`, { cause: error });
   }
 }
 

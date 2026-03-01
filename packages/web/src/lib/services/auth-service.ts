@@ -84,7 +84,9 @@ class AuthService {
     } catch (error) {
       // ネットワークエラーの検出
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください', {
+          cause: error,
+        });
       }
       // その他のエラーは再スロー
       throw error;
@@ -210,7 +212,9 @@ class AuthService {
     } catch (error) {
       // ネットワークエラーの検出
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください', {
+          cause: error,
+        });
       }
       // その他のエラーは再スロー
       throw error;
@@ -244,7 +248,9 @@ class AuthService {
     } catch (error) {
       // ネットワークエラーの検出
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください', {
+          cause: error,
+        });
       }
       // その他のエラーは再スロー
       throw error;
@@ -294,7 +300,9 @@ class AuthService {
     } catch (error) {
       // ネットワークエラーの検出
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください', {
+          cause: error,
+        });
       }
       // その他のエラーは再スロー
       throw error;

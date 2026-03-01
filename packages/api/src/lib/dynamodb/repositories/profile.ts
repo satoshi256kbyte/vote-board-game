@@ -88,7 +88,7 @@ export class ProfileRepository extends BaseRepository {
       return response.Attributes as UserEntity;
     } catch (error) {
       if (error instanceof Error && error.name === 'ConditionalCheckFailedException') {
-        throw new Error('User not found');
+        throw new Error('User not found', { cause: error });
       }
       console.error('Failed to update profile:', error);
       throw error;

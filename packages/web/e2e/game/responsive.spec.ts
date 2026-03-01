@@ -5,8 +5,8 @@
  * Requirements: 7.1-7.7
  */
 
-import { test, expect, devices } from '@playwright/test';
-import { test as baseTest } from '../fixtures';
+import { test, expect } from '@playwright/test';
+import { test as _baseTest } from '../fixtures';
 import { TIMEOUTS } from '../helpers/wait-utils';
 
 // Desktop viewport tests (Task 4.1)
@@ -17,7 +17,7 @@ test.describe('Responsive Design - Desktop Viewport (Task 4.1)', () => {
 
   test('should display game list in grid layout on desktop', async ({
     authenticatedPage,
-    game,
+    game: _game,
   }) => {
     // Navigate to game list page
     await authenticatedPage.goto('/');
@@ -139,7 +139,7 @@ test.describe('Responsive Design - Mobile Viewport (Task 4.2)', () => {
 
   test('should display game list in single column layout on mobile', async ({
     authenticatedPage,
-    game,
+    game: _game,
   }) => {
     // Navigate to game list page
     await authenticatedPage.goto('/');
@@ -180,7 +180,6 @@ test.describe('Responsive Design - Mobile Viewport (Task 4.2)', () => {
 
     // Verify single column layout (Requirement 7.4)
     // On mobile, the grid should collapse to single column
-    const mainContent = authenticatedPage.locator('main > div > div.grid');
 
     // Verify board section is visible
     const boardSection = authenticatedPage.locator('h2:has-text("盤面")').locator('..');
@@ -300,7 +299,10 @@ test.describe('Responsive Design - Viewport Comparison', () => {
     expect(cellBox!.width).toBeLessThanOrEqual(32);
   });
 
-  test('should maintain functionality across viewports', async ({ authenticatedPage, game }) => {
+  test('should maintain functionality across viewports', async ({
+    authenticatedPage,
+    game: _game,
+  }) => {
     // Test on desktop
     await authenticatedPage.setViewportSize({ width: 1280, height: 720 });
     await authenticatedPage.goto('/');

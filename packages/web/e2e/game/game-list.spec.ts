@@ -13,7 +13,7 @@ import { test, expect } from '../fixtures';
 import { GameListPage } from '../page-objects/game-list-page';
 
 test.describe('Game List Page - Basic Display', () => {
-  test('should display page title "対局一覧"', async ({ authenticatedPage, game }) => {
+  test('should display page title "対局一覧"', async ({ authenticatedPage, game: _game }) => {
     const gameListPage = new GameListPage(authenticatedPage);
 
     // Navigate to game list page

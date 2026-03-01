@@ -54,7 +54,9 @@ class ProfileService {
       return data;
     } catch (err) {
       if (err instanceof TypeError) {
-        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください', {
+          cause: err,
+        });
       }
       throw err;
     }
@@ -100,7 +102,9 @@ class ProfileService {
       return result;
     } catch (err) {
       if (err instanceof TypeError) {
-        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください', {
+          cause: err,
+        });
       }
       throw err;
     }
@@ -140,7 +144,9 @@ class ProfileService {
       return data;
     } catch (err) {
       if (err instanceof TypeError) {
-        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください');
+        throw new Error('ネットワークエラーが発生しました。インターネット接続を確認してください', {
+          cause: err,
+        });
       }
       throw err;
     }

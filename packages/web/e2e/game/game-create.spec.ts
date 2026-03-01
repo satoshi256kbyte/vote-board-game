@@ -184,7 +184,7 @@ test.describe('Game Creation Flow - Form Input and Submission (Task 3.3)', () =>
 
   test('should submit form and send POST request to Game API', async ({
     authenticatedPage,
-    context,
+    context: _context,
   }) => {
     // Navigate to game creation page
     await authenticatedPage.goto('/games/new');
@@ -390,7 +390,7 @@ test.describe('Game Creation Flow - Success Behavior (Task 3.4)', () => {
 test.describe('Game Creation Flow - Error Handling (Task 3.5)', () => {
   test('should display error message when creation fails', async ({
     authenticatedPage,
-    context,
+    context: _context,
   }) => {
     // Navigate to game creation page
     await authenticatedPage.goto('/games/new');

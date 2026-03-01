@@ -49,7 +49,7 @@ function getApiBaseUrl(): string {
  */
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    let errorData: { error?: string; message?: string; details?: Record<string, unknown> } = {};
+    let errorData: { error?: string; message?: string; details?: Record<string, unknown> };
 
     try {
       errorData = await response.json();

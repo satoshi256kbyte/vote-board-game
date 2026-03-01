@@ -208,11 +208,11 @@ test.describe('Accessibility - Keyboard Navigation (Task 7.2)', () => {
 
     // Tab through form elements
     await authenticatedPage.keyboard.press('Tab');
-    let focusedElement = await authenticatedPage.evaluate(() => document.activeElement?.id);
+    const focusedElement = await authenticatedPage.evaluate(() => document.activeElement?.id);
 
     // Continue tabbing
     await authenticatedPage.keyboard.press('Tab');
-    let nextFocusedElement = await authenticatedPage.evaluate(() => document.activeElement?.id);
+    const nextFocusedElement = await authenticatedPage.evaluate(() => document.activeElement?.id);
 
     // Verify focus moves through form in logical order
     expect(focusedElement).toBeTruthy();

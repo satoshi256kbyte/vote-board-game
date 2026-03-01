@@ -81,7 +81,7 @@ export async function navigateWithErrorHandling(page: Page, url: string): Promis
   } catch (error) {
     if (isNetworkError(error)) {
       // Use the URL as-is for error message (Playwright resolves relative URLs automatically)
-      throw new Error(formatNetworkError(error, url));
+      throw new Error(formatNetworkError(error, url), { cause: error });
     }
     // Re-throw non-network errors as-is
     throw error;
