@@ -1,14 +1,14 @@
 {
   "enabled": true,
-  "name": "Post Task: Lint, Test & Push",
-  "description": "Once a task in tasks.md is completed, execute all checks performed in .husky/pre-push. Resolve any errors, pass all checks, and then push to GitHub.",
+  "name": "Post Task: Commit & Push",
+  "description": "When you complete any task in tasks.md and check it as completed, please commit and push.\nIf a commit or push fails, fix the cause of the failure and complete the commit or push.",
   "version": "1",
   "when": {
     "type": "postTaskExecution"
   },
   "then": {
     "type": "askAgent",
-    "prompt": "The task is complete. Please follow these steps:\n1. Run all checks specified in .husky/pre-push\n2. Resolve all errors that occur\n3. Once all errors are resolved, commit your changes and push to GitHub\nNote: Direct pushes to the main branch are prohibited. Push only to your current branch."
+    "prompt": "When you complete any task in tasks.md and check it as completed, please commit and push using the following steps.\nPlease follow these steps:\n1. Run all checks specified in .husky/pre-push\n2. Resolve all errors that occur\n3. Once all errors are resolved, commit your changes and push to GitHub\nNote: Direct pushes to the main branch are prohibited. Push only to your current branch."
   },
   "workspaceFolderName": "vote-board-game",
   "shortName": "post-task-lint-test-push"

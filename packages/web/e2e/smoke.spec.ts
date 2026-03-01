@@ -16,13 +16,14 @@ test.describe('Smoke Tests', () => {
   test('homepage has main content', async ({ page }) => {
     await page.goto('/');
 
-    // 見出しが存在することを確認
-    const heading = page.locator('h1');
-    await expect(heading).toBeVisible();
-    await expect(heading).toContainText('投票対局');
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
 
-    // 説明文が存在することを確認（最初のp要素を取得）
-    const description = page.locator('p').first();
-    await expect(description).toBeVisible();
+    // タブナビゲーションが存在することを確認
+    const activeTab = page.getByRole('button', { name: '進行中' });
+    await expect(activeTab).toBeVisible();
+
+    const finishedTab = page.getByRole('button', { name: '終了' });
+    await expect(finishedTab).toBeVisible();
   });
 });

@@ -24,7 +24,8 @@ export class LoginPage {
   }
 
   async clickSubmit(): Promise<void> {
-    const submitButton = this.page.getByRole('button', { name: 'ログイン' });
+    // Use form context to avoid matching header login button
+    const submitButton = this.page.locator('form').getByRole('button', { name: 'ログイン' });
     await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await submitButton.click();
 

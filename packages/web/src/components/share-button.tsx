@@ -102,6 +102,7 @@ export function ShareButton({
         onClick={handleShare}
         className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]}`}
         aria-label="シェア"
+        data-testid="share-button"
       >
         {copied ? (
           <>

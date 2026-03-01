@@ -125,7 +125,7 @@ inclusion: manual
 | 5.2.3 対局作成画面                            | 完了       | 15-game-screens-components |
 | 5.2.4 オセロ盤面コンポーネント                | 完了       | 15-game-screens-components |
 | 5.2.5 棋譜表示コンポーネント                  | 完了       | 15-game-screens-components |
-| 5.2.6 E2Eテスト作成（最低限の主要フローのみ） |            |                            |
+| 5.2.6 E2Eテスト作成（最低限の主要フローのみ） | 完了       |                            |
 
 ### 🚀 デプロイ: 対局管理機能を開発環境にデプロイ
 

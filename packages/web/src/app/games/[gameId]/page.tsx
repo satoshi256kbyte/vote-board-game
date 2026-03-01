@@ -207,6 +207,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
                   <Link
                     href={`/games/${game.gameId}/candidates/new`}
                     className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    data-testid="post-candidate-button"
                   >
                     候補を投稿
                   </Link>

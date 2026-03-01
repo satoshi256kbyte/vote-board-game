@@ -48,6 +48,7 @@ export function GameList({ initialGames, initialStatus, initialNextCursor }: Gam
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           <button
             onClick={() => handleTabChange('ACTIVE')}
+            data-testid="tab-active"
             className={`
               whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
               ${
@@ -62,6 +63,7 @@ export function GameList({ initialGames, initialStatus, initialNextCursor }: Gam
           </button>
           <button
             onClick={() => handleTabChange('FINISHED')}
+            data-testid="tab-finished"
             className={`
               whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
               ${

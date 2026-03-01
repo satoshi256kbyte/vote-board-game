@@ -24,6 +24,22 @@ export class GameListPage {
     await gameCard.click();
   }
 
+  async clickActiveTab(): Promise<void> {
+    const activeTab = this.page.getByTestId('tab-active');
+    await expect(activeTab).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await activeTab.click();
+    await waitForNetworkIdle(this.page);
+    await waitForLoadingComplete(this.page);
+  }
+
+  async clickFinishedTab(): Promise<void> {
+    const finishedTab = this.page.getByTestId('tab-finished');
+    await expect(finishedTab).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await finishedTab.click();
+    await waitForNetworkIdle(this.page);
+    await waitForLoadingComplete(this.page);
+  }
+
   async getActiveGames(): Promise<string[]> {
     // Wait for game cards to load
     await waitForDynamicContent(this.page, '[data-testid^="game-card-"]');
