@@ -69,7 +69,10 @@ export function GameCard({ game, boardState, participantCount, votingDeadline }:
   const deadlineLabel = formatDeadline(votingDeadline);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+    <div
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+      data-testid={`game-card-${game.gameId}`}
+    >
       {/* 盤面サムネイル */}
       <div className="bg-gray-100 p-4 flex justify-center">
         <Board boardState={boardState} cellSize={30} />
@@ -78,21 +81,21 @@ export function GameCard({ game, boardState, participantCount, votingDeadline }:
       {/* ゲーム情報 */}
       <div className="p-4 space-y-3">
         {/* ゲームタイトル */}
-        <h3 className="text-lg font-bold text-gray-900">
+        <h3 className="text-lg font-bold text-gray-900" data-testid="game-title">
           {gameTypeLabel} - {gameModeLabel}
         </h3>
 
         {/* メタデータ */}
         <div className="space-y-1 text-sm text-gray-600">
-          <div className="flex justify-between">
+          <div className="flex justify-between" data-testid="game-turn">
             <span>ターン数:</span>
             <span className="font-medium">{game.currentTurn}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between" data-testid="game-participants">
             <span>参加者数:</span>
             <span className="font-medium">{participantCount}人</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between" data-testid="game-deadline">
             <span>投票締切:</span>
             <span className="font-medium">{deadlineLabel}</span>
           </div>
