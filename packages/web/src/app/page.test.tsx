@@ -35,11 +35,17 @@ vi.mock('@/lib/hooks/use-auth', () => ({
 vi.mock('@/components/game-list', () => ({
   GameList: ({ initialGames }: { initialGames: GameSummary[] }) => (
     <div data-testid="game-list">
-      {initialGames.map((game) => (
-        <div key={game.gameId} data-testid={`game-${game.gameId}`}>
-          {game.gameType}
+      {initialGames.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">対局がありません</p>
         </div>
-      ))}
+      ) : (
+        initialGames.map((game) => (
+          <div key={game.gameId} data-testid={`game-${game.gameId}`}>
+            {game.gameType}
+          </div>
+        ))
+      )}
     </div>
   ),
 }));
@@ -174,5 +180,23 @@ describe('Home (Game List Screen)', () => {
     await waitFor(() => {
       expect(screen.getByTestId('game-list')).toBeInTheDocument();
     });
+  });
+
+  it('should display empty state message when no games exist', async () => {
+    vi.mocked(apiClient.fetchGames).mockResolvedValue({
+      games: [],
+      nextCursor: undefined,
+    });
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(screen.getByText('対局がありません')).toBeInTheDocument();
+    });
+
+    // GameList component is rendered, but with empty games array
+    expect(screen.getByTestId('game-list')).toBeInTheDocument();
+    // No individual game cards should be present
+    expect(screen.queryByTestId(/^game-/)).not.toBeInTheDocument();
   });
 });
