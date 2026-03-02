@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 import { RateLimiter } from './rate-limiter.js';
 import { PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import type { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
 // DynamoDBDocumentClientをモック
 vi.mock('@aws-sdk/lib-dynamodb', async () => {
@@ -17,7 +18,7 @@ vi.mock('@aws-sdk/lib-dynamodb', async () => {
 });
 
 vi.mock('@aws-sdk/client-dynamodb', () => ({
-  DynamoDBClient: vi.fn(function (this: any) {
+  DynamoDBClient: vi.fn(function (this: DynamoDBClient) {
     return {};
   }),
 }));
