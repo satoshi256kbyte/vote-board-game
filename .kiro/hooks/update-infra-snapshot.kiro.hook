@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Update Infra Snapshot on API Changes",
+  "description": "Automatically update infra snapshot tests when API source code changes to prevent Lambda hash mismatches",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "packages/api/src/**/*.ts",
+      "packages/api/src/**/*.js"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cd packages/infra && pnpm --filter @vote-board-game/api build && pnpm test -- -u",
+    "timeout": 120
+  }
+}
