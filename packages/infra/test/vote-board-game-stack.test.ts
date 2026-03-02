@@ -3,6 +3,35 @@ import * as cdk from 'aws-cdk-lib';
 import { Template, Match } from 'aws-cdk-lib/assertions';
 import { VoteBoardGameStack } from '../lib/vote-board-game-stack.js';
 
+/**
+ * CloudFormation テンプレートを正規化する
+ * Lambda の S3Key (コードハッシュ) など、変動する値を固定値に置き換える
+ */
+function normalizeTemplate(template: Record<string, unknown>): Record<string, unknown> {
+  const normalized = JSON.parse(JSON.stringify(template)) as Record<string, unknown>;
+
+  // Lambda 関数の S3Key を固定値に置き換え
+  const resources = normalized.Resources as Record<string, unknown> | undefined;
+  if (resources) {
+    Object.keys(resources).forEach((key) => {
+      const resource = resources[key] as Record<string, unknown>;
+      if (
+        resource.Type === 'AWS::Lambda::Function' &&
+        typeof resource.Properties === 'object' &&
+        resource.Properties !== null
+      ) {
+        const properties = resource.Properties as Record<string, unknown>;
+        const code = properties.Code as Record<string, unknown> | undefined;
+        if (code && 'S3Key' in code) {
+          code.S3Key = '<LAMBDA_CODE_HASH>';
+        }
+      }
+    });
+  }
+
+  return normalized;
+}
+
 describe('VoteBoardGameStack', () => {
   describe('Development environment', () => {
     it('should create DynamoDB table with development configuration', () => {
@@ -319,7 +348,10 @@ describe('VoteBoardGameStack', () => {
       const template = Template.fromStack(stack);
 
       // スナップショットテスト: CloudFormation テンプレート全体を検証
-      expect(template.toJSON()).toMatchSnapshot();
+      // Lambda の S3Key (コードハッシュ) は変動するため、スナップショットから除外
+      const templateJson = template.toJSON();
+      const normalizedTemplate = normalizeTemplate(templateJson);
+      expect(normalizedTemplate).toMatchSnapshot();
     });
 
     it('should match CloudFormation template snapshot for prod environment', () => {
@@ -333,7 +365,10 @@ describe('VoteBoardGameStack', () => {
       const template = Template.fromStack(stack);
 
       // スナップショットテスト: CloudFormation テンプレート全体を検証
-      expect(template.toJSON()).toMatchSnapshot();
+      // Lambda の S3Key (コードハッシュ) は変動するため、スナップショットから除外
+      const templateJson = template.toJSON();
+      const normalizedTemplate = normalizeTemplate(templateJson);
+      expect(normalizedTemplate).toMatchSnapshot();
     });
   });
 
