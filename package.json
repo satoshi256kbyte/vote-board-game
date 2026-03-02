@@ -29,7 +29,11 @@
     "*.md": [
       "prettier --write"
     ],
-    "*.{js,ts,tsx,json}": [
+    "*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.json": [
       "prettier --write"
     ]
   },
