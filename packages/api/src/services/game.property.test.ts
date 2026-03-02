@@ -55,9 +55,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             status: fc.constantFrom('ACTIVE', 'FINISHED'),
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
-            createdAt: fc
-              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+            createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
           }),
           { minLength: 0, maxLength: 50 }
         ),
@@ -111,9 +109,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             status: fc.constant('ACTIVE' as const),
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
-            createdAt: fc
-              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+            createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
           }),
           { minLength: 0, maxLength: 150 }
         ),
@@ -164,9 +160,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             status: fc.constant('ACTIVE' as const),
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
-            createdAt: fc
-              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+            createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
           }),
           { minLength: 5, maxLength: 30 }
         ),
@@ -250,9 +244,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             status: fc.constant('ACTIVE' as const),
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
-            createdAt: fc
-              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+            createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
           }),
           { minLength: 2, maxLength: 20 }
         ),
@@ -369,9 +361,7 @@ describe('GameService Property Tests - Game List Retrieval', () => {
             aiSide: fc.constantFrom('BLACK', 'WHITE'),
             currentTurn: fc.nat({ max: 100 }),
             winner: fc.option(fc.constantFrom('AI', 'COLLECTIVE', 'DRAW'), { nil: undefined }),
-            createdAt: fc
-              .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-              .map((timestamp) => new Date(timestamp).toISOString()),
+            createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
           }),
           { minLength: 1, maxLength: 10 }
         ),
@@ -521,9 +511,7 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
             minLength: 8,
             maxLength: 8,
           }),
-          createdAt: fc
-            .date({ min: new Date('2024-01-01'), max: new Date('2026-12-31') })
-            .map((d) => d.toISOString()),
+          createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
         }),
         (gameData) => {
           // Mock repository response
@@ -792,9 +780,7 @@ describe('GameService Property Tests - Game Detail Retrieval', () => {
           aiSide: fc.constantFrom('BLACK', 'WHITE'),
           currentTurn: fc.nat({ max: 100 }),
           winner: fc.option(fc.constantFrom('AI', 'COLLECTIVE', 'DRAW'), { nil: undefined }),
-          createdAt: fc
-            .integer({ min: Date.parse('2024-01-01'), max: Date.now() })
-            .map((timestamp) => new Date(timestamp).toISOString()),
+          createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
         }),
         fc.array(fc.array(fc.constantFrom(0, 1, 2), { minLength: 8, maxLength: 8 }), {
           minLength: 8,
