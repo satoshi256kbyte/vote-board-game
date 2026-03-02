@@ -5,6 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['test/**/*.test.ts'],
+    testTimeout: 30000, // 30 seconds for CDK stack creation
     reporters: process.env.CI ? ['basic'] : ['default'],
     coverage: {
       provider: 'v8',
