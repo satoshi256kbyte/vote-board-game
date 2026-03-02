@@ -36,10 +36,14 @@ vi.mock('@aws-sdk/client-dynamodb', () => ({
 describe('Property 12: Rate limiting', () => {
   let rateLimiter: RateLimiter;
   let mockSend: ReturnType<typeof vi.fn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // 環境変数を設定
     process.env.DYNAMODB_TABLE_NAME = 'test-table';
+
+    // console.errorをモックして、意図的なエラーログを抑制
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // モックをリセット
     vi.clearAllMocks();
@@ -53,6 +57,7 @@ describe('Property 12: Rate limiting', () => {
   });
 
   afterEach(() => {
+    consoleErrorSpy.mockRestore();
     vi.clearAllMocks();
   });
 
