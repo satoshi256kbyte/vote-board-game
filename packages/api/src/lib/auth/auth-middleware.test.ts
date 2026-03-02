@@ -27,9 +27,10 @@ vi.mock('jose', () => {
 const mockGetKeys = vi.fn();
 
 vi.mock('./jwks-cache.js', () => ({
-  JwksCache: vi.fn().mockImplementation(() => ({
-    getKeys: mockGetKeys,
-  })),
+  JwksCache: vi.fn(function (this: { getKeys: typeof mockGetKeys }) {
+    this.getKeys = mockGetKeys;
+    return this;
+  }),
 }));
 
 import { createAuthMiddleware } from './auth-middleware.js';

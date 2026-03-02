@@ -11,9 +11,15 @@ import { UserRepository } from '../lib/dynamodb/repositories/user.js';
 import { RateLimiter } from '../lib/rate-limiter.js';
 
 // モックを設定
-vi.mock('../lib/cognito/cognito-service.js');
-vi.mock('../lib/dynamodb/repositories/user.js');
-vi.mock('../lib/rate-limiter.js');
+vi.mock('../lib/cognito/cognito-service.js', () => ({
+  CognitoService: vi.fn(),
+}));
+vi.mock('../lib/dynamodb/repositories/user.js', () => ({
+  UserRepository: vi.fn(),
+}));
+vi.mock('../lib/rate-limiter.js', () => ({
+  RateLimiter: vi.fn(),
+}));
 
 // --- ジェネレーター ---
 
@@ -42,21 +48,19 @@ const validConfirmationCodeArb = fc
 // --- ヘルパー ---
 
 function setupDefaultMocks() {
-  vi.mocked(RateLimiter).mockImplementation(
-    () =>
-      ({
-        checkLimit: vi.fn().mockResolvedValue(true),
-        getRetryAfter: vi.fn().mockResolvedValue(0),
-      }) as unknown as RateLimiter
-  );
+  vi.mocked(RateLimiter).mockImplementation(function (this: RateLimiter) {
+    return {
+      checkLimit: vi.fn().mockResolvedValue(true),
+      getRetryAfter: vi.fn().mockResolvedValue(0),
+    } as unknown as RateLimiter;
+  });
 
-  vi.mocked(UserRepository).mockImplementation(
-    () =>
-      ({
-        create: vi.fn(),
-        getById: vi.fn(),
-      }) as unknown as UserRepository
-  );
+  vi.mocked(UserRepository).mockImplementation(function (this: UserRepository) {
+    return {
+      create: vi.fn(),
+      getById: vi.fn(),
+    } as unknown as UserRepository;
+  });
 }
 
 /**
@@ -81,16 +85,15 @@ describe('Property 2: パスワードリセット要求の成功レスポンス'
   it('should return 200 with success message for any valid email when Cognito succeeds', async () => {
     await fc.assert(
       fc.asyncProperty(validEmailArb, async (email) => {
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              forgotPassword: vi.fn().mockResolvedValue(undefined),
-              confirmForgotPassword: vi.fn(),
-              signUp: vi.fn(),
-              authenticate: vi.fn(),
-              deleteUser: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            forgotPassword: vi.fn().mockResolvedValue(undefined),
+            confirmForgotPassword: vi.fn(),
+            signUp: vi.fn(),
+            authenticate: vi.fn(),
+            deleteUser: vi.fn(),
+          } as unknown as CognitoService;
+        });
 
         const res = await app.request('/auth/password-reset', {
           method: 'POST',
@@ -129,16 +132,15 @@ describe('Property 3: アカウント列挙防止', () => {
     await fc.assert(
       fc.asyncProperty(validEmailArb, async (email) => {
         // ケース1: ユーザーが存在する（Cognito成功）
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              forgotPassword: vi.fn().mockResolvedValue(undefined),
-              confirmForgotPassword: vi.fn(),
-              signUp: vi.fn(),
-              authenticate: vi.fn(),
-              deleteUser: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            forgotPassword: vi.fn().mockResolvedValue(undefined),
+            confirmForgotPassword: vi.fn(),
+            signUp: vi.fn(),
+            authenticate: vi.fn(),
+            deleteUser: vi.fn(),
+          };
+        }) as unknown as CognitoService;
 
         const resRegistered = await app.request('/auth/password-reset', {
           method: 'POST',
@@ -152,16 +154,15 @@ describe('Property 3: アカウント列挙防止', () => {
         const userNotFoundError = new Error('User does not exist.') as Error & { name: string };
         userNotFoundError.name = 'UserNotFoundException';
 
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              forgotPassword: vi.fn().mockRejectedValue(userNotFoundError),
-              confirmForgotPassword: vi.fn(),
-              signUp: vi.fn(),
-              authenticate: vi.fn(),
-              deleteUser: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            forgotPassword: vi.fn().mockRejectedValue(userNotFoundError),
+            confirmForgotPassword: vi.fn(),
+            signUp: vi.fn(),
+            authenticate: vi.fn(),
+            deleteUser: vi.fn(),
+          };
+        }) as unknown as CognitoService;
 
         const resNotRegistered = await app.request('/auth/password-reset', {
           method: 'POST',
@@ -217,16 +218,15 @@ describe('Property 4: Cognito予期しないエラー時の500レスポンス', 
         const cognitoError = new Error(`Cognito error: ${errorName}`) as Error & { name: string };
         cognitoError.name = errorName;
 
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              forgotPassword: vi.fn().mockRejectedValue(cognitoError),
-              confirmForgotPassword: vi.fn(),
-              signUp: vi.fn(),
-              authenticate: vi.fn(),
-              deleteUser: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            forgotPassword: vi.fn().mockRejectedValue(cognitoError),
+            confirmForgotPassword: vi.fn(),
+            signUp: vi.fn(),
+            authenticate: vi.fn(),
+            deleteUser: vi.fn(),
+          };
+        }) as unknown as CognitoService;
 
         const res = await app.request('/auth/password-reset', {
           method: 'POST',
@@ -258,16 +258,15 @@ describe('Property 4: Cognito予期しないエラー時の500レスポンス', 
           };
           cognitoError.name = errorName;
 
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn().mockRejectedValue(cognitoError),
-                signUp: vi.fn(),
-                authenticate: vi.fn(),
-                deleteUser: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn().mockRejectedValue(cognitoError),
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const res = await app.request('/auth/password-reset/confirm', {
             method: 'POST',
@@ -321,16 +320,15 @@ describe('Property 6: 無効/期限切れ確認コードのエラーハンドリ
           const cognitoError = new Error(`Code error: ${errorName}`) as Error & { name: string };
           cognitoError.name = errorName;
 
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn().mockRejectedValue(cognitoError),
-                signUp: vi.fn(),
-                authenticate: vi.fn(),
-                deleteUser: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn().mockRejectedValue(cognitoError),
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const res = await app.request('/auth/password-reset/confirm', {
             method: 'POST',
@@ -375,16 +373,15 @@ describe('Property 7: パスワードリセット確認の成功レスポンス'
         validConfirmationCodeArb,
         validPasswordArb,
         async (email, code, password) => {
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn().mockResolvedValue(undefined),
-                signUp: vi.fn(),
-                authenticate: vi.fn(),
-                deleteUser: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn().mockResolvedValue(undefined),
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const res = await app.request('/auth/password-reset/confirm', {
             method: 'POST',
@@ -426,32 +423,29 @@ describe('Property 8: レート制限', () => {
   it('should return 429 with retryAfter for password-reset when rate limit exceeded', async () => {
     await fc.assert(
       fc.asyncProperty(validEmailArb, retryAfterArb, async (email, retryAfter) => {
-        vi.mocked(RateLimiter).mockImplementation(
-          () =>
-            ({
-              checkLimit: vi.fn().mockResolvedValue(false),
-              getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
-            }) as unknown as RateLimiter
-        );
+        vi.mocked(RateLimiter).mockImplementation(function (this: RateLimiter) {
+          return {
+            checkLimit: vi.fn().mockResolvedValue(false),
+            getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
+          };
+        }) as unknown as RateLimiter;
 
-        vi.mocked(UserRepository).mockImplementation(
-          () =>
-            ({
-              create: vi.fn(),
-              getById: vi.fn(),
-            }) as unknown as UserRepository
-        );
+        vi.mocked(UserRepository).mockImplementation(function (this: UserRepository) {
+          return {
+            create: vi.fn(),
+            getById: vi.fn(),
+          };
+        }) as unknown as UserRepository;
 
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              forgotPassword: vi.fn(),
-              confirmForgotPassword: vi.fn(),
-              signUp: vi.fn(),
-              authenticate: vi.fn(),
-              deleteUser: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            forgotPassword: vi.fn(),
+            confirmForgotPassword: vi.fn(),
+            signUp: vi.fn(),
+            authenticate: vi.fn(),
+            deleteUser: vi.fn(),
+          };
+        }) as unknown as CognitoService;
 
         const res = await app.request('/auth/password-reset', {
           method: 'POST',
@@ -477,32 +471,29 @@ describe('Property 8: レート制限', () => {
         validPasswordArb,
         retryAfterArb,
         async (email, code, password, retryAfter) => {
-          vi.mocked(RateLimiter).mockImplementation(
-            () =>
-              ({
-                checkLimit: vi.fn().mockResolvedValue(false),
-                getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
-              }) as unknown as RateLimiter
-          );
+          vi.mocked(RateLimiter).mockImplementation(function (this: RateLimiter) {
+            return {
+              checkLimit: vi.fn().mockResolvedValue(false),
+              getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
+            };
+          }) as unknown as RateLimiter;
 
-          vi.mocked(UserRepository).mockImplementation(
-            () =>
-              ({
-                create: vi.fn(),
-                getById: vi.fn(),
-              }) as unknown as UserRepository
-          );
+          vi.mocked(UserRepository).mockImplementation(function (this: UserRepository) {
+            return {
+              create: vi.fn(),
+              getById: vi.fn(),
+            };
+          }) as unknown as UserRepository;
 
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn(),
-                signUp: vi.fn(),
-                authenticate: vi.fn(),
-                deleteUser: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn(),
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const res = await app.request('/auth/password-reset/confirm', {
             method: 'POST',
@@ -544,16 +535,15 @@ describe('Property 9: 機密データのログ保護', () => {
   it('should not log password or confirmation code, and should mask email in password-reset requests', async () => {
     await fc.assert(
       fc.asyncProperty(validEmailArb, async (email) => {
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              forgotPassword: vi.fn().mockResolvedValue(undefined),
-              confirmForgotPassword: vi.fn(),
-              signUp: vi.fn(),
-              authenticate: vi.fn(),
-              deleteUser: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            forgotPassword: vi.fn().mockResolvedValue(undefined),
+            confirmForgotPassword: vi.fn(),
+            signUp: vi.fn(),
+            authenticate: vi.fn(),
+            deleteUser: vi.fn(),
+          };
+        }) as unknown as CognitoService;
 
         const consoleSpy = vi.spyOn(console, 'log');
         const consoleErrorSpy = vi.spyOn(console, 'error');
@@ -594,16 +584,15 @@ describe('Property 9: 機密データのログ保護', () => {
         validConfirmationCodeArb,
         validPasswordArb,
         async (email, code, password) => {
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn().mockResolvedValue(undefined),
-                signUp: vi.fn(),
-                authenticate: vi.fn(),
-                deleteUser: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn().mockResolvedValue(undefined),
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const consoleSpy = vi.spyOn(console, 'log');
           const consoleErrorSpy = vi.spyOn(console, 'error');
@@ -651,16 +640,15 @@ describe('Property 9: 機密データのログ保護', () => {
           const cognitoError = new Error('Code mismatch') as Error & { name: string };
           cognitoError.name = 'CodeMismatchException';
 
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn().mockRejectedValue(cognitoError),
-                signUp: vi.fn(),
-                authenticate: vi.fn(),
-                deleteUser: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn().mockRejectedValue(cognitoError),
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const consoleSpy = vi.spyOn(console, 'log');
           const consoleErrorSpy = vi.spyOn(console, 'error');
@@ -739,41 +727,39 @@ describe('Feature: 3-login-api, Property 2: ログイン成功レスポンス形
         tokenArb,
         async (email, password, userId, username, accessToken, refreshToken, idToken) => {
           // Cognito認証成功モック
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                signUp: vi.fn(),
-                authenticate: vi.fn().mockResolvedValue({
-                  accessToken,
-                  refreshToken,
-                  idToken,
-                  expiresIn: 900,
-                }),
-                deleteUser: vi.fn(),
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn(),
-                refreshTokens: vi.fn(),
-                extractUserIdFromIdToken: vi.fn().mockReturnValue(userId),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              signUp: vi.fn(),
+              authenticate: vi.fn().mockResolvedValue({
+                accessToken,
+                refreshToken,
+                idToken,
+                expiresIn: 900,
+              }),
+              deleteUser: vi.fn(),
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn(),
+              refreshTokens: vi.fn(),
+              extractUserIdFromIdToken: vi.fn().mockReturnValue(userId),
+            };
+          }) as unknown as CognitoService;
 
           // ユーザー存在モック
-          vi.mocked(UserRepository).mockImplementation(
-            () =>
-              ({
-                create: vi.fn(),
-                getById: vi.fn().mockResolvedValue({
-                  PK: `USER#${userId}`,
-                  SK: `USER#${userId}`,
-                  userId,
-                  email,
-                  username,
-                  createdAt: '2024-01-01T00:00:00.000Z',
-                  updatedAt: '2024-01-01T00:00:00.000Z',
-                  entityType: 'USER',
-                }),
-              }) as unknown as UserRepository
-          );
+          vi.mocked(UserRepository).mockImplementation(function (this: UserRepository) {
+            return {
+              create: vi.fn(),
+              getById: vi.fn().mockResolvedValue({
+                PK: `USER#${userId}`,
+                SK: `USER#${userId}`,
+                userId,
+                email,
+                username,
+                createdAt: '2024-01-01T00:00:00.000Z',
+                updatedAt: '2024-01-01T00:00:00.000Z',
+                entityType: 'USER',
+              }),
+            };
+          }) as unknown as UserRepository;
 
           const res = await app.request('/auth/login', {
             method: 'POST',
@@ -847,18 +833,17 @@ describe('Feature: 3-login-api, Property 3: 認証失敗時の統一エラーメ
           const authError = new Error(`Auth error: ${errorName}`) as Error & { name: string };
           authError.name = errorName;
 
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                signUp: vi.fn(),
-                authenticate: vi.fn().mockRejectedValue(authError),
-                deleteUser: vi.fn(),
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn(),
-                refreshTokens: vi.fn(),
-                extractUserIdFromIdToken: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              signUp: vi.fn(),
+              authenticate: vi.fn().mockRejectedValue(authError),
+              deleteUser: vi.fn(),
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn(),
+              refreshTokens: vi.fn(),
+              extractUserIdFromIdToken: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const res = await app.request('/auth/login', {
             method: 'POST',
@@ -917,34 +902,31 @@ describe('Feature: 3-login-api, Property 7: レート制限', () => {
         retryAfterArb,
         async (email, password, retryAfter) => {
           // レート制限超過モック
-          vi.mocked(RateLimiter).mockImplementation(
-            () =>
-              ({
-                checkLimit: vi.fn().mockResolvedValue(false),
-                getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
-              }) as unknown as RateLimiter
-          );
+          vi.mocked(RateLimiter).mockImplementation(function (this: RateLimiter) {
+            return {
+              checkLimit: vi.fn().mockResolvedValue(false),
+              getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
+            };
+          }) as unknown as RateLimiter;
 
-          vi.mocked(UserRepository).mockImplementation(
-            () =>
-              ({
-                create: vi.fn(),
-                getById: vi.fn(),
-              }) as unknown as UserRepository
-          );
+          vi.mocked(UserRepository).mockImplementation(function (this: UserRepository) {
+            return {
+              create: vi.fn(),
+              getById: vi.fn(),
+            };
+          }) as unknown as UserRepository;
 
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                signUp: vi.fn(),
-                authenticate: vi.fn(),
-                deleteUser: vi.fn(),
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn(),
-                refreshTokens: vi.fn(),
-                extractUserIdFromIdToken: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn(),
+              refreshTokens: vi.fn(),
+              extractUserIdFromIdToken: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const res = await app.request('/auth/login', {
             method: 'POST',
@@ -967,34 +949,31 @@ describe('Feature: 3-login-api, Property 7: レート制限', () => {
     await fc.assert(
       fc.asyncProperty(tokenArb, retryAfterArb, async (refreshToken, retryAfter) => {
         // レート制限超過モック
-        vi.mocked(RateLimiter).mockImplementation(
-          () =>
-            ({
-              checkLimit: vi.fn().mockResolvedValue(false),
-              getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
-            }) as unknown as RateLimiter
-        );
+        vi.mocked(RateLimiter).mockImplementation(function (this: RateLimiter) {
+          return {
+            checkLimit: vi.fn().mockResolvedValue(false),
+            getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
+          };
+        }) as unknown as RateLimiter;
 
-        vi.mocked(UserRepository).mockImplementation(
-          () =>
-            ({
-              create: vi.fn(),
-              getById: vi.fn(),
-            }) as unknown as UserRepository
-        );
+        vi.mocked(UserRepository).mockImplementation(function (this: UserRepository) {
+          return {
+            create: vi.fn(),
+            getById: vi.fn(),
+          };
+        }) as unknown as UserRepository;
 
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              signUp: vi.fn(),
-              authenticate: vi.fn(),
-              deleteUser: vi.fn(),
-              forgotPassword: vi.fn(),
-              confirmForgotPassword: vi.fn(),
-              refreshTokens: vi.fn(),
-              extractUserIdFromIdToken: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            signUp: vi.fn(),
+            authenticate: vi.fn(),
+            deleteUser: vi.fn(),
+            forgotPassword: vi.fn(),
+            confirmForgotPassword: vi.fn(),
+            refreshTokens: vi.fn(),
+            extractUserIdFromIdToken: vi.fn(),
+          };
+        }) as unknown as CognitoService;
 
         const res = await app.request('/auth/refresh', {
           method: 'POST',
@@ -1103,18 +1082,17 @@ describe('Feature: 3-login-api, Property 8: エラーレスポンス形式の一
         const authError = new Error('Not authorized') as Error & { name: string };
         authError.name = 'NotAuthorizedException';
 
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              signUp: vi.fn(),
-              authenticate: vi.fn().mockRejectedValue(authError),
-              deleteUser: vi.fn(),
-              forgotPassword: vi.fn(),
-              confirmForgotPassword: vi.fn(),
-              refreshTokens: vi.fn(),
-              extractUserIdFromIdToken: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            signUp: vi.fn(),
+            authenticate: vi.fn().mockRejectedValue(authError),
+            deleteUser: vi.fn(),
+            forgotPassword: vi.fn(),
+            confirmForgotPassword: vi.fn(),
+            refreshTokens: vi.fn(),
+            extractUserIdFromIdToken: vi.fn(),
+          };
+        }) as unknown as CognitoService;
 
         const res = await app.request('/auth/login', {
           method: 'POST',
@@ -1146,26 +1124,24 @@ describe('Feature: 3-login-api, Property 8: エラーレスポンス形式の一
         validPasswordArb,
         retryAfterArb,
         async (email, password, retryAfter) => {
-          vi.mocked(RateLimiter).mockImplementation(
-            () =>
-              ({
-                checkLimit: vi.fn().mockResolvedValue(false),
-                getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
-              }) as unknown as RateLimiter
-          );
+          vi.mocked(RateLimiter).mockImplementation(function (this: RateLimiter) {
+            return {
+              checkLimit: vi.fn().mockResolvedValue(false),
+              getRetryAfter: vi.fn().mockResolvedValue(retryAfter),
+            };
+          }) as unknown as RateLimiter;
 
-          vi.mocked(CognitoService).mockImplementation(
-            () =>
-              ({
-                signUp: vi.fn(),
-                authenticate: vi.fn(),
-                deleteUser: vi.fn(),
-                forgotPassword: vi.fn(),
-                confirmForgotPassword: vi.fn(),
-                refreshTokens: vi.fn(),
-                extractUserIdFromIdToken: vi.fn(),
-              }) as unknown as CognitoService
-          );
+          vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+            return {
+              signUp: vi.fn(),
+              authenticate: vi.fn(),
+              deleteUser: vi.fn(),
+              forgotPassword: vi.fn(),
+              confirmForgotPassword: vi.fn(),
+              refreshTokens: vi.fn(),
+              extractUserIdFromIdToken: vi.fn(),
+            };
+          }) as unknown as CognitoService;
 
           const res = await app.request('/auth/login', {
             method: 'POST',
@@ -1200,18 +1176,17 @@ describe('Feature: 3-login-api, Property 8: エラーレスポンス形式の一
         const internalError = new Error('Unexpected error') as Error & { name: string };
         internalError.name = 'InternalErrorException';
 
-        vi.mocked(CognitoService).mockImplementation(
-          () =>
-            ({
-              signUp: vi.fn(),
-              authenticate: vi.fn().mockRejectedValue(internalError),
-              deleteUser: vi.fn(),
-              forgotPassword: vi.fn(),
-              confirmForgotPassword: vi.fn(),
-              refreshTokens: vi.fn(),
-              extractUserIdFromIdToken: vi.fn(),
-            }) as unknown as CognitoService
-        );
+        vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+          return {
+            signUp: vi.fn(),
+            authenticate: vi.fn().mockRejectedValue(internalError),
+            deleteUser: vi.fn(),
+            forgotPassword: vi.fn(),
+            confirmForgotPassword: vi.fn(),
+            refreshTokens: vi.fn(),
+            extractUserIdFromIdToken: vi.fn(),
+          };
+        }) as unknown as CognitoService;
 
         const res = await app.request('/auth/login', {
           method: 'POST',

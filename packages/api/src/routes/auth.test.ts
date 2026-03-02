@@ -7,9 +7,15 @@ import { UserRepository } from '../lib/dynamodb/repositories/user.js';
 import { RateLimiter } from '../lib/rate-limiter.js';
 
 // モック
-vi.mock('../lib/cognito/cognito-service.js');
-vi.mock('../lib/dynamodb/repositories/user.js');
-vi.mock('../lib/rate-limiter.js');
+vi.mock('../lib/cognito/cognito-service.js', () => ({
+  CognitoService: vi.fn(),
+}));
+vi.mock('../lib/dynamodb/repositories/user.js', () => ({
+  UserRepository: vi.fn(),
+}));
+vi.mock('../lib/rate-limiter.js', () => ({
+  RateLimiter: vi.fn(),
+}));
 
 describe('Auth Router', () => {
   let app: Hono;
@@ -48,25 +54,27 @@ describe('Auth Router', () => {
       refreshTokens: vi.fn(),
       extractUserIdFromIdToken: vi.fn(),
     };
-    vi.mocked(CognitoService).mockImplementation(
-      () => mockCognitoService as unknown as CognitoService
-    );
+    vi.mocked(CognitoService).mockImplementation(function (this: CognitoService) {
+      return mockCognitoService as unknown as CognitoService;
+    });
 
     // UserRepositoryのモック
     mockUserRepository = {
       create: vi.fn(),
       getById: vi.fn(),
     };
-    vi.mocked(UserRepository).mockImplementation(
-      () => mockUserRepository as unknown as UserRepository
-    );
+    vi.mocked(UserRepository).mockImplementation(function (this: UserRepository) {
+      return mockUserRepository as unknown as UserRepository;
+    });
 
     // RateLimiterのモック
     mockRateLimiter = {
       checkLimit: vi.fn(),
       getRetryAfter: vi.fn(),
     };
-    vi.mocked(RateLimiter).mockImplementation(() => mockRateLimiter as unknown as RateLimiter);
+    vi.mocked(RateLimiter).mockImplementation(function (this: RateLimiter) {
+      return mockRateLimiter as unknown as RateLimiter;
+    });
   });
 
   describe('POST /auth/register', () => {

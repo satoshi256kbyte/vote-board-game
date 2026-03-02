@@ -22,13 +22,20 @@ const mockUpdateBoardState = vi.fn();
 const mockFinish = vi.fn();
 
 vi.mock('../lib/dynamodb/repositories/game.js', () => ({
-  GameRepository: vi.fn().mockImplementation(() => ({
-    create: mockCreate,
-    getById: mockGetById,
-    listByStatus: mockListByStatus,
-    updateBoardState: mockUpdateBoardState,
-    finish: mockFinish,
-  })),
+  GameRepository: vi.fn(function (this: {
+    create: typeof mockCreate;
+    getById: typeof mockGetById;
+    listByStatus: typeof mockListByStatus;
+    updateBoardState: typeof mockUpdateBoardState;
+    finish: typeof mockFinish;
+  }) {
+    this.create = mockCreate;
+    this.getById = mockGetById;
+    this.listByStatus = mockListByStatus;
+    this.updateBoardState = mockUpdateBoardState;
+    this.finish = mockFinish;
+    return this;
+  }),
 }));
 
 describe('Game API Integration Tests', () => {

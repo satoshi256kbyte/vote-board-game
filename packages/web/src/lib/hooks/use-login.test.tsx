@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useLogin } from './use-login';
 import { AuthProvider } from '@/lib/contexts/auth-context';
 import { authService } from '@/lib/services/auth-service';
@@ -98,16 +98,9 @@ describe('useLogin', () => {
 
     expect(result.current.isLoading).toBe(false);
 
-    const loginPromise = act(async () => {
+    await act(async () => {
       await result.current.login('test@example.com', 'password123');
     });
-
-    // ローディング中
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false); // finallyで即座にfalseになる
-    });
-
-    await loginPromise;
 
     // ローディング完了
     expect(result.current.isLoading).toBe(false);

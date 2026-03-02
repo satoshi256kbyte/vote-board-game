@@ -23,18 +23,23 @@ vi.mock('../lib/auth/auth-middleware.js', () => ({
 const mockGetById = vi.fn();
 const mockUpdate = vi.fn();
 vi.mock('../lib/dynamodb/repositories/profile.js', () => ({
-  ProfileRepository: vi.fn().mockImplementation(() => ({
-    getById: mockGetById,
-    update: mockUpdate,
-  })),
+  ProfileRepository: vi.fn(function (this: {
+    getById: typeof mockGetById;
+    update: typeof mockUpdate;
+  }) {
+    this.getById = mockGetById;
+    this.update = mockUpdate;
+    return this;
+  }),
 }));
 
 // MockS3Service
 const mockGenerateUploadUrl = vi.fn();
 vi.mock('../lib/s3/s3-service.js', () => ({
-  S3Service: vi.fn().mockImplementation(() => ({
-    generateUploadUrl: mockGenerateUploadUrl,
-  })),
+  S3Service: vi.fn(function (this: { generateUploadUrl: typeof mockGenerateUploadUrl }) {
+    this.generateUploadUrl = mockGenerateUploadUrl;
+    return this;
+  }),
 }));
 
 /**

@@ -1,5 +1,26 @@
 import '@testing-library/jest-dom/vitest';
-import { afterEach, beforeEach, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
+
+// Suppress act(...) warnings from React 19 and Next.js Link internal updates
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args: unknown[]) => {
+    const message = typeof args[0] === 'string' ? args[0] : '';
+    // Suppress act(...) warnings
+    if (message.includes('not wrapped in act(...)')) {
+      return;
+    }
+    // Suppress duplicate key warnings from intentional test cases
+    if (message.includes('Encountered two children with the same key')) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalError;
+});
 
 // Clear all mocks before each test
 beforeEach(() => {

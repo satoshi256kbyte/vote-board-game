@@ -5,7 +5,9 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // AWS SDK v3をモック
 vi.mock('@aws-sdk/client-s3', () => ({
-  S3Client: vi.fn(),
+  S3Client: vi.fn(function (this: object) {
+    return this;
+  }),
   PutObjectCommand: vi.fn(),
 }));
 
@@ -22,9 +24,6 @@ describe('S3Service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // S3Clientのモック実装
-    (S3Client as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({}));
 
     s3Service = new S3Service(mockBucketName, mockCdnDomain, mockRegion);
   });

@@ -13,9 +13,10 @@ vi.mock('@aws-sdk/client-cognito-identity-provider', async () => {
   const actual = await vi.importActual('@aws-sdk/client-cognito-identity-provider');
   return {
     ...actual,
-    CognitoIdentityProviderClient: vi.fn().mockImplementation(() => ({
-      send: vi.fn(),
-    })),
+    CognitoIdentityProviderClient: vi.fn(function (this: { send: ReturnType<typeof vi.fn> }) {
+      this.send = vi.fn();
+      return this;
+    }),
   };
 });
 

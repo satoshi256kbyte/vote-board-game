@@ -64,7 +64,7 @@ export function MoveHistory({ moves, onMoveClick, selectedTurn }: MoveHistoryPro
 
         return (
           <div
-            key={move.turn}
+            key={`${move.turn}-${move.position}`}
             role="listitem"
             tabIndex={isInteractive ? 0 : undefined}
             onClick={() => handleMoveClick(move.turn)}

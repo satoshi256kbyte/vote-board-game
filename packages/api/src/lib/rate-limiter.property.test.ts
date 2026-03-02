@@ -17,7 +17,9 @@ vi.mock('@aws-sdk/lib-dynamodb', async () => {
 });
 
 vi.mock('@aws-sdk/client-dynamodb', () => ({
-  DynamoDBClient: vi.fn().mockImplementation(() => ({})),
+  DynamoDBClient: vi.fn(function (this: any) {
+    return {};
+  }),
 }));
 
 /**
