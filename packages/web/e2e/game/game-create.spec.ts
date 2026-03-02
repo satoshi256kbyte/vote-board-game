@@ -291,6 +291,16 @@ test.describe('Game Creation Flow - Success Behavior (Task 3.4)', () => {
     // Wait for game detail page to load
     await authenticatedPage.waitForLoadState('networkidle');
 
+    // Wait for the game data to be loaded (retry logic)
+    // The game might not be immediately available after creation
+    await authenticatedPage.waitForFunction(
+      () => {
+        const heading = document.querySelector('h1');
+        return heading && heading.textContent && heading.textContent.includes('オセロ対局');
+      },
+      { timeout: TIMEOUTS.LONG }
+    );
+
     // Verify game detail page is displayed (Requirement 4.12)
     const heading = authenticatedPage.locator('h1');
     await expect(heading).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
@@ -317,6 +327,16 @@ test.describe('Game Creation Flow - Success Behavior (Task 3.4)', () => {
 
     // Wait for game detail page to load
     await authenticatedPage.waitForLoadState('networkidle');
+
+    // Wait for the game data to be loaded (retry logic)
+    // The game might not be immediately available after creation
+    await authenticatedPage.waitForFunction(
+      () => {
+        const heading = document.querySelector('h1');
+        return heading && heading.textContent && heading.textContent.includes('オセロ対局');
+      },
+      { timeout: TIMEOUTS.LONG }
+    );
 
     // Verify initial board state (Requirement 4.13)
     // Initial Othello board has 2 black discs and 2 white discs in the center
@@ -374,6 +394,16 @@ test.describe('Game Creation Flow - Success Behavior (Task 3.4)', () => {
 
     // Wait for game detail page to load
     await authenticatedPage.waitForLoadState('networkidle');
+
+    // Wait for the game data to be loaded (retry logic)
+    // The game might not be immediately available after creation
+    await authenticatedPage.waitForFunction(
+      () => {
+        const heading = document.querySelector('h1');
+        return heading && heading.textContent && heading.textContent.includes('オセロ対局');
+      },
+      { timeout: TIMEOUTS.LONG }
+    );
 
     // Verify board is displayed
     const board = authenticatedPage.locator('role=grid[name="オセロの盤面"]');
@@ -514,6 +544,16 @@ test.describe('Game Creation Flow - Error Handling (Task 3.5)', () => {
 
     // Wait for redirect to game detail page
     await authenticatedPage.waitForURL('**/games/**', { timeout: TIMEOUTS.LONG });
+
+    // Wait for the game data to be loaded (retry logic)
+    // The game might not be immediately available after creation
+    await authenticatedPage.waitForFunction(
+      () => {
+        const heading = document.querySelector('h1');
+        return heading && heading.textContent && heading.textContent.includes('オセロ対局');
+      },
+      { timeout: TIMEOUTS.LONG }
+    );
 
     // Verify we're on game detail page
     const heading = authenticatedPage.locator('h1');
