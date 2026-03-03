@@ -94,6 +94,30 @@ export default async function globalSetup() {
 
   console.log(`📍 Base URL: ${baseURL}\n`);
 
+  // Check required AWS environment variables for test data creation
+  const requiredEnvVars = [
+    'DYNAMODB_TABLE_NAME',
+    'USER_POOL_ID',
+    'COGNITO_USER_POOL_ID',
+    'COGNITO_CLIENT_ID',
+    'AWS_REGION',
+  ];
+
+  const missingEnvVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+
+  if (missingEnvVars.length > 0) {
+    console.warn(
+      `⚠️  Warning: The following environment variables are not set:\n` +
+        missingEnvVars.map((v) => `   - ${v}`).join('\n') +
+        '\n\n   Tests that require these variables will use mock data or be skipped.\n'
+    );
+  } else {
+    console.log('✅ All required AWS environment variables are set\n');
+    console.log(`   - DYNAMODB_TABLE_NAME: ${process.env.DYNAMODB_TABLE_NAME}`);
+    console.log(`   - USER_POOL_ID: ${process.env.USER_POOL_ID}`);
+    console.log(`   - AWS_REGION: ${process.env.AWS_REGION}\n`);
+  }
+
   try {
     // Check frontend availability (fail-fast)
     await checkFrontendAvailability(baseURL);

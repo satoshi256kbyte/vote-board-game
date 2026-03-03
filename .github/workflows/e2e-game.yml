@@ -99,6 +99,11 @@ jobs:
           echo "USER_POOL_CLIENT_ID: ${{ steps.cdk-outputs.outputs.user-pool-client-id }}"
           echo "AWS_REGION: ap-northeast-1"
           echo "================================"
+          echo ""
+          echo "=== Verifying environment variables are set ==="
+          echo "DYNAMODB_TABLE_NAME is set: $([[ -n \"${{ steps.cdk-outputs.outputs.table-name }}\" ]] && echo 'YES' || echo 'NO')"
+          echo "Value: ${{ steps.cdk-outputs.outputs.table-name }}"
+          echo "================================"
 
       - name: Run game management E2E tests
         run: pnpm --filter @vote-board-game/web test:e2e:game

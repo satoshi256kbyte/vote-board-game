@@ -65,19 +65,6 @@ export function createPlaywrightConfig(
       navigationTimeout: 30 * 1000,
     },
 
-    // 環境変数をテストプロセスに渡す
-    // これにより、test-data.ts などのヘルパーで環境変数にアクセスできる
-    env: {
-      DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || '',
-      USER_POOL_ID: process.env.USER_POOL_ID || '',
-      COGNITO_USER_POOL_ID: process.env.COGNITO_USER_POOL_ID || '',
-      COGNITO_CLIENT_ID: process.env.COGNITO_CLIENT_ID || '',
-      TEST_USER_EMAIL: process.env.TEST_USER_EMAIL || '',
-      TEST_USER_PASSWORD: process.env.TEST_USER_PASSWORD || '',
-      AWS_REGION: process.env.AWS_REGION || 'ap-northeast-1',
-      CI: process.env.CI || '',
-    },
-
     // ブラウザ設定（CI環境ではChromiumのみ、ローカルもChromiumのみ）
     projects: [
       {
