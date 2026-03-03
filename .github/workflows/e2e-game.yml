@@ -78,11 +78,32 @@ jobs:
           echo "user-pool-id=$USER_POOL_ID" >> $GITHUB_OUTPUT
           echo "user-pool-client-id=$USER_POOL_CLIENT_ID" >> $GITHUB_OUTPUT
 
+      - name: Get Vercel URL
+        id: vercel-url
+        run: |
+          VERCEL_URL="${{ vars.VERCEL_URL }}"
+          if [ -z "$VERCEL_URL" ]; then
+            echo "Error: VERCEL_URL variable not set"
+            exit 1
+          fi
+          echo "url=$VERCEL_URL" >> $GITHUB_OUTPUT
+          echo "Vercel URL: $VERCEL_URL"
+
+      - name: Debug environment variables
+        run: |
+          echo "=== Environment Configuration ==="
+          echo "BASE_URL: ${{ steps.vercel-url.outputs.url }}"
+          echo "API_URL: ${{ steps.cdk-outputs.outputs.api-url }}"
+          echo "TABLE_NAME: ${{ steps.cdk-outputs.outputs.table-name }}"
+          echo "USER_POOL_ID: ${{ steps.cdk-outputs.outputs.user-pool-id }}"
+          echo "USER_POOL_CLIENT_ID: ${{ steps.cdk-outputs.outputs.user-pool-client-id }}"
+          echo "AWS_REGION: ap-northeast-1"
+          echo "================================"
+
       - name: Run game management E2E tests
         run: pnpm --filter @vote-board-game/web test:e2e:game
         env:
-          BASE_URL: ${{ vars.VERCEL_URL }}
-          NEXT_PUBLIC_API_URL: ${{ steps.cdk-outputs.outputs.api-url }}
+          BASE_URL: ${{ steps.vercel-url.outputs.url }}
           DYNAMODB_TABLE_NAME: ${{ steps.cdk-outputs.outputs.table-name }}
           USER_POOL_ID: ${{ steps.cdk-outputs.outputs.user-pool-id }}
           COGNITO_USER_POOL_ID: ${{ steps.cdk-outputs.outputs.user-pool-id }}

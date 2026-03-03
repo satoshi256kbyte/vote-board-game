@@ -7,6 +7,37 @@
 
 import { test, expect } from '../fixtures';
 import { TIMEOUTS } from '../helpers/wait-utils';
+import type { Page } from '@playwright/test';
+
+/**
+ * Helper function to wait for game detail page to load after creation
+ * Includes retry logic and debugging for eventual consistency issues
+ */
+async function waitForGameDetailPage(page: Page): Promise<void> {
+  // Get the game ID from URL for debugging
+  const url = page.url();
+  console.log('[Test] Redirected to:', url);
+
+  // Wait for game detail page to load
+  await page.waitForLoadState('networkidle');
+
+  // Wait for the game data to be loaded (retry logic)
+  // The game might not be immediately available after creation
+  try {
+    await page.waitForFunction(
+      () => {
+        const heading = document.querySelector('h1');
+        return heading && heading.textContent && heading.textContent.includes('オセロ対局');
+      },
+      { timeout: TIMEOUTS.LONG }
+    );
+  } catch (error) {
+    // Log page content for debugging
+    const pageContent = await page.content();
+    console.error('[Test] Page content when heading not found:', pageContent.substring(0, 500));
+    throw error;
+  }
+}
 
 test.describe('Game Creation Flow - Basic Display (Task 3.1)', () => {
   test('should display page title "新しい対局を作成"', async ({ authenticatedPage }) => {
@@ -288,18 +319,8 @@ test.describe('Game Creation Flow - Success Behavior (Task 3.4)', () => {
     // Wait for redirect to game detail page
     await authenticatedPage.waitForURL('**/games/**', { timeout: TIMEOUTS.LONG });
 
-    // Wait for game detail page to load
-    await authenticatedPage.waitForLoadState('networkidle');
-
-    // Wait for the game data to be loaded (retry logic)
-    // The game might not be immediately available after creation
-    await authenticatedPage.waitForFunction(
-      () => {
-        const heading = document.querySelector('h1');
-        return heading && heading.textContent && heading.textContent.includes('オセロ対局');
-      },
-      { timeout: TIMEOUTS.LONG }
-    );
+    // Wait for game detail page to load with retry logic
+    await waitForGameDetailPage(authenticatedPage);
 
     // Verify game detail page is displayed (Requirement 4.12)
     const heading = authenticatedPage.locator('h1');
@@ -325,18 +346,8 @@ test.describe('Game Creation Flow - Success Behavior (Task 3.4)', () => {
     // Wait for redirect to game detail page
     await authenticatedPage.waitForURL('**/games/**', { timeout: TIMEOUTS.LONG });
 
-    // Wait for game detail page to load
-    await authenticatedPage.waitForLoadState('networkidle');
-
-    // Wait for the game data to be loaded (retry logic)
-    // The game might not be immediately available after creation
-    await authenticatedPage.waitForFunction(
-      () => {
-        const heading = document.querySelector('h1');
-        return heading && heading.textContent && heading.textContent.includes('オセロ対局');
-      },
-      { timeout: TIMEOUTS.LONG }
-    );
+    // Wait for game detail page to load with retry logic
+    await waitForGameDetailPage(authenticatedPage);
 
     // Verify initial board state (Requirement 4.13)
     // Initial Othello board has 2 black discs and 2 white discs in the center
@@ -392,18 +403,8 @@ test.describe('Game Creation Flow - Success Behavior (Task 3.4)', () => {
     // Wait for redirect to game detail page
     await authenticatedPage.waitForURL('**/games/**', { timeout: TIMEOUTS.LONG });
 
-    // Wait for game detail page to load
-    await authenticatedPage.waitForLoadState('networkidle');
-
-    // Wait for the game data to be loaded (retry logic)
-    // The game might not be immediately available after creation
-    await authenticatedPage.waitForFunction(
-      () => {
-        const heading = document.querySelector('h1');
-        return heading && heading.textContent && heading.textContent.includes('オセロ対局');
-      },
-      { timeout: TIMEOUTS.LONG }
-    );
+    // Wait for game detail page to load with retry logic
+    await waitForGameDetailPage(authenticatedPage);
 
     // Verify board is displayed
     const board = authenticatedPage.locator('role=grid[name="オセロの盤面"]');
