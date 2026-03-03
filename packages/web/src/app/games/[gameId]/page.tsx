@@ -84,15 +84,25 @@ export async function generateMetadata({ params }: GameDetailPageProps): Promise
 export default async function GameDetailPage({ params }: GameDetailPageProps) {
   const { gameId } = await params;
   let game;
-  let candidates;
+  let candidates: Awaited<ReturnType<typeof fetchCandidates>>;
 
   try {
-    [game, candidates] = await Promise.all([fetchGame(gameId), fetchCandidates(gameId)]);
+    game = await fetchGame(gameId);
   } catch (error) {
+    console.error('Failed to fetch game:', error);
     if (error instanceof ApiError && error.statusCode === 404) {
       notFound();
     }
     throw error;
+  }
+
+  try {
+    candidates = await fetchCandidates(gameId);
+  } catch (error) {
+    console.error('Failed to fetch candidates:', error);
+    // Candidates fetch failure should not trigger 404
+    // Just use empty array
+    candidates = [];
   }
 
   // Calculate disc counts
