@@ -1,4 +1,11 @@
 import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from .env.test if it exists (for CI)
+// Otherwise, use .env.local (for local development)
+const envFile = process.env.CI ? '.env.test' : '.env.local';
+dotenv.config({ path: path.resolve(__dirname, envFile) });
 
 export function createPlaywrightConfig(
   baseURL: string | undefined,

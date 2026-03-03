@@ -15,7 +15,7 @@
 
 ## プロジェクト構造
 
-```
+```text
 packages/web/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
@@ -147,7 +147,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-http://localhost:3000 でアプリケーションが起動します。
+<http://localhost:3000> でアプリケーションが起動します。
 
 ### ビルド
 
@@ -172,6 +172,56 @@ pnpm test:coverage
 
 # E2Eテスト
 pnpm test:e2e
+
+# E2Eテスト（ゲーム管理のみ）
+pnpm test:e2e:game
+```
+
+#### E2Eテストのセットアップ
+
+E2Eテストを実行する前に、環境変数を設定する必要があります：
+
+```bash
+# .env.local.example をコピー
+cp .env.local.example .env.local
+
+# .env.local を編集して必要な環境変数を設定
+# - BASE_URL: テスト対象のフロントエンドURL
+# - NEXT_PUBLIC_API_URL: API Gateway URL
+# - DYNAMODB_TABLE_NAME: DynamoDBテーブル名
+# - USER_POOL_ID: Cognito User Pool ID
+# - COGNITO_USER_POOL_ID: Cognito User Pool ID（USER_POOL_IDと同じ）
+# - COGNITO_CLIENT_ID: Cognito Client ID
+# - TEST_USER_EMAIL: テストユーザーのメールアドレス（オプション）
+# - TEST_USER_PASSWORD: テストユーザーのパスワード（オプション）
+# - AWS_REGION: AWSリージョン（デフォルト: ap-northeast-1）
+```
+
+AWS リソースの値は CloudFormation スタックから取得できます：
+
+```bash
+# 開発環境の場合
+aws cloudformation describe-stacks --stack-name VoteBoardGameStack-dev \
+  --query "Stacks[0].Outputs" --output table
+```
+
+#### E2Eテストの実行
+
+```bash
+# すべてのE2Eテストを実行
+pnpm test:e2e
+
+# ゲーム管理のE2Eテストのみ実行
+pnpm test:e2e:game
+
+# ヘッドレスモードで実行（ブラウザを表示）
+pnpm test:e2e:headed
+
+# UIモードで実行（デバッグ用）
+pnpm test:e2e:ui
+
+# テストレポートを表示
+pnpm test:e2e:report
 ```
 
 ### Lint & Format

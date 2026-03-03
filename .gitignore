@@ -12,6 +12,7 @@ cdk.out/
 .env
 .env.local
 .env.*.local
+.env.test
 
 # Logs
 *.log
