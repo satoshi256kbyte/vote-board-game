@@ -36,3 +36,5 @@ packages/web/playwright-report/
 packages/web/test-results/
 packages/web/test-results.json
 packages/web/.playwright/
+
+tmp/**/*
