@@ -17,6 +17,10 @@ import { ShareButton } from '@/components/share-button';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface GameDetailPageProps {
   params: Promise<{
     gameId: string;
@@ -89,8 +93,14 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
   try {
     game = await fetchGame(gameId);
   } catch (error) {
-    console.error('Failed to fetch game:', error);
+    console.error('[GameDetailPage] Failed to fetch game:', {
+      gameId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      isApiError: error instanceof ApiError,
+      statusCode: error instanceof ApiError ? error.statusCode : undefined,
+    });
     if (error instanceof ApiError && error.statusCode === 404) {
+      console.log('[GameDetailPage] Calling notFound() for 404 error');
       notFound();
     }
     throw error;
