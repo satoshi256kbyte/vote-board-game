@@ -63,14 +63,14 @@ export async function createTestUser(): Promise<TestUser> {
 
   try {
     const userPoolId = process.env.USER_POOL_ID;
-    const tableName = process.env.TABLE_NAME;
+    const tableName = process.env.DYNAMODB_TABLE_NAME;
 
     if (!userPoolId) {
       throw new Error('USER_POOL_ID environment variable is not set');
     }
 
     if (!tableName) {
-      throw new Error('TABLE_NAME environment variable is not set');
+      throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
     }
 
     const region = process.env.AWS_REGION || 'ap-northeast-1';

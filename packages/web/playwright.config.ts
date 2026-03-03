@@ -69,7 +69,9 @@ export function createPlaywrightConfig(
     projects: [
       {
         name: 'chromium',
-        use: { ...devices['Desktop Chrome'] },
+        use: {
+          ...devices['Desktop Chrome'],
+        },
       },
     ],
   };

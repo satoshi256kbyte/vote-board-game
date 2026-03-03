@@ -103,7 +103,14 @@ export default async function globalSetup() {
     'AWS_REGION',
   ];
 
-  const missingEnvVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+  console.log('=== Environment Variables Check ===');
+  const missingEnvVars = requiredEnvVars.filter((varName) => {
+    const value = process.env[varName];
+    const isSet = !!value;
+    console.log(`  ${varName}: ${isSet ? `✓ (${value})` : '✗ NOT SET'}`);
+    return !isSet;
+  });
+  console.log('===================================\n');
 
   if (missingEnvVars.length > 0) {
     console.warn(
@@ -113,9 +120,6 @@ export default async function globalSetup() {
     );
   } else {
     console.log('✅ All required AWS environment variables are set\n');
-    console.log(`   - DYNAMODB_TABLE_NAME: ${process.env.DYNAMODB_TABLE_NAME}`);
-    console.log(`   - USER_POOL_ID: ${process.env.USER_POOL_ID}`);
-    console.log(`   - AWS_REGION: ${process.env.AWS_REGION}\n`);
   }
 
   try {
