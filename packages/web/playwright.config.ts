@@ -1,6 +1,11 @@
 import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env.test if it exists (for CI)
 // Otherwise, use .env.local (for local development)
