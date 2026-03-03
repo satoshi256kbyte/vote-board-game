@@ -69,6 +69,11 @@ jobs:
             exit 1
           fi
 
+          # Debug: List all outputs
+          echo "=== All Stack Outputs ==="
+          aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs" --output json
+          echo "=========================="
+
           API_URL=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
           TABLE_NAME=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='TableName'].OutputValue" --output text)
           USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
@@ -122,9 +127,10 @@ jobs:
           echo "AWS_REGION: ap-northeast-1"
           echo "================================"
           echo ""
-          echo "=== Verifying environment variables are set ==="
-          echo "DYNAMODB_TABLE_NAME is set: $([[ -n \"${{ steps.cdk-outputs.outputs.table-name }}\" ]] && echo 'YES' || echo 'NO')"
-          echo "Value: ${{ steps.cdk-outputs.outputs.table-name }}"
+          echo "=== Checking if outputs are empty ==="
+          echo "table-name is empty: ${{ steps.cdk-outputs.outputs.table-name == '' }}"
+          echo "user-pool-id is empty: ${{ steps.cdk-outputs.outputs.user-pool-id == '' }}"
+          echo "user-pool-client-id is empty: ${{ steps.cdk-outputs.outputs.user-pool-client-id == '' }}"
           echo "================================"
 
       - name: Verify environment variables before test
