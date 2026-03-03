@@ -63,10 +63,32 @@ jobs:
           STACK_NAME="VoteBoardGameStack-${ENV}"
           echo "Stack name: $STACK_NAME"
 
+          # Check if stack exists
+          if ! aws cloudformation describe-stacks --stack-name $STACK_NAME &> /dev/null; then
+            echo "Error: Stack $STACK_NAME not found"
+            exit 1
+          fi
+
           API_URL=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
           TABLE_NAME=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='TableName'].OutputValue" --output text)
           USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
           USER_POOL_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolClientId'].OutputValue" --output text)
+
+          # Validate outputs
+          if [ -z "$TABLE_NAME" ] || [ "$TABLE_NAME" == "None" ]; then
+            echo "Error: TABLE_NAME is empty or None"
+            exit 1
+          fi
+
+          if [ -z "$USER_POOL_ID" ] || [ "$USER_POOL_ID" == "None" ]; then
+            echo "Error: USER_POOL_ID is empty or None"
+            exit 1
+          fi
+
+          if [ -z "$USER_POOL_CLIENT_ID" ] || [ "$USER_POOL_CLIENT_ID" == "None" ]; then
+            echo "Error: USER_POOL_CLIENT_ID is empty or None"
+            exit 1
+          fi
 
           echo "API URL: $API_URL"
           echo "Table Name: $TABLE_NAME"
@@ -104,6 +126,27 @@ jobs:
           echo "DYNAMODB_TABLE_NAME is set: $([[ -n \"${{ steps.cdk-outputs.outputs.table-name }}\" ]] && echo 'YES' || echo 'NO')"
           echo "Value: ${{ steps.cdk-outputs.outputs.table-name }}"
           echo "================================"
+
+      - name: Verify environment variables before test
+        run: |
+          echo "=== Verifying Environment Variables ==="
+          echo "BASE_URL: $BASE_URL"
+          echo "DYNAMODB_TABLE_NAME: $DYNAMODB_TABLE_NAME"
+          echo "USER_POOL_ID: $USER_POOL_ID"
+          echo "COGNITO_USER_POOL_ID: $COGNITO_USER_POOL_ID"
+          echo "COGNITO_CLIENT_ID: $COGNITO_CLIENT_ID"
+          echo "AWS_REGION: $AWS_REGION"
+          echo "AWS_ACCESS_KEY_ID is set: $([[ -n \"$AWS_ACCESS_KEY_ID\" ]] && echo 'YES' || echo 'NO')"
+          echo "AWS_SECRET_ACCESS_KEY is set: $([[ -n \"$AWS_SECRET_ACCESS_KEY\" ]] && echo 'YES' || echo 'NO')"
+          echo "AWS_SESSION_TOKEN is set: $([[ -n \"$AWS_SESSION_TOKEN\" ]] && echo 'YES' || echo 'NO')"
+          echo "========================================"
+        env:
+          BASE_URL: ${{ steps.vercel-url.outputs.url }}
+          DYNAMODB_TABLE_NAME: ${{ steps.cdk-outputs.outputs.table-name }}
+          USER_POOL_ID: ${{ steps.cdk-outputs.outputs.user-pool-id }}
+          COGNITO_USER_POOL_ID: ${{ steps.cdk-outputs.outputs.user-pool-id }}
+          COGNITO_CLIENT_ID: ${{ steps.cdk-outputs.outputs.user-pool-client-id }}
+          AWS_REGION: ap-northeast-1
 
       - name: Run game management E2E tests
         run: pnpm --filter @vote-board-game/web test:e2e:game
