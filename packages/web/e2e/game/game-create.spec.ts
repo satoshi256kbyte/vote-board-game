@@ -306,6 +306,23 @@ test.describe('Game Creation Flow - Success Behavior (Task 3.4)', () => {
   });
 
   test('should display newly created game on detail page', async ({ authenticatedPage }) => {
+    // Listen for API responses to debug
+    authenticatedPage.on('response', async (response) => {
+      if (response.url().includes('/api/games') && response.request().method() === 'POST') {
+        console.log('[Test] Game creation API response:', {
+          status: response.status(),
+          statusText: response.statusText(),
+          url: response.url(),
+        });
+        try {
+          const body = await response.json();
+          console.log('[Test] Response body:', JSON.stringify(body, null, 2));
+        } catch {
+          console.log('[Test] Could not parse response body');
+        }
+      }
+    });
+
     // Navigate to game creation page
     await authenticatedPage.goto('/games/new');
 

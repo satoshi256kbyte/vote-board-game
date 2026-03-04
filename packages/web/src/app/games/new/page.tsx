@@ -36,19 +36,30 @@ export default function NewGamePage() {
     setIsSubmitting(true);
 
     try {
+      console.log('[GameCreate] Submitting game creation request', { aiSide });
       const game = await createGame({
         gameType: 'OTHELLO',
         aiSide,
       });
+      console.log('[GameCreate] Game created successfully', { gameId: game.gameId });
 
       // Redirect to game detail page
       router.push(`/games/${game.gameId}`);
     } catch (err) {
+      console.error('[GameCreate] Failed to create game', err);
       if (err instanceof ApiError) {
+        console.error('[GameCreate] API Error details', {
+          message: err.message,
+          statusCode: err.statusCode,
+          errorCode: err.errorCode,
+          details: err.details,
+        });
         setError(err.message);
       } else if (err instanceof Error) {
+        console.error('[GameCreate] Error details', { message: err.message, stack: err.stack });
         setError(err.message);
       } else {
+        console.error('[GameCreate] Unknown error', err);
         setError('対局の作成に失敗しました');
       }
       setIsSubmitting(false);
