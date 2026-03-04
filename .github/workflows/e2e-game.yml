@@ -19,6 +19,7 @@ on:
 jobs:
   e2e-game:
     runs-on: ubuntu-latest
+    environment: development
 
     permissions:
       id-token: write
