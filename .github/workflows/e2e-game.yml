@@ -78,6 +78,12 @@ jobs:
             exit 1
           fi
 
+          # Output full stack information for debugging
+          echo "=== Full CloudFormation Stack Output ==="
+          aws cloudformation describe-stacks --stack-name $STACK_NAME
+          echo "========================================="
+          echo ""
+
           # Get all outputs
           API_URL=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
           TABLE_NAME=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='TableName'].OutputValue" --output text)
