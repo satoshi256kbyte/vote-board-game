@@ -7,6 +7,11 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: development
+
+    permissions:
+      id-token: write
+      contents: read
 
     strategy:
       fail-fast: false
@@ -74,6 +79,18 @@ jobs:
           STACK_NAME="VoteBoardGameStack-dev"
           echo "Stack name: $STACK_NAME"
 
+          # Check if stack exists
+          if ! aws cloudformation describe-stacks --stack-name $STACK_NAME &> /dev/null; then
+            echo "Error: Stack $STACK_NAME not found"
+            exit 1
+          fi
+
+          # Output full stack information for debugging
+          echo "=== Full CloudFormation Stack Output ==="
+          aws cloudformation describe-stacks --stack-name $STACK_NAME
+          echo "========================================="
+          echo ""
+
           TABLE_NAME=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='TableName'].OutputValue" --output text)
           USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
           USER_POOL_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolClientId'].OutputValue" --output text)
@@ -92,6 +109,7 @@ jobs:
           BASE_URL: http://localhost:3000
           CI: true
           AWS_REGION: ap-northeast-1
+          USER_POOL_ID: ${{ steps.aws-resources.outputs.user-pool-id }}
           COGNITO_USER_POOL_ID: ${{ steps.aws-resources.outputs.user-pool-id }}
           COGNITO_CLIENT_ID: ${{ steps.aws-resources.outputs.user-pool-client-id }}
           DYNAMODB_TABLE_NAME: ${{ steps.aws-resources.outputs.table-name }}
