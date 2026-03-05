@@ -2,16 +2,6 @@ name: E2E Tests - Game Management
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to test (dev, stg, prod)'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - stg
-          - prod
   schedule:
     # Run daily at 9:00 JST (0:00 UTC)
     - cron: '0 0 * * *'
@@ -52,24 +42,11 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ap-northeast-1
 
-      - name: Determine environment
-        id: env
-        run: |
-          # Determine environment from workflow input or default to dev
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            ENV="${{ github.event.inputs.environment }}"
-          else
-            ENV="dev"
-          fi
-          echo "environment=$ENV" >> $GITHUB_OUTPUT
-          echo "Testing environment: $ENV"
-
       - name: Get AWS resources from CloudFormation
         id: aws-resources
         run: |
-          ENV="${{ steps.env.outputs.environment }}"
-          STACK_NAME="VoteBoardGameStack-${ENV}"
-
+          # Use VoteBoardGameStack (no environment suffix in stack name)
+          STACK_NAME="VoteBoardGameStack"
           echo "Getting outputs from stack: $STACK_NAME"
 
           # Check if stack exists

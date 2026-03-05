@@ -75,8 +75,8 @@ jobs:
       - name: Get AWS resources for testing
         id: aws-resources
         run: |
-          # Use development environment for local E2E tests
-          STACK_NAME="VoteBoardGameStack-dev"
+          # Use VoteBoardGameStack (no environment suffix in stack name)
+          STACK_NAME="VoteBoardGameStack"
           echo "Stack name: $STACK_NAME"
 
           # Check if stack exists
