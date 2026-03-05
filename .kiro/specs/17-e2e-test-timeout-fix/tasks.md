@@ -1,0 +1,193 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration test
+  - **Property 1: Fault Condition** - CI環境でのゲーム作成API呼び出し失敗の検証
+  - **CRITICAL**: このテストはUNFIXEDコードで失敗する必要があります - 失敗はバグの存在を確認します
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: このテストは期待される動作をエンコードします - 実装後にパスすることで修正を検証します
+  - **GOAL**: バグの存在を示す反例を表面化させる
+  - **Scoped PBT Approach**: 決定論的バグのため、プロパティを具体的な失敗ケースにスコープして再現性を確保
+  - CI環境でゲーム作成フォームを送信したとき、APIが正常にレスポンスを返し、ゲーム詳細ページへリダイレクトされることをテスト
+  - テストアサーションは設計のExpected Behavior Propertiesと一致させる
+  - UNFIXEDコードでテストを実行
+  - **EXPECTED OUTCOME**: テスト失敗（これは正しい - バグの存在を証明）
+  - 反例を文書化して根本原因を理解
+  - テストが書かれ、実行され、失敗が文書化されたらタスクを完了とマーク
+  - _Requirements: 2.1, 2.2, 2.3, 2.4_
+
+- [~] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - ローカル環境とその他の機能の動作保持
+  - **IMPORTANT**: observation-first methodologyに従う
+  - UNFIXEDコードでバグ条件以外の入力に対する動作を観察
+  - Preservation Requirementsから観察された動作パターンをキャプチャするプロパティベーステストを作成
+  - プロパティベーステストは多くのテストケースを生成し、より強力な保証を提供
+  - UNFIXEDコードでテストを実行
+  - **EXPECTED OUTCOME**: テストがパス（保持すべきベースライン動作を確認）
+  - テストが書かれ、実行され、unfixedコードでパスしたらタスクを完了とマーク
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [ ] 3. Fix for E2Eテストタイムアウト問題
+  - [~] 3.1 Phase 1: デバッグログの追加
+    - `packages/web/src/lib/api/client.ts` の `createGame` 関数に詳細なログを追加
+      - API呼び出し前: URL、ヘッダー、ボディ、環境変数を記録
+      - レスポンス受信後: ステータス、ヘッダー、ボディを記録
+      - エラー発生時: エラーの種類、メッセージ、スタックトレースを記録
+    - `packages/web/src/app/games/new/page.tsx` の `handleSubmit` 関数にログを追加
+      - フォーム送信開始時: aiSide値を記録
+      - API呼び出し成功時: gameIdを記録
+      - リダイレクト実行時: リダイレクト先URLを記録
+      - エラー発生時: エラーの詳細情報を記録
+    - _Bug_Condition: isBugCondition(input) where input.environment == 'CI' AND apiCallFails(input)_
+    - _Expected_Behavior: ゲーム作成が成功し、/games/{gameId}へリダイレクトされる_
+    - _Preservation: ローカル環境での動作、他のAPI呼び出しの動作_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5_
+
+  - [ ] 3.2 GitHubへプッシュとActionsログ確認（イテレーション1）
+    - デバッグログを追加したコードをGitHubにプッシュ
+    - GitHub Actions E2Eテストワークフロー（e2e-game.yml）の実行を待機
+    - ワークフローログを確認:
+      - ブラウザコンソールログからAPI呼び出しの詳細を確認
+      - 環境変数 `NEXT_PUBLIC_API_URL` の値を確認
+      - リクエスト/レスポンスの詳細を確認
+      - エラーメッセージとスタックトレースを確認
+    - ログを分析して根本原因を特定（環境変数、CORS、認証、タイムアウトのいずれか）
+    - 次の修正方針を決定
+    - _Requirements: 2.1, 2.2_
+
+  - [ ] 3.3 Phase 2: 環境変数の検証と修正（必要に応じて）
+    - `.github/workflows/e2e-game.yml` で環境変数の出力を追加（機密情報はマスク）
+    - `packages/web/src/lib/api/client.ts` の `getApiBaseUrl` 関数を改善
+      - 環境変数が未定義の場合、詳細なエラーメッセージを出力
+      - URLの形式を検証（http/httpsで始まるか）
+    - Vercelデプロイメント時に環境変数が正しく設定されているか確認
+    - 必要に応じて `.env.test` ファイルまたはVercel環境変数を修正
+    - _Bug_Condition: 環境変数が未定義または不正_
+    - _Expected_Behavior: 正しいAPI URLが設定され、API呼び出しが成功_
+    - _Preservation: ローカル環境での環境変数の動作_
+    - _Requirements: 2.1, 2.3_
+
+  - [ ] 3.4 GitHubへプッシュとActionsログ確認（イテレーション2）
+    - 環境変数の修正をGitHubにプッシュ
+    - GitHub Actions E2Eテストワークフローの実行を待機
+    - ワークフローログを確認:
+      - 環境変数が正しく設定されているか
+      - API呼び出しが正しいエンドポイントに送信されているか
+      - 新しいエラーが発生していないか
+    - 問題が解決したか、または別の問題が特定されたかを判断
+    - 次の修正方針を決定
+    - _Requirements: 2.1, 2.3_
+
+  - [ ] 3.5 Phase 3: CORS設定の確認と修正（必要に応じて）
+    - `packages/api/src/index.ts` のCORSミドルウェア設定を確認
+    - Vercel URLパターン（`*.vercel.app`）が許可リストに含まれているか確認
+    - 必要に応じてCORS設定を拡張
+      - `origin` 設定に Vercel URLパターンを追加
+      - プリフライトリクエスト（OPTIONS）が正しく処理されているか確認
+    - _Bug_Condition: CORSエラーによりAPI呼び出しがブロックされる_
+    - _Expected_Behavior: Vercel URLからのリクエストが許可され、API呼び出しが成功_
+    - _Preservation: ローカル環境からのリクエストの動作_
+    - _Requirements: 2.1, 2.4_
+
+  - [ ] 3.6 GitHubへプッシュとActionsログ確認（イテレーション3）
+    - CORS設定の修正をGitHubにプッシュ
+    - GitHub Actions E2Eテストワークフローの実行を待機
+    - ワークフローログを確認:
+      - CORSエラーが解消されているか
+      - API呼び出しが成功しているか
+      - リダイレクトが実行されているか
+    - 問題が解決したか、または別の問題が特定されたかを判断
+    - 次の修正方針を決定
+    - _Requirements: 2.1, 2.4_
+
+  - [ ] 3.7 Phase 4: 認証トークンの追加（必要に応じて）
+    - `packages/web/src/lib/api/client.ts` に認証トークン取得関数を実装
+    - `createGame`, `createCandidate`, `vote` 関数に `Authorization` ヘッダーを追加
+    - トークンが無効または期限切れの場合のエラーハンドリングを追加
+    - _Bug_Condition: 認証トークンがないためAPI呼び出しが401エラーを返す_
+    - _Expected_Behavior: 認証トークンが含まれ、API呼び出しが成功_
+    - _Preservation: 認証が不要なエンドポイント（ゲーム一覧取得など）の動作_
+    - _Requirements: 2.1, 2.4_
+
+  - [ ] 3.8 GitHubへプッシュとActionsログ確認（イテレーション4）
+    - 認証トークンの追加をGitHubにプッシュ
+    - GitHub Actions E2Eテストワークフローの実行を待機
+    - ワークフローログを確認:
+      - 認証エラーが解消されているか
+      - API呼び出しが成功しているか
+      - リダイレクトが実行されているか
+    - 問題が解決したか、または別の問題が特定されたかを判断
+    - 次の修正方針を決定
+    - _Requirements: 2.1, 2.4_
+
+  - [ ] 3.9 Phase 5: タイムアウトとリトライの実装（必要に応じて）
+    - `packages/web/src/lib/api/client.ts` の全API関数にタイムアウトを設定
+      - `AbortController` を使用してタイムアウトを実装（例: 30秒）
+    - リトライロジックを実装
+      - ネットワークエラーや5xxエラーの場合、指数バックオフでリトライ（最大3回）
+      - 4xxエラーはリトライしない
+    - _Bug_Condition: ネットワークタイムアウトによりAPI呼び出しが失敗_
+    - _Expected_Behavior: タイムアウトとリトライにより、API呼び出しが成功_
+    - _Preservation: 正常なレスポンスが返る場合の動作_
+    - _Requirements: 2.1, 2.4_
+
+  - [ ] 3.10 GitHubへプッシュとActionsログ確認（イテレーション5）
+    - タイムアウトとリトライの実装をGitHubにプッシュ
+    - GitHub Actions E2Eテストワークフローの実行を待機
+    - ワークフローログを確認:
+      - タイムアウトエラーが解消されているか
+      - リトライが正しく動作しているか
+      - API呼び出しが成功しているか
+    - 問題が解決したか、または別の問題が特定されたかを判断
+    - 次の修正方針を決定
+    - _Requirements: 2.1, 2.4_
+
+  - [ ] 3.11 Phase 6: DynamoDB結果整合性への対応（必要に応じて）
+    - `packages/web/src/app/games/[gameId]/page.tsx` にリトライロジックを追加
+      - ゲームデータの取得に失敗した場合、短い間隔でリトライ（最大5回、各1秒間隔）
+    - ローディング状態の改善
+    - エラーメッセージの改善
+    - _Bug_Condition: DynamoDB結果整合性によりゲームデータが取得できない_
+    - _Expected_Behavior: リトライによりゲームデータが取得され、ページが表示される_
+    - _Preservation: データが即座に利用可能な場合の動作_
+    - _Requirements: 2.2_
+
+  - [ ] 3.12 GitHubへプッシュとActionsログ確認（イテレーション6）
+    - DynamoDB結果整合性への対応をGitHubにプッシュ
+    - GitHub Actions E2Eテストワークフローの実行を待機
+    - ワークフローログを確認:
+      - ゲーム詳細ページが正しく表示されているか
+      - リトライが正しく動作しているか
+      - すべてのE2Eテストが成功しているか
+    - 問題が完全に解決したことを確認
+    - _Requirements: 2.2_
+
+  - [~] 3.13 デバッグログのクリーンアップ
+    - 本番環境に不要な詳細ログを削除または条件付きに変更
+    - 重要なエラーログは保持
+    - ログレベルを適切に設定（開発環境: debug、本番環境: error）
+    - _Preservation: ログ機能の既存動作_
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+  - [~] 3.14 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - CI環境でのゲーム作成成功
+    - **IMPORTANT**: タスク1と同じテストを再実行 - 新しいテストを書かない
+    - タスク1のテストは期待される動作をエンコードしている
+    - このテストがパスすると、期待される動作が満たされていることを確認
+    - ステップ1のバグ条件探索テストを実行
+    - **EXPECTED OUTCOME**: テストがパス（バグが修正されたことを確認）
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+
+  - [~] 3.15 Verify preservation tests still pass
+    - **Property 2: Preservation** - ローカル環境とその他の機能
+    - **IMPORTANT**: タスク2と同じテストを再実行 - 新しいテストを書かない
+    - ステップ2の保持プロパティテストを実行
+    - **EXPECTED OUTCOME**: テストがパス（リグレッションがないことを確認）
+    - 修正後もすべてのテストがパスすることを確認（リグレッションなし）
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [~] 4. Checkpoint - Ensure all tests pass
+  - すべてのテストがパスすることを確認
+  - CI環境でのE2Eテスト（GitHub Actions）がすべて成功することを確認
+  - ローカル環境でのE2Eテストがすべて成功することを確認
+  - 単体テストがすべて成功することを確認
+  - 質問が生じた場合はユーザーに確認

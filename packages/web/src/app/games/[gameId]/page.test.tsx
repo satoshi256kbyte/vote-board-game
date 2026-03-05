@@ -83,8 +83,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     expect(container.textContent).toContain('オセロ対局');
     expect(container.textContent).toContain('ターン: 5');
@@ -95,8 +94,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    render(page);
+    render(<GameDetailPage />);
 
     expect(screen.getByTestId('board')).toBeInTheDocument();
   });
@@ -105,8 +103,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     // 2 black discs and 2 white discs in initial position
     expect(container.textContent).toContain('2');
@@ -116,8 +113,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     expect(container.textContent).toContain('現在のターン');
   });
@@ -126,8 +122,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    render(page);
+    render(<GameDetailPage />);
 
     expect(screen.getByTestId('candidate-candidate-1')).toBeInTheDocument();
   });
@@ -136,8 +131,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue([]);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     expect(container.textContent).toContain('まだ候補がありません');
   });
@@ -146,8 +140,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     expect(container.textContent).toContain('シェア');
   });
@@ -156,8 +149,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     expect(container.textContent).toContain('候補を投稿');
   });
@@ -167,8 +159,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(finishedGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     expect(container.textContent).not.toContain('候補を投稿');
   });
@@ -178,8 +169,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(finishedGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     expect(container.textContent).toContain('勝者');
     expect(container.textContent).toContain('AI');
@@ -189,8 +179,7 @@ describe('GameDetailPage', () => {
     vi.spyOn(apiClient, 'fetchGame').mockResolvedValue(mockGame);
     vi.spyOn(apiClient, 'fetchCandidates').mockResolvedValue(mockCandidates);
 
-    const page = await GameDetailPage({ params: Promise.resolve({ gameId: 'test-game-123' }) });
-    const { container } = render(page);
+    const { container } = render(<GameDetailPage />);
 
     expect(container.textContent).toContain('AI解説');
   });
