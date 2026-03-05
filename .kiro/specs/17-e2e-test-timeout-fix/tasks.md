@@ -15,7 +15,7 @@
   - テストが書かれ、実行され、失敗が文書化されたらタスクを完了とマーク
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [~] 2. Write preservation property tests (BEFORE implementing fix)
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
   - **Property 2: Preservation** - ローカル環境とその他の機能の動作保持
   - **IMPORTANT**: observation-first methodologyに従う
   - UNFIXEDコードでバグ条件以外の入力に対する動作を観察
