@@ -109,7 +109,6 @@ describe('GameService', () => {
       };
 
       vi.mocked(mockRepository.create).mockResolvedValue(mockEntity);
-      vi.mocked(mockRepository.updateBoardState).mockResolvedValue();
 
       await service.createGame({
         gameType: 'OTHELLO',
@@ -120,13 +119,8 @@ describe('GameService', () => {
         expect.objectContaining({
           gameType: 'OTHELLO',
           aiSide: 'BLACK',
+          boardState: expect.any(String),
         })
-      );
-
-      expect(mockRepository.updateBoardState).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(String),
-        0
       );
     });
   });

@@ -674,10 +674,10 @@ describe('GameService Property Tests - Game Creation', () => {
           aiSide,
         });
 
-        // Verify DynamoDB send was called (for both create and updateBoardState)
+        // Verify DynamoDB send was called (for create with boardState)
         expect(mockSend).toHaveBeenCalled();
         const callCount = mockSend.mock.calls.length;
-        expect(callCount).toBeGreaterThanOrEqual(2); // At least create + updateBoardState
+        expect(callCount).toBeGreaterThanOrEqual(1); // At least create with boardState
 
         // Verify the game data is consistent
         expect(createdGame.gameId).toBeDefined();
