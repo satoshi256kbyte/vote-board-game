@@ -2,117 +2,170 @@
  * Game Detail Screen
  *
  * Displays game board, move history, candidates, and game information.
- * Server Component that fetches game data.
+ * Client Component that fetches game data with error handling and retry logic.
  *
  * Requirements: Task 10, Task 19 (OGP metadata)
  */
 
-import React from 'react';
-import { notFound } from 'next/navigation';
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { fetchGame, fetchCandidates, ApiError } from '@/lib/api/client';
 import { Board } from '@/components/board';
 import { MoveHistory } from '@/components/move-history';
 import { CandidateCard } from '@/components/candidate-card';
 import { ShareButton } from '@/components/share-button';
 import Link from 'next/link';
-import type { Metadata } from 'next';
+import type { Game, Candidate } from '@/types/game';
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export default function GameDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const gameId = params.gameId as string;
 
-interface GameDetailPageProps {
-  params: Promise<{
-    gameId: string;
-  }>;
-}
+  const [game, setGame] = useState<Game | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-/**
- * Generate metadata for OGP
- */
-export async function generateMetadata({ params }: GameDetailPageProps): Promise<Metadata> {
-  const { gameId } = await params;
+  useEffect(() => {
+    let mounted = true;
+    let retryTimeout: NodeJS.Timeout;
 
-  try {
-    const game = await fetchGame(gameId);
+    const loadGameData = async () => {
+      try {
+        console.log('[GameDetailPage] Fetching game:', gameId, 'retry:', retryCount);
+        console.log('[GameDetailPage] API URL:', process.env.NEXT_PUBLIC_API_URL);
+        const gameData = await fetchGame(gameId);
 
-    // Calculate disc counts
-    const blackCount = game.boardState.board.flat().filter((cell) => cell === 1).length;
-    const whiteCount = game.boardState.board.flat().filter((cell) => cell === 2).length;
+        if (!mounted) return;
 
-    const title = `オセロ対局 #${gameId.slice(0, 8)} - ターン${game.currentTurn}`;
-    const description = `${game.status === 'ACTIVE' ? '進行中' : '終了'}の対局。黒: ${blackCount}, 白: ${whiteCount}`;
+        console.log('[GameDetailPage] Game fetched successfully:', gameData.gameId);
+        setGame(gameData);
+        setError(null);
 
-    // Generate OGP image URL with query parameters
-    const ogImageUrl = new URL(
-      `/api/og/game/${gameId}`,
-      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        // Fetch candidates
+        try {
+          const candidatesData = await fetchCandidates(gameId);
+          if (mounted) {
+            setCandidates(candidatesData);
+          }
+        } catch (err) {
+          console.error('[GameDetailPage] Failed to fetch candidates:', err);
+          // Candidates fetch failure should not block the page
+          if (mounted) {
+            setCandidates([]);
+          }
+        }
+
+        if (mounted) {
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('[GameDetailPage] Failed to fetch game:', {
+          gameId,
+          error: err instanceof Error ? err.message : 'Unknown error',
+          isApiError: err instanceof ApiError,
+          statusCode: err instanceof ApiError ? err.statusCode : undefined,
+          retryCount,
+        });
+
+        if (!mounted) return;
+
+        if (err instanceof ApiError && err.statusCode === 404) {
+          console.log('[GameDetailPage] Game not found (404)');
+          router.push('/404');
+          return;
+        }
+
+        // Retry logic for eventual consistency issues
+        if (retryCount < 5) {
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Exponential backoff
+          console.log(`[GameDetailPage] Retrying in ${delay}ms...`);
+          retryTimeout = setTimeout(() => {
+            if (mounted) {
+              setRetryCount((prev) => prev + 1);
+            }
+          }, delay);
+        } else {
+          setError(
+            err instanceof ApiError ? err.message : '対局の読み込み中にエラーが発生しました。'
+          );
+          setLoading(false);
+        }
+      }
+    };
+
+    loadGameData();
+
+    return () => {
+      mounted = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, [gameId, router, retryCount]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-8" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="h-6 bg-gray-200 rounded w-32 mb-4" />
+                  <div className="aspect-square bg-gray-200 rounded" />
+                </div>
+              </div>
+              <div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="h-6 bg-gray-200 rounded w-40 mb-4" />
+                  <div className="space-y-4">
+                    <div className="h-24 bg-gray-200 rounded" />
+                    <div className="h-24 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     );
-    ogImageUrl.searchParams.set('turn', game.currentTurn.toString());
-    ogImageUrl.searchParams.set('black', blackCount.toString());
-    ogImageUrl.searchParams.set('white', whiteCount.toString());
-    ogImageUrl.searchParams.set('status', game.status);
-
-    return {
-      title,
-      description,
-      openGraph: {
-        title,
-        description,
-        images: [
-          {
-            url: ogImageUrl.toString(),
-            width: 1200,
-            height: 630,
-            alt: title,
-          },
-        ],
-        type: 'website',
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: [ogImageUrl.toString()],
-      },
-    };
-  } catch {
-    // Fallback metadata if game fetch fails
-    return {
-      title: '対局詳細 - 投票対局',
-      description: 'オセロの対局を見る',
-    };
-  }
-}
-
-export default async function GameDetailPage({ params }: GameDetailPageProps) {
-  const { gameId } = await params;
-  let game;
-  let candidates: Awaited<ReturnType<typeof fetchCandidates>>;
-
-  try {
-    game = await fetchGame(gameId);
-  } catch (error) {
-    console.error('[GameDetailPage] Failed to fetch game:', {
-      gameId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      isApiError: error instanceof ApiError,
-      statusCode: error instanceof ApiError ? error.statusCode : undefined,
-    });
-    if (error instanceof ApiError && error.statusCode === 404) {
-      console.log('[GameDetailPage] Calling notFound() for 404 error');
-      notFound();
-    }
-    throw error;
   }
 
-  try {
-    candidates = await fetchCandidates(gameId);
-  } catch (error) {
-    console.error('Failed to fetch candidates:', error);
-    // Candidates fetch failure should not trigger 404
-    // Just use empty array
-    candidates = [];
+  if (error || !game) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">エラーが発生しました</h1>
+          <p className="text-gray-600 mb-8">
+            {error || '対局の読み込み中にエラーが発生しました。'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                setRetryCount(0);
+              }}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              再試行
+            </button>
+            <Link
+              href="/"
+              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              対局一覧に戻る
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   // Calculate disc counts

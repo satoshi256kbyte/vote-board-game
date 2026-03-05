@@ -144,6 +144,8 @@ export async function fetchGame(gameId: string): Promise<Game> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/api/games/${gameId}`;
 
+  console.log('[fetchGame] Requesting:', url);
+
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -152,8 +154,11 @@ export async function fetchGame(gameId: string): Promise<Game> {
       },
     });
 
+    console.log('[fetchGame] Response status:', response.status);
+
     return handleResponse<Game>(response);
   } catch (error) {
+    console.error('[fetchGame] Error:', error);
     if (error instanceof ApiError) {
       throw error;
     }

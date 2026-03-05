@@ -105,13 +105,14 @@ export class GameService {
       board: initialBoard.map((row) => [...row]),
     });
 
+    // Create game with initial board state in a single operation
     const entity = await this.repository.create({
       gameId,
       gameType: params.gameType,
       aiSide: params.aiSide,
+      boardState, // Pass initial board state to create method
     });
 
-    await this.repository.updateBoardState(gameId, boardState, 0);
     const parsedBoardState = JSON.parse(boardState) as { board: number[][] };
 
     const response: CreateGameResponse = {

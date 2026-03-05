@@ -11,6 +11,7 @@ export class GameRepository extends BaseRepository {
     gameId: string;
     gameType: 'OTHELLO' | 'CHESS' | 'GO' | 'SHOGI';
     aiSide: 'BLACK' | 'WHITE';
+    boardState?: string;
   }): Promise<GameEntity> {
     const now = this.now();
     const keys = Keys.game(params.gameId);
@@ -25,7 +26,7 @@ export class GameRepository extends BaseRepository {
       status: 'ACTIVE',
       aiSide: params.aiSide,
       currentTurn: 0,
-      boardState: JSON.stringify({ board: [] }), // 初期盤面
+      boardState: params.boardState || JSON.stringify({ board: [] }), // 初期盤面
       createdAt: now,
       updatedAt: now,
     };
