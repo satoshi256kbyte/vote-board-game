@@ -42,7 +42,7 @@
     - _Preservation: ローカル環境での動作、他のAPI呼び出しの動作_
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [x] 3.2 GitHubへプッシュとActionsログ確認（イテレーション1）
+  - [ ] 3.2 GitHubへプッシュとActionsログ確認（イテレーション1）
     - デバッグログを追加したコードをGitHubにプッシュ
     - GitHub Actions E2Eテストワークフロー（e2e-game.yml）の実行を待機
     - ワークフローログを確認:
