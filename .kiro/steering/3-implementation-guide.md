@@ -467,6 +467,87 @@ SK: MOVE#789
 
 参考: [DynamoDB Single Table Design](https://www.alexdebrie.com/posts/dynamodb-single-table/)
 
+## GitHub Actions / CI・CD
+
+### ワークフローの全体構造
+
+本プロジェクトのワークフローは以下のチェーンで動作する:
+
+```text
+push to develop
+  → CI (ci.yml): lint, test, build, artifact upload
+    → CD Development (cd-development.yml): workflow_run で CI 成功後に起動
+      → deploy-reusable.yml: CDK デプロイ（reusable workflow）
+      → e2e-tests ジョブ: デプロイ後に E2E テスト実行
+```
+
+別途、スタンドアロンのワークフローも存在する:
+
+- `e2e-game.yml`: 手動実行（workflow_dispatch）または日次スケジュール
+- `e2e-tests.yml`: 手動実行用の E2E テスト
+
+CI の失敗を調査する際は、必ず関連するワークフロー全体の依存関係を確認すること。1つのワークフローだけ見ても根本原因を特定できない場合がある。
+
+### AWS 認証: OIDC（OpenID Connect）
+
+GitHub Actions から AWS へのアクセスには OIDC 認証を使用する。静的なアクセスキーは使用しない。
+
+```yaml
+# 正しい設定例
+- name: Configure AWS credentials
+  uses: aws-actions/configure-aws-credentials@v4
+  with:
+    role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+    aws-region: ap-northeast-1
+    role-duration-seconds: 7200 # 長時間ジョブの場合は延長
+```
+
+#### OIDC 認証の仕組み
+
+1. `aws-actions/configure-aws-credentials@v4` が OIDC トークンを使って AWS STS から一時的な認証情報を取得
+2. `AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、`AWS_SESSION_TOKEN` がジョブレベルの環境変数として自動設定される
+3. 以降のステップでは AWS CLI や SDK が自動的にこれらの環境変数を使用
+
+#### 禁止事項
+
+```yaml
+# NG: 環境変数を手動で渡す必要はない（OIDC が自動設定する）
+- name: Run tests
+  run: pnpm test:e2e
+  env:
+    AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }} # 不要
+    AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }} # 不要
+    AWS_SESSION_TOKEN: ${{ env.AWS_SESSION_TOKEN }} # 不要
+```
+
+```yaml
+# OK: OIDC が自動設定するため、env で AWS 認証情報を渡す必要なし
+- name: Run tests
+  run: pnpm test:e2e
+  env:
+    BASE_URL: ${{ steps.vercel-url.outputs.url }}
+    NEXT_PUBLIC_API_URL: ${{ needs.deploy.outputs.api-url }}
+```
+
+#### セッション期限
+
+- OIDC セッションのデフォルト有効期限は 1 時間
+- E2E テストなど長時間かかるジョブでは `role-duration-seconds` を設定して延長する
+- `ExpiredTokenException` が発生した場合、まず OIDC セッションの期限切れを疑う
+
+### CI 失敗時のデバッグ手順
+
+1. 失敗したワークフローのログを確認し、エラーメッセージを特定
+2. ワークフローファイル全体（`.github/workflows/` 配下）を読み、依存関係を把握
+3. エラーの種類に応じて原因を切り分け:
+   - `ExpiredTokenException` → OIDC セッション期限切れ（`role-duration-seconds` を確認）
+   - `403 Forbidden` / CORS エラー → API の CORS 設定を確認
+   - `401 Unauthorized` → 認証トークンの有無を確認
+   - タイムアウト → ネットワーク到達性、API の起動状態を確認
+4. 表面的な修正（エラーメッセージだけ見て対処）をせず、根本原因を特定してから修正する
+
+参考: [GitHub Actions OIDC](https://docs.github.com/ja/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
+
 ## Spec駆動開発
 
 - Specのフォルダには連番をつけてください
