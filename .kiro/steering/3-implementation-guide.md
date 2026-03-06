@@ -541,14 +541,18 @@ GitHub Actions から AWS へのアクセスには OIDC 認証を使用する。
 
 ### CI 失敗時のデバッグ手順
 
-1. 失敗したワークフローのログを確認し、エラーメッセージを特定
-2. ワークフローファイル全体（`.github/workflows/` 配下）を読み、依存関係を把握
-3. エラーの種類に応じて原因を切り分け:
+1. `gh run view <run-id> --repo <owner/repo> --log-failed` でログを取得
+   - GitHub CLI (`gh`) を使えばサインイン不要でログを取得できる
+   - `--log-failed` で失敗したジョブのログのみ取得
+   - `| head -200` や `| tail -200` でログの先頭・末尾を確認
+2. 失敗したワークフローのログを確認し、エラーメッセージを特定
+3. ワークフローファイル全体（`.github/workflows/` 配下）を読み、依存関係を把握
+4. エラーの種類に応じて原因を切り分け:
    - `ExpiredTokenException` → OIDC セッション期限切れ（`role-duration-seconds` を確認）
    - `403 Forbidden` / CORS エラー → API の CORS 設定を確認
    - `401 Unauthorized` → 認証トークンの有無を確認
    - タイムアウト → ネットワーク到達性、API の起動状態を確認
-4. 表面的な修正（エラーメッセージだけ見て対処）をせず、根本原因を特定してから修正する
+5. 表面的な修正（エラーメッセージだけ見て対処）をせず、根本原因を特定してから修正する
 
 参考: [GitHub Actions OIDC](https://docs.github.com/ja/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
 
