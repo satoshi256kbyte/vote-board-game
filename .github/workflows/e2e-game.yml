@@ -125,6 +125,10 @@ jobs:
           echo "COGNITO_CLIENT_ID: ${{ steps.aws-resources.outputs.user-pool-client-id }}"
           echo "AWS_REGION: ap-northeast-1"
           echo "======================================"
+          echo ""
+          echo "=== .env.test file content (passwords masked) ==="
+          cat packages/web/.env.test | sed 's/TEST_USER_PASSWORD=.*/TEST_USER_PASSWORD=***MASKED***/'
+          echo "=================================================="
 
       - name: Run game management E2E tests
         run: |
@@ -132,6 +136,33 @@ jobs:
           set -a
           source packages/web/.env.test
           set +a
+
+          echo "=== Verifying environment variables are loaded ==="
+          echo "NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}"
+          echo "BASE_URL: ${BASE_URL}"
+          echo "CI: ${CI}"
+          echo "NODE_ENV: ${NODE_ENV}"
+          echo "=================================================="
+          echo ""
+          echo "=== Testing API URL accessibility ==="
+          echo "Attempting to reach API at: ${NEXT_PUBLIC_API_URL}"
+          if curl -f -s -o /dev/null -w "%{http_code}" "${NEXT_PUBLIC_API_URL}/api/games" > /tmp/api_status.txt 2>&1; then
+            echo "✓ API is accessible, HTTP status: $(cat /tmp/api_status.txt)"
+          else
+            echo "✗ API is not accessible or returned error"
+            echo "HTTP status: $(cat /tmp/api_status.txt)"
+          fi
+          echo "=================================================="
+          echo ""
+          echo "=== Testing Vercel deployment accessibility ==="
+          echo "Attempting to reach Vercel at: ${BASE_URL}"
+          if curl -f -s -o /dev/null -w "%{http_code}" "${BASE_URL}" > /tmp/vercel_status.txt 2>&1; then
+            echo "✓ Vercel deployment is accessible, HTTP status: $(cat /tmp/vercel_status.txt)"
+          else
+            echo "✗ Vercel deployment is not accessible or returned error"
+            echo "HTTP status: $(cat /tmp/vercel_status.txt)"
+          fi
+          echo "=================================================="
 
           pnpm --filter @vote-board-game/web test:e2e:game
 

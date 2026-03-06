@@ -34,13 +34,38 @@ export class ApiError extends Error {
  */
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL;
+
+  // Debug: Log environment variable state
+  console.log('[getApiBaseUrl] Environment check:', {
+    NEXT_PUBLIC_API_URL: url,
+    NODE_ENV: process.env.NODE_ENV,
+    isDefined: url !== undefined,
+    isEmpty: url === '',
+  });
+
   if (!url) {
     // Development fallback
     if (process.env.NODE_ENV === 'development') {
+      console.log('[getApiBaseUrl] Using development fallback: http://localhost:3001');
       return 'http://localhost:3001';
     }
-    throw new Error('NEXT_PUBLIC_API_URL is not defined');
+
+    const errorMsg =
+      'NEXT_PUBLIC_API_URL is not defined. Please ensure the environment variable is set correctly.';
+    console.error('[getApiBaseUrl] Error:', errorMsg, {
+      availableEnvVars: Object.keys(process.env).filter((key) => key.startsWith('NEXT_PUBLIC_')),
+    });
+    throw new Error(errorMsg);
   }
+
+  // Validate URL format
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    const errorMsg = `NEXT_PUBLIC_API_URL has invalid format: "${url}". URL must start with http:// or https://`;
+    console.error('[getApiBaseUrl] Error:', errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  console.log('[getApiBaseUrl] Using API URL:', url);
   return url;
 }
 

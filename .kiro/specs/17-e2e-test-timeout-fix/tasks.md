@@ -42,7 +42,7 @@
     - _Preservation: ローカル環境での動作、他のAPI呼び出しの動作_
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 3.2 GitHubへプッシュとActionsログ確認（イテレーション1）
+  - [x] 3.2 GitHubへプッシュとActionsログ確認（イテレーション1）
     - デバッグログを追加したコードをGitHubにプッシュ
     - GitHub Actions E2Eテストワークフロー（e2e-game.yml）の実行を待機
     - ワークフローログを確認:
@@ -54,7 +54,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.2_
 
-  - [ ] 3.3 Phase 2: 環境変数の検証と修正（必要に応じて）
+  - [x] 3.3 Phase 2: 環境変数の検証と修正（必要に応じて）
     - `.github/workflows/e2e-game.yml` で環境変数の出力を追加（機密情報はマスク）
     - `packages/web/src/lib/api/client.ts` の `getApiBaseUrl` 関数を改善
       - 環境変数が未定義の場合、詳細なエラーメッセージを出力
@@ -66,7 +66,7 @@
     - _Preservation: ローカル環境での環境変数の動作_
     - _Requirements: 2.1, 2.3_
 
-  - [ ] 3.4 GitHubへプッシュとActionsログ確認（イテレーション2）
+  - [~] 3.4 GitHubへプッシュとActionsログ確認（イテレーション2）
     - 環境変数の修正をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -77,7 +77,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.3_
 
-  - [ ] 3.5 Phase 3: CORS設定の確認と修正（必要に応じて）
+  - [~] 3.5 Phase 3: CORS設定の確認と修正（必要に応じて）
     - `packages/api/src/index.ts` のCORSミドルウェア設定を確認
     - Vercel URLパターン（`*.vercel.app`）が許可リストに含まれているか確認
     - 必要に応じてCORS設定を拡張
@@ -88,7 +88,7 @@
     - _Preservation: ローカル環境からのリクエストの動作_
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.6 GitHubへプッシュとActionsログ確認（イテレーション3）
+  - [~] 3.6 GitHubへプッシュとActionsログ確認（イテレーション3）
     - CORS設定の修正をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -99,7 +99,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.7 Phase 4: 認証トークンの追加（必要に応じて）
+  - [~] 3.7 Phase 4: 認証トークンの追加（必要に応じて）
     - `packages/web/src/lib/api/client.ts` に認証トークン取得関数を実装
     - `createGame`, `createCandidate`, `vote` 関数に `Authorization` ヘッダーを追加
     - トークンが無効または期限切れの場合のエラーハンドリングを追加
@@ -108,7 +108,7 @@
     - _Preservation: 認証が不要なエンドポイント（ゲーム一覧取得など）の動作_
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.8 GitHubへプッシュとActionsログ確認（イテレーション4）
+  - [~] 3.8 GitHubへプッシュとActionsログ確認（イテレーション4）
     - 認証トークンの追加をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -119,7 +119,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.9 Phase 5: タイムアウトとリトライの実装（必要に応じて）
+  - [~] 3.9 Phase 5: タイムアウトとリトライの実装（必要に応じて）
     - `packages/web/src/lib/api/client.ts` の全API関数にタイムアウトを設定
       - `AbortController` を使用してタイムアウトを実装（例: 30秒）
     - リトライロジックを実装
@@ -130,7 +130,7 @@
     - _Preservation: 正常なレスポンスが返る場合の動作_
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.10 GitHubへプッシュとActionsログ確認（イテレーション5）
+  - [~] 3.10 GitHubへプッシュとActionsログ確認（イテレーション5）
     - タイムアウトとリトライの実装をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -141,7 +141,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.11 Phase 6: DynamoDB結果整合性への対応（必要に応じて）
+  - [~] 3.11 Phase 6: DynamoDB結果整合性への対応（必要に応じて）
     - `packages/web/src/app/games/[gameId]/page.tsx` にリトライロジックを追加
       - ゲームデータの取得に失敗した場合、短い間隔でリトライ（最大5回、各1秒間隔）
     - ローディング状態の改善
@@ -151,7 +151,7 @@
     - _Preservation: データが即座に利用可能な場合の動作_
     - _Requirements: 2.2_
 
-  - [ ] 3.12 GitHubへプッシュとActionsログ確認（イテレーション6）
+  - [~] 3.12 GitHubへプッシュとActionsログ確認（イテレーション6）
     - DynamoDB結果整合性への対応をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
