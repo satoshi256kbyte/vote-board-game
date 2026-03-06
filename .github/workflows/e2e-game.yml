@@ -131,6 +131,12 @@ jobs:
           echo "=================================================="
 
       - name: Run game management E2E tests
+        env:
+          # AWS credentials for Cognito test user creation
+          AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ env.AWS_SESSION_TOKEN }}
+          AWS_REGION: ap-northeast-1
         run: |
           # Load environment variables from .env.test
           set -a
@@ -142,6 +148,8 @@ jobs:
           echo "BASE_URL: ${BASE_URL}"
           echo "CI: ${CI}"
           echo "NODE_ENV: ${NODE_ENV}"
+          echo "AWS_REGION: ${AWS_REGION}"
+          echo "AWS credentials configured: $([ -n "$AWS_ACCESS_KEY_ID" ] && echo "Yes" || echo "No")"
           echo "=================================================="
           echo ""
           echo "=== Testing API URL accessibility ==="
