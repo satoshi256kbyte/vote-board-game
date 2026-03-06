@@ -532,8 +532,12 @@ GitHub Actions から AWS へのアクセスには OIDC 認証を使用する。
 #### セッション期限
 
 - OIDC セッションのデフォルト有効期限は 1 時間
-- E2E テストなど長時間かかるジョブでは `role-duration-seconds` を設定して延長する
+- `role-duration-seconds` で延長する場合、IAM ロール側の `MaxSessionDuration` も同じ値以上に設定する必要がある
+  - IAM ロールのデフォルト `MaxSessionDuration` は 3600 秒（1 時間）
+  - `role-duration-seconds: 7200` を指定するなら、IAM ロールの `MaxSessionDuration` も 7200 以上にする
+  - 不一致の場合 `The requested DurationSeconds exceeds the MaxSessionDuration set for this role` エラーになる
 - `ExpiredTokenException` が発生した場合、まず OIDC セッションの期限切れを疑う
+- 現在のプロジェクトでは IAM ロールの `MaxSessionDuration` はデフォルト（1 時間）のため、`role-duration-seconds` は指定しない
 
 ### CI 失敗時のデバッグ手順
 

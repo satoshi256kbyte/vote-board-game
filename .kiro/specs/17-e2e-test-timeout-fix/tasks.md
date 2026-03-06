@@ -66,7 +66,7 @@
     - _Preservation: ローカル環境での環境変数の動作_
     - _Requirements: 2.1, 2.3_
 
-  - [~] 3.4 GitHubへプッシュとActionsログ確認（イテレーション2）
+  - [x] 3.4 GitHubへプッシュとActionsログ確認（イテレーション2）
     - 環境変数の修正をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
