@@ -24,14 +24,7 @@ export function createPlaywrightConfig(
     testDir: './e2e',
 
     // E2E テストファイルのパターン（.test.ts は Vitest 用なので除外）
-    testMatch: [
-      '**/smoke.spec.ts',
-      '**/auth/login.spec.ts',
-      '**/cognito-availability.spec.ts',
-      '**/game/game-list.spec.ts',
-      '**/game/game-detail.spec.ts',
-      '**/game/game-create.spec.ts',
-    ],
+    testMatch: ['**/*.spec.ts'],
 
     // グローバルセットアップ（サービス可用性チェック）
     globalSetup: './e2e/global-setup.ts',

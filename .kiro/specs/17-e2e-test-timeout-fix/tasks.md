@@ -27,7 +27,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
 - [ ] 3. Fix for E2Eテストタイムアウト問題
-  - [~] 3.1 Phase 1: デバッグログの追加
+  - [x] 3.1 Phase 1: デバッグログの追加
     - `packages/web/src/lib/api/client.ts` の `createGame` 関数に詳細なログを追加
       - API呼び出し前: URL、ヘッダー、ボディ、環境変数を記録
       - レスポンス受信後: ステータス、ヘッダー、ボディを記録
@@ -42,7 +42,7 @@
     - _Preservation: ローカル環境での動作、他のAPI呼び出しの動作_
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 3.2 GitHubへプッシュとActionsログ確認（イテレーション1）
+  - [x] 3.2 GitHubへプッシュとActionsログ確認（イテレーション1）
     - デバッグログを追加したコードをGitHubにプッシュ
     - GitHub Actions E2Eテストワークフロー（e2e-game.yml）の実行を待機
     - ワークフローログを確認:

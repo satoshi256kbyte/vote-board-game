@@ -192,6 +192,9 @@ describe('API Client', () => {
         ok: true,
         status: 201,
         json: async () => mockGame,
+        text: async () => JSON.stringify(mockGame),
+        headers: new Headers(),
+        url: 'http://localhost:3001/api/games',
       });
 
       const result = await createGame({
@@ -214,18 +217,23 @@ describe('API Client', () => {
     });
 
     it('should handle validation errors', async () => {
+      const errorResponse = {
+        error: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: {
+          fields: {
+            aiSide: 'Required',
+          },
+        },
+      };
+
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        json: async () => ({
-          error: 'VALIDATION_ERROR',
-          message: 'Validation failed',
-          details: {
-            fields: {
-              aiSide: 'Required',
-            },
-          },
-        }),
+        json: async () => errorResponse,
+        text: async () => JSON.stringify(errorResponse),
+        headers: new Headers(),
+        url: 'http://localhost:3001/api/games',
       });
 
       try {

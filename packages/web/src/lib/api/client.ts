@@ -196,6 +196,19 @@ export async function createGame(data: CreateGameRequest): Promise<Game> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/api/games`;
 
+  // Debug: Log request details
+  console.log('[createGame] Request:', {
+    url,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    apiBaseUrl: baseUrl,
+    env: {
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+      NODE_ENV: process.env.NODE_ENV,
+    },
+  });
+
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -205,8 +218,52 @@ export async function createGame(data: CreateGameRequest): Promise<Game> {
       body: JSON.stringify(data),
     });
 
-    return handleResponse<Game>(response);
+    // Debug: Log response details
+    console.log('[createGame] Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers ? Object.fromEntries(response.headers.entries()) : {},
+      url: response.url,
+      ok: response.ok,
+    });
+
+    // Debug: Log response body before parsing
+    const responseText = await response.text();
+    console.log('[createGame] Response body:', responseText);
+
+    // Parse response manually since we already consumed the body
+    if (!response.ok) {
+      let errorData: { error?: string; message?: string; details?: Record<string, unknown> };
+
+      try {
+        errorData = JSON.parse(responseText);
+      } catch {
+        throw new ApiError(response.statusText || 'Unknown error', response.status);
+      }
+
+      throw new ApiError(
+        errorData.message || 'API request failed',
+        response.status,
+        errorData.error,
+        errorData.details
+      );
+    }
+
+    const result = JSON.parse(responseText) as Game;
+    console.log('[createGame] Parsed game:', { gameId: result.gameId, status: result.status });
+    return result;
   } catch (error) {
+    // Debug: Log error details
+    console.error('[createGame] Error:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      isApiError: error instanceof ApiError,
+      statusCode: error instanceof ApiError ? error.statusCode : undefined,
+      errorCode: error instanceof ApiError ? error.errorCode : undefined,
+      details: error instanceof ApiError ? error.details : undefined,
+    });
+
     if (error instanceof ApiError) {
       throw error;
     }
