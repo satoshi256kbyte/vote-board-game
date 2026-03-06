@@ -13,6 +13,7 @@ import type {
   Candidate,
   CreateCandidateRequest,
 } from '@/types/game';
+import { storageService } from '@/lib/services/storage-service';
 
 /**
  * API client error class
@@ -67,6 +68,41 @@ function getApiBaseUrl(): string {
 
   console.log('[getApiBaseUrl] Using API URL:', url);
   return url;
+}
+
+/**
+ * Get authentication token from storage
+ * Returns null if no token is available (e.g., user not logged in)
+ */
+function getAuthToken(): string | null {
+  try {
+    return storageService.getAccessToken();
+  } catch (error) {
+    console.warn('[getAuthToken] Failed to retrieve token:', error);
+    return null;
+  }
+}
+
+/**
+ * Build headers for API requests
+ * Includes Content-Type and Authorization (if token is available)
+ */
+function buildHeaders(includeAuth: boolean = false): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (includeAuth) {
+    const token = getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      console.log('[buildHeaders] Added Authorization header');
+    } else {
+      console.log('[buildHeaders] No token available, skipping Authorization header');
+    }
+  }
+
+  return headers;
 }
 
 /**
@@ -220,12 +256,13 @@ export async function fetchGame(gameId: string): Promise<Game> {
 export async function createGame(data: CreateGameRequest): Promise<Game> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/api/games`;
+  const headers = buildHeaders(false); // Game creation is public (no auth required per API middleware)
 
   // Debug: Log request details
   console.log('[createGame] Request:', {
     url,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(data),
     apiBaseUrl: baseUrl,
     env: {
@@ -237,9 +274,7 @@ export async function createGame(data: CreateGameRequest): Promise<Game> {
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(data),
     });
 
@@ -367,18 +402,29 @@ export async function createCandidate(
 ): Promise<Candidate> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/api/games/${gameId}/candidates`;
+  const headers = buildHeaders(true); // Candidate creation requires authentication
+
+  console.log('[createCandidate] Request:', {
+    url,
+    method: 'POST',
+    hasAuthHeader: 'Authorization' in headers,
+  });
 
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(data),
     });
 
     return handleResponse<Candidate>(response);
   } catch (error) {
+    console.error('[createCandidate] Error:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      statusCode: error instanceof ApiError ? error.statusCode : undefined,
+    });
+
     if (error instanceof ApiError) {
       throw error;
     }
@@ -413,17 +459,28 @@ export async function createCandidate(
 export async function vote(gameId: string, candidateId: string): Promise<void> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/api/games/${gameId}/candidates/${candidateId}/vote`;
+  const headers = buildHeaders(true); // Voting requires authentication
+
+  console.log('[vote] Request:', {
+    url,
+    method: 'POST',
+    hasAuthHeader: 'Authorization' in headers,
+  });
 
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     await handleResponse<void>(response);
   } catch (error) {
+    console.error('[vote] Error:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      statusCode: error instanceof ApiError ? error.statusCode : undefined,
+    });
+
     if (error instanceof ApiError) {
       throw error;
     }

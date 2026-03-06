@@ -77,7 +77,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.3_
 
-  - [~] 3.5 Phase 3: CORS設定の確認と修正（必要に応じて）
+  - [x] 3.5 Phase 3: CORS設定の確認と修正（必要に応じて）
     - `packages/api/src/index.ts` のCORSミドルウェア設定を確認
     - Vercel URLパターン（`*.vercel.app`）が許可リストに含まれているか確認
     - 必要に応じてCORS設定を拡張
@@ -99,7 +99,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.4_
 
-  - [~] 3.7 Phase 4: 認証トークンの追加（必要に応じて）
+  - [x] 3.7 Phase 4: 認証トークンの追加（必要に応じて）
     - `packages/web/src/lib/api/client.ts` に認証トークン取得関数を実装
     - `createGame`, `createCandidate`, `vote` 関数に `Authorization` ヘッダーを追加
     - トークンが無効または期限切れの場合のエラーハンドリングを追加
