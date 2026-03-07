@@ -38,7 +38,19 @@ export class RegistrationPage {
   async clickSubmit(): Promise<void> {
     const submitButton = this.page.getByTestId('registration-submit-button');
     await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    await submitButton.click();
+
+    // When onBlur validation sets errors, hasErrors becomes true and the button is disabled.
+    // Playwright's click() waits for the button to be enabled (actionability check),
+    // which causes a timeout. Instead, dispatch a submit event on the form directly
+    // to trigger validateForm() which will show all validation errors.
+    const isDisabled = await submitButton.isDisabled();
+    if (isDisabled) {
+      await this.page.locator('form').evaluate((form) => {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      });
+    } else {
+      await submitButton.click();
+    }
   }
 
   async clickSubmitAndWaitForApi(): Promise<void> {

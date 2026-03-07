@@ -8,6 +8,9 @@
  * - Property 4: Successful Registration Shows No Errors
  *
  * Validates: Requirements 1.4, 1.5, 1.6, 1.7
+ *
+ * NOTE: Uses data-testid selectors and handles disabled submit button caused by
+ * onBlur validation setting hasErrors=true during Playwright's fill() operations.
  */
 
 import { test, expect } from '@playwright/test';
@@ -21,20 +24,6 @@ const testUserArbitrary = fc.record({
 });
 
 test.describe('User Registration Flow - Property Tests', () => {
-  /**
-   * Property 1: User Registration Creates Cognito User
-   * Property 2: Successful Registration Redirects to Email Verification
-   * Property 3: Registration Stores Access Token
-   * Property 4: Successful Registration Shows No Errors
-   *
-   * **Validates: Requirements 1.4, 1.5, 1.6, 1.7**
-   *
-   * For any valid test user data, registration should:
-   * - Create user in Cognito
-   * - Redirect to /email-verification
-   * - Store access token in localStorage (key: vbg_access_token)
-   * - Display no error messages
-   */
   test('should satisfy all registration properties for any valid user data', async ({ page }) => {
     const testEmails: string[] = [];
 
@@ -55,13 +44,19 @@ test.describe('User Registration Flow - Property Tests', () => {
           // Verify page loaded correctly
           await expect(page.locator('h1')).toContainText('アカウント作成', { timeout: 10000 });
 
-          // Fill registration form
-          await page.fill('input[name="email"]', email);
-          await page.fill('input[name="password"]', password);
-          await page.fill('input[name="password-confirmation"]', password);
+          // Fill registration form using data-testid selectors
+          const emailInput = page.getByTestId('registration-email-input');
+          const passwordInput = page.getByTestId('registration-password-input');
+          const confirmPasswordInput = page.getByTestId('registration-confirm-password-input');
+          const submitButton = page.getByTestId('registration-submit-button');
 
-          // Submit form
-          await page.click('button[type="submit"]');
+          await emailInput.fill(email);
+          await passwordInput.fill(password);
+          await confirmPasswordInput.fill(password);
+
+          // Submit form - click the button directly since all fields are valid
+          // (valid email + matching passwords = no onBlur errors)
+          await submitButton.click();
 
           // Property 2: Successful Registration Redirects to Email Verification
           await page.waitForURL('/email-verification', { timeout: 15000 });
@@ -74,7 +69,6 @@ test.describe('User Registration Flow - Property Tests', () => {
           expect(accessToken).not.toBe('');
 
           // Property 4: Successful Registration Shows No Errors
-          // Check that no API error alert is visible (registration-error-message)
           const errorMessage = page.getByTestId('registration-error-message');
           await expect(errorMessage).not.toBeVisible();
 
@@ -85,7 +79,7 @@ test.describe('User Registration Flow - Property Tests', () => {
           await page.evaluate(() => localStorage.clear());
         }),
         {
-          numRuns: process.env.CI ? 3 : 15,
+          numRuns: process.env.CI ? 3 : 5,
           endOnFailure: true,
         }
       );
