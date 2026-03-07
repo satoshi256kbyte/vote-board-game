@@ -112,7 +112,7 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
   const whiteCount = candidate.resultingBoardState.board.flat().filter((cell) => cell === 2).length;
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -199,6 +199,6 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

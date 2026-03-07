@@ -68,8 +68,8 @@ test.describe('User Login Flow - Property Tests', () => {
             console.log(`[Property Test] Step 1: Submitting registration form`);
             await page.click('button[type="submit"]');
 
-            console.log(`[Property Test] Step 1: Waiting for redirect to /`);
-            await page.waitForURL('/', { timeout: 15000 });
+            console.log(`[Property Test] Step 1: Waiting for redirect to /email-verification`);
+            await page.waitForURL('/email-verification', { timeout: 15000 });
             console.log(
               `[Property Test] Step 1: Registration successful, redirected to ${page.url()}`
             );

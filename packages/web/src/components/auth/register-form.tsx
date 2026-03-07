@@ -131,7 +131,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="mt-8 space-y-6" noValidate>
       {apiError && (
-        <Alert variant="destructive" role="alert">
+        <Alert variant="destructive" role="alert" data-testid="registration-error-message">
           <AlertDescription>{apiError}</AlertDescription>
         </Alert>
       )}
@@ -153,6 +153,7 @@ export function RegisterForm() {
             disabled={isLoading}
             placeholder="メールアドレス"
             aria-label="メールアドレス"
+            data-testid="registration-email-input"
             aria-invalid={!!(touched.email && errors.email)}
             aria-describedby={touched.email && errors.email ? 'email-error' : undefined}
             className={touched.email && errors.email ? 'border-red-500' : ''}
@@ -181,6 +182,7 @@ export function RegisterForm() {
               disabled={isLoading}
               placeholder="パスワード（8文字以上）"
               aria-label="パスワード"
+              data-testid="registration-password-input"
               aria-invalid={!!(touched.password && errors.password)}
               aria-describedby={touched.password && errors.password ? 'password-error' : undefined}
               className={touched.password && errors.password ? 'border-red-500 pr-10' : 'pr-10'}
@@ -223,6 +225,7 @@ export function RegisterForm() {
               disabled={isLoading}
               placeholder="パスワード確認"
               aria-label="パスワード確認"
+              data-testid="registration-confirm-password-input"
               aria-invalid={!!(touched.passwordConfirmation && errors.passwordConfirmation)}
               aria-describedby={
                 touched.passwordConfirmation && errors.passwordConfirmation
@@ -265,6 +268,7 @@ export function RegisterForm() {
           disabled={isSubmitDisabled}
           aria-disabled={isSubmitDisabled}
           className="w-full min-h-[44px]"
+          data-testid="registration-submit-button"
         >
           {isLoading ? '登録中...' : 'アカウント作成'}
         </Button>

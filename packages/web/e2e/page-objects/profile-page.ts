@@ -35,7 +35,7 @@ export class ProfilePage {
     await submitButton.click();
 
     // Wait for profile update API call
-    await waitForApiResponse(this.page, /\/api\/.*\/profile/, { timeout: TIMEOUTS.LONG });
+    await waitForApiResponse(this.page, /\/api\/profile/, { timeout: TIMEOUTS.LONG });
   }
 
   async updateProfile(data: ProfileData): Promise<void> {

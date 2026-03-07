@@ -96,7 +96,7 @@ export default function NewGamePage() {
   // Show loading state while checking authentication
   if (authLoading) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="h-8 bg-gray-200 rounded w-48 animate-pulse mb-8" />
           <div className="bg-white rounded-lg shadow p-6">
@@ -106,7 +106,7 @@ export default function NewGamePage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -116,7 +116,7 @@ export default function NewGamePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">新しい対局を作成</h1>
 
@@ -223,6 +223,6 @@ export default function NewGamePage() {
           </div>
         </form>
       </div>
-    </main>
+    </div>
   );
 }

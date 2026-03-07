@@ -31,7 +31,7 @@ export class VotingPage {
     await submitButton.click();
 
     // Wait for vote submission API call
-    await waitForApiResponse(this.page, /\/api\/.*\/vote/, { timeout: TIMEOUTS.LONG });
+    await waitForApiResponse(this.page, /\/api\/votes/, { timeout: TIMEOUTS.LONG });
   }
 
   async vote(candidateId: string): Promise<void> {
@@ -52,7 +52,7 @@ export class VotingPage {
     await submitButton.click();
 
     // Wait for candidate submission API call
-    await waitForApiResponse(this.page, /\/api\/.*\/candidate/, { timeout: TIMEOUTS.LONG });
+    await waitForApiResponse(this.page, /\/api\/candidates/, { timeout: TIMEOUTS.LONG });
   }
 
   // Assertions

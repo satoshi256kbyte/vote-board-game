@@ -304,7 +304,7 @@ describe('NewGamePage', () => {
     it('should have responsive container classes', () => {
       const { container } = render(<NewGamePage />);
 
-      const innerDiv = container.querySelector('main > div');
+      const innerDiv = container.querySelector('.max-w-2xl');
       expect(innerDiv?.className).toContain('px-4');
       expect(innerDiv?.className).toContain('sm:px-6');
       expect(innerDiv?.className).toContain('lg:px-8');

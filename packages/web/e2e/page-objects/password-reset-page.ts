@@ -29,7 +29,7 @@ export class PasswordResetPage {
     await submitButton.click();
 
     // Wait for password reset request API call
-    await waitForApiResponse(this.page, /\/api\/auth\/password-reset/, { timeout: TIMEOUTS.LONG });
+    await waitForApiResponse(this.page, /\/auth\/password-reset/, { timeout: TIMEOUTS.LONG });
   }
 
   // Actions - Confirmation Step
@@ -57,7 +57,7 @@ export class PasswordResetPage {
     await submitButton.click();
 
     // Wait for password reset confirmation API call
-    await waitForApiResponse(this.page, /\/api\/auth\/password-reset\/confirm/, {
+    await waitForApiResponse(this.page, /\/auth\/password-reset\/confirm/, {
       timeout: TIMEOUTS.LONG,
     });
   }

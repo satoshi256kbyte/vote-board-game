@@ -41,7 +41,7 @@ export class RegistrationPage {
     await submitButton.click();
 
     // Wait for registration API call
-    await waitForApiResponse(this.page, /\/api\/auth\/register/, { timeout: TIMEOUTS.LONG });
+    await waitForApiResponse(this.page, /\/auth\/register/, { timeout: TIMEOUTS.LONG });
   }
 
   async register(email: string, password: string): Promise<void> {
@@ -63,9 +63,9 @@ export class RegistrationPage {
   }
 
   async expectRedirectToLogin(): Promise<void> {
-    await waitForNavigation(this.page, '/login', { timeout: TIMEOUTS.NAVIGATION });
+    await waitForNavigation(this.page, '/email-verification', { timeout: TIMEOUTS.NAVIGATION });
     await retryAssertion(async () => {
-      expect(this.page.url()).toContain('/login');
+      expect(this.page.url()).toContain('/email-verification');
     });
   }
 }

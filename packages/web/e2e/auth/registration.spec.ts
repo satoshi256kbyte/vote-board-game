@@ -28,11 +28,11 @@ test.describe('User Registration Flow', () => {
       // Fill registration form with valid data
       await registrationPage.register(testUser.email, testUser.password);
 
-      // Verify redirect to login page
+      // Verify redirect to email verification page
       await registrationPage.expectRedirectToLogin();
 
-      // Verify we're on the login page
-      expect(page.url()).toContain('/login');
+      // Verify we're on the email verification page
+      expect(page.url()).toContain('/email-verification');
     } finally {
       // Clean up test user
       await cleanupTestUser(testUser.email);

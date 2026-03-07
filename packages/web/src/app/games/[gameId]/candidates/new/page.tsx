@@ -130,7 +130,7 @@ export default function CandidatePostPage({ params }: CandidatePostPageProps) {
   // Show loading state
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="h-8 bg-gray-200 rounded w-48 animate-pulse mb-8" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -145,7 +145,7 @@ export default function CandidatePostPage({ params }: CandidatePostPageProps) {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -157,13 +157,13 @@ export default function CandidatePostPage({ params }: CandidatePostPageProps) {
   // Show error if game not found
   if (!game) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <p className="text-red-600">{error || '対局が見つかりません'}</p>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -173,7 +173,7 @@ export default function CandidatePostPage({ params }: CandidatePostPageProps) {
     : null;
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">次の一手候補を投稿</h1>
 
@@ -287,6 +287,6 @@ export default function CandidatePostPage({ params }: CandidatePostPageProps) {
           </div>
         </form>
       </div>
-    </main>
+    </div>
   );
 }
