@@ -28,6 +28,13 @@ export class LoginPage {
     const submitButton = this.page.locator('form').getByRole('button', { name: 'ログイン' });
     await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await submitButton.click();
+  }
+
+  async clickSubmitAndWaitForApi(): Promise<void> {
+    // Use form context to avoid matching header login button
+    const submitButton = this.page.locator('form').getByRole('button', { name: 'ログイン' });
+    await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await submitButton.click();
 
     // Wait for network request to complete
     await waitForNetworkIdle(this.page, '/auth/login', { timeout: TIMEOUTS.LONG });
@@ -36,7 +43,7 @@ export class LoginPage {
   async login(email: string, password: string): Promise<void> {
     await this.fillEmail(email);
     await this.fillPassword(password);
-    await this.clickSubmit();
+    await this.clickSubmitAndWaitForApi();
   }
 
   async clickForgotPassword(): Promise<void> {

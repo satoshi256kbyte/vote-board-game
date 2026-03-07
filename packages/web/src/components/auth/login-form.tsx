@@ -86,6 +86,7 @@ export function LoginForm() {
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? 'email-error' : undefined}
             className={errors.email ? 'border-red-500' : ''}
+            data-testid="login-email-input"
           />
           {errors.email && (
             <p id="email-error" className="mt-1 text-sm text-red-600" role="alert">
@@ -113,6 +114,7 @@ export function LoginForm() {
               aria-invalid={!!errors.password}
               aria-describedby={errors.password ? 'password-error' : undefined}
               className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+              data-testid="login-password-input"
             />
             <button
               type="button"

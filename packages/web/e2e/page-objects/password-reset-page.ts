@@ -27,6 +27,12 @@ export class PasswordResetPage {
     const submitButton = this.page.getByTestId('password-reset-submit-button');
     await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await submitButton.click();
+  }
+
+  async clickSubmitAndWaitForApi(): Promise<void> {
+    const submitButton = this.page.getByTestId('password-reset-submit-button');
+    await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await submitButton.click();
 
     // Wait for password reset request API call
     await waitForApiResponse(this.page, /\/auth\/password-reset/, { timeout: TIMEOUTS.LONG });
@@ -52,6 +58,12 @@ export class PasswordResetPage {
   }
 
   async clickConfirmSubmit(): Promise<void> {
+    const submitButton = this.page.getByTestId('password-reset-confirm-submit-button');
+    await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await submitButton.click();
+  }
+
+  async clickConfirmSubmitAndWaitForApi(): Promise<void> {
     const submitButton = this.page.getByTestId('password-reset-confirm-submit-button');
     await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await submitButton.click();
@@ -91,6 +103,17 @@ export class PasswordResetPage {
       await expect(errorElement).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
       if (message) {
         await expect(errorElement).toContainText(message);
+      }
+    });
+  }
+
+  async expectValidationError(message?: string): Promise<void> {
+    await retryAssertion(async () => {
+      // Client-side validation errors appear as role="alert" paragraphs under fields
+      const alerts = this.page.locator('p[role="alert"]');
+      await expect(alerts.first()).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+      if (message) {
+        await expect(alerts.first()).toContainText(message);
       }
     });
   }

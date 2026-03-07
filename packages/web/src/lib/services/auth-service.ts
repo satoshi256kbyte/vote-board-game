@@ -177,7 +177,11 @@ class AuthService {
   async register(email: string, password: string): Promise<RegisterResponse> {
     try {
       // ユーザー名をメールアドレスから生成（一時的な実装）
-      const username = email.split('@')[0];
+      // APIスキーマ: 3-20文字、英数字・ハイフン・アンダースコアのみ
+      const username = email
+        .split('@')[0]
+        .replace(/[^a-zA-Z0-9_-]/g, '')
+        .substring(0, 20);
 
       const response = await fetch(`${this.apiUrl}/auth/register`, {
         method: 'POST',

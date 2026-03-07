@@ -39,6 +39,12 @@ export class RegistrationPage {
     const submitButton = this.page.getByTestId('registration-submit-button');
     await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await submitButton.click();
+  }
+
+  async clickSubmitAndWaitForApi(): Promise<void> {
+    const submitButton = this.page.getByTestId('registration-submit-button');
+    await expect(submitButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await submitButton.click();
 
     // Wait for registration API call
     await waitForApiResponse(this.page, /\/auth\/register/, { timeout: TIMEOUTS.LONG });
@@ -48,7 +54,7 @@ export class RegistrationPage {
     await this.fillEmail(email);
     await this.fillPassword(password);
     await this.fillConfirmPassword(password);
-    await this.clickSubmit();
+    await this.clickSubmitAndWaitForApi();
   }
 
   // Assertions
@@ -58,6 +64,16 @@ export class RegistrationPage {
       await expect(errorElement).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
       if (message) {
         await expect(errorElement).toContainText(message);
+      }
+    });
+  }
+
+  async expectValidationError(message?: string): Promise<void> {
+    await retryAssertion(async () => {
+      const alerts = this.page.locator('p[role="alert"]');
+      await expect(alerts.first()).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+      if (message) {
+        await expect(alerts.first()).toContainText(message);
       }
     });
   }

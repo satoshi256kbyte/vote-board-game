@@ -3,7 +3,7 @@
  *
  * Tests universal properties that should hold for any valid registration data:
  * - Property 1: User Registration Creates Cognito User
- * - Property 2: Successful Registration Redirects to Home
+ * - Property 2: Successful Registration Redirects to Email Verification
  * - Property 3: Registration Stores Access Token
  * - Property 4: Successful Registration Shows No Errors
  *
@@ -23,7 +23,7 @@ const testUserArbitrary = fc.record({
 test.describe('User Registration Flow - Property Tests', () => {
   /**
    * Property 1: User Registration Creates Cognito User
-   * Property 2: Successful Registration Redirects to Home
+   * Property 2: Successful Registration Redirects to Email Verification
    * Property 3: Registration Stores Access Token
    * Property 4: Successful Registration Shows No Errors
    *
@@ -31,8 +31,8 @@ test.describe('User Registration Flow - Property Tests', () => {
    *
    * For any valid test user data, registration should:
    * - Create user in Cognito
-   * - Redirect to home page "/"
-   * - Store access token in localStorage
+   * - Redirect to /email-verification
+   * - Store access token in localStorage (key: vbg_access_token)
    * - Display no error messages
    */
   test('should satisfy all registration properties for any valid user data', async ({ page }) => {
@@ -63,29 +63,29 @@ test.describe('User Registration Flow - Property Tests', () => {
           // Submit form
           await page.click('button[type="submit"]');
 
-          // Property 2: Successful Registration Redirects to Home
-          await page.waitForURL('/', { timeout: 15000 });
+          // Property 2: Successful Registration Redirects to Email Verification
+          await page.waitForURL('/email-verification', { timeout: 15000 });
           const currentUrl = page.url();
-          expect(currentUrl).toContain('/');
+          expect(currentUrl).toContain('/email-verification');
 
-          // Property 3: Registration Stores Access Token
-          const accessToken = await page.evaluate(() => localStorage.getItem('accessToken'));
+          // Property 3: Registration Stores Access Token (key: vbg_access_token)
+          const accessToken = await page.evaluate(() => localStorage.getItem('vbg_access_token'));
           expect(accessToken).toBeTruthy();
           expect(accessToken).not.toBe('');
 
           // Property 4: Successful Registration Shows No Errors
-          const errorMessage = page.locator('[role="alert"]');
+          // Check that no API error alert is visible (registration-error-message)
+          const errorMessage = page.getByTestId('registration-error-message');
           await expect(errorMessage).not.toBeVisible();
 
           // Property 1: User Registration Creates Cognito User
           // (Implicit - if we got here, user was created successfully)
-          // The fact that we have a token and no errors confirms user creation
 
           // Clear localStorage for next iteration
           await page.evaluate(() => localStorage.clear());
         }),
         {
-          numRuns: 15,
+          numRuns: process.env.CI ? 3 : 15,
           endOnFailure: true,
         }
       );

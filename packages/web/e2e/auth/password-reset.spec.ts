@@ -37,7 +37,7 @@ test.describe('Password Reset Flow', () => {
 
       // Submit valid email
       await passwordResetPage.fillEmail(testUser.email);
-      await passwordResetPage.clickSubmit();
+      await passwordResetPage.clickSubmitAndWaitForApi();
 
       // Verify confirmation message is displayed
       await passwordResetPage.expectConfirmationMessage();
@@ -53,12 +53,12 @@ test.describe('Password Reset Flow', () => {
     // Navigate to password reset page
     await passwordResetPage.goto();
 
-    // Submit invalid email format
+    // Submit invalid email format - client-side validation prevents API call
     await passwordResetPage.fillEmail('invalid-email');
     await passwordResetPage.clickSubmit();
 
-    // Verify error message is displayed
-    await passwordResetPage.expectErrorMessage('');
+    // Verify client-side validation error is displayed
+    await passwordResetPage.expectValidationError('有効なメールアドレスを入力してください');
   });
 
   test('should display error message for non-existent email', async ({ page }) => {
@@ -67,11 +67,10 @@ test.describe('Password Reset Flow', () => {
     // Navigate to password reset page
     await passwordResetPage.goto();
 
-    // Submit non-existent email
+    // Submit non-existent email - API is called
     await passwordResetPage.fillEmail('nonexistent@example.com');
-    await passwordResetPage.clickSubmit();
+    await passwordResetPage.clickSubmitAndWaitForApi();
 
-    // Verify error message is displayed (or confirmation message for security)
     // Note: Some systems show confirmation message even for non-existent emails
     // to prevent email enumeration attacks
     await passwordResetPage.expectConfirmationMessage();
@@ -83,12 +82,12 @@ test.describe('Password Reset Flow', () => {
     // Navigate to password reset page
     await passwordResetPage.goto();
 
-    // Submit empty email
+    // Submit empty email - client-side validation prevents API call
     await passwordResetPage.fillEmail('');
     await passwordResetPage.clickSubmit();
 
-    // Verify error message is displayed
-    await passwordResetPage.expectErrorMessage('');
+    // Verify client-side validation error is displayed
+    await passwordResetPage.expectValidationError('メールアドレスを入力してください');
   });
 
   test('should navigate from login page to password reset page', async ({ page }) => {
@@ -114,7 +113,7 @@ test.describe('Password Reset Flow', () => {
     try {
       await passwordResetPage.goto();
       await passwordResetPage.fillEmail(testUser.email);
-      await passwordResetPage.clickSubmit();
+      await passwordResetPage.clickSubmitAndWaitForApi();
       await passwordResetPage.expectConfirmationMessage();
 
       const duration = Date.now() - startTime;
@@ -134,20 +133,21 @@ test.describe('Password Reset Flow', () => {
       // Request password reset
       await passwordResetPage.goto();
       await passwordResetPage.fillEmail(testUser.email);
-      await passwordResetPage.clickSubmit();
+      await passwordResetPage.clickSubmitAndWaitForApi();
 
       // Wait for confirmation message and transition to confirm step
       await passwordResetPage.expectConfirmationMessage();
       await page.waitForTimeout(2500); // Wait for auto-transition
 
       // Submit with invalid confirmation code format (not 6 digits)
+      // Client-side validation prevents API call
       await passwordResetPage.fillConfirmationCode('12345'); // Only 5 digits
       await passwordResetPage.fillNewPassword(newPassword);
       await passwordResetPage.fillConfirmPassword(newPassword);
       await passwordResetPage.clickConfirmSubmit();
 
-      // Verify error message is displayed for invalid format
-      await passwordResetPage.expectErrorMessage('');
+      // Verify client-side validation error is displayed
+      await passwordResetPage.expectValidationError('確認コードは6桁の数字');
     } finally {
       await cleanupTestUser(testUser.email);
     }
@@ -163,19 +163,19 @@ test.describe('Password Reset Flow', () => {
       // Request password reset
       await passwordResetPage.goto();
       await passwordResetPage.fillEmail(testUser.email);
-      await passwordResetPage.clickSubmit();
+      await passwordResetPage.clickSubmitAndWaitForApi();
 
       // Wait for confirmation message and transition to confirm step
       await passwordResetPage.expectConfirmationMessage();
       await page.waitForTimeout(2500); // Wait for auto-transition
 
-      // Submit with invalid confirmation code (wrong code)
+      // Submit with invalid confirmation code (wrong code) - API is called
       await passwordResetPage.fillConfirmationCode('000000');
       await passwordResetPage.fillNewPassword(newPassword);
       await passwordResetPage.fillConfirmPassword(newPassword);
-      await passwordResetPage.clickConfirmSubmit();
+      await passwordResetPage.clickConfirmSubmitAndWaitForApi();
 
-      // Verify error message is displayed
+      // Verify API error message is displayed
       await passwordResetPage.expectErrorMessage('');
     } finally {
       await cleanupTestUser(testUser.email);
@@ -192,20 +192,20 @@ test.describe('Password Reset Flow', () => {
       // Request password reset
       await passwordResetPage.goto();
       await passwordResetPage.fillEmail(testUser.email);
-      await passwordResetPage.clickSubmit();
+      await passwordResetPage.clickSubmitAndWaitForApi();
 
       // Wait for confirmation message and transition to confirm step
       await passwordResetPage.expectConfirmationMessage();
       await page.waitForTimeout(2500); // Wait for auto-transition
 
-      // Submit with weak password
+      // Submit with weak password - client-side validation prevents API call
       await passwordResetPage.fillConfirmationCode('123456');
       await passwordResetPage.fillNewPassword(weakPassword);
       await passwordResetPage.fillConfirmPassword(weakPassword);
       await passwordResetPage.clickConfirmSubmit();
 
-      // Verify error message is displayed (client-side validation)
-      await passwordResetPage.expectErrorMessage('');
+      // Verify client-side validation error is displayed
+      await passwordResetPage.expectValidationError('パスワードは8文字以上');
     } finally {
       await cleanupTestUser(testUser.email);
     }
@@ -222,20 +222,20 @@ test.describe('Password Reset Flow', () => {
       // Request password reset
       await passwordResetPage.goto();
       await passwordResetPage.fillEmail(testUser.email);
-      await passwordResetPage.clickSubmit();
+      await passwordResetPage.clickSubmitAndWaitForApi();
 
       // Wait for confirmation message and transition to confirm step
       await passwordResetPage.expectConfirmationMessage();
       await page.waitForTimeout(2500); // Wait for auto-transition
 
-      // Submit with mismatched passwords
+      // Submit with mismatched passwords - client-side validation prevents API call
       await passwordResetPage.fillConfirmationCode('123456');
       await passwordResetPage.fillNewPassword(newPassword);
       await passwordResetPage.fillConfirmPassword(differentPassword);
       await passwordResetPage.clickConfirmSubmit();
 
-      // Verify error message is displayed
-      await passwordResetPage.expectErrorMessage('');
+      // Verify client-side validation error is displayed
+      await passwordResetPage.expectValidationError('パスワードが一致しません');
     } finally {
       await cleanupTestUser(testUser.email);
     }
@@ -252,17 +252,17 @@ test.describe('Password Reset Flow', () => {
       // Request password reset
       await passwordResetPage.goto();
       await passwordResetPage.fillEmail(testUser.email);
-      await passwordResetPage.clickSubmit();
+      await passwordResetPage.clickSubmitAndWaitForApi();
 
       // Wait for confirmation message and transition to confirm step
       await passwordResetPage.expectConfirmationMessage();
       await page.waitForTimeout(2500); // Wait for auto-transition
 
-      // Submit with invalid code (to test the flow timing)
+      // Submit with invalid code (to test the flow timing) - API is called
       await passwordResetPage.fillConfirmationCode('000000');
       await passwordResetPage.fillNewPassword(newPassword);
       await passwordResetPage.fillConfirmPassword(newPassword);
-      await passwordResetPage.clickConfirmSubmit();
+      await passwordResetPage.clickConfirmSubmitAndWaitForApi();
 
       // Wait for error response
       await passwordResetPage.expectErrorMessage('');
@@ -273,75 +273,4 @@ test.describe('Password Reset Flow', () => {
       await cleanupTestUser(testUser.email);
     }
   });
-
-  // Note: The following tests are commented out because they require actual
-  // confirmation codes from Cognito, which are challenging to retrieve in E2E tests.
-  // To enable these tests, implement one of the approaches described in
-  // e2e/helpers/cognito-code.ts
-
-  /*
-    test.skip('should successfully reset password with valid confirmation code', async ({ page }) => {
-        const passwordResetPage = new PasswordResetPage(page);
-        const loginPage = new LoginPage(page);
-        const newPassword = `NewPass${Date.now()}!`;
-
-        const testUser = await createTestUser();
-
-        try {
-            // Request password reset
-            await passwordResetPage.goto();
-            await passwordResetPage.fillEmail(testUser.email);
-            await passwordResetPage.clickSubmit();
-            await passwordResetPage.expectConfirmationMessage();
-            await page.waitForTimeout(2500); // Wait for auto-transition
-
-            // Get confirmation code (requires implementation)
-            const confirmationCode = await getPasswordResetCode(testUser.email);
-
-            // Submit new password with confirmation code
-            await passwordResetPage.submitPasswordReset(testUser.email, confirmationCode, newPassword);
-
-            // Verify success message
-            await passwordResetPage.expectSuccessMessage();
-
-            // Verify redirect to login page (auto-redirect after 3 seconds)
-            await passwordResetPage.expectRedirectToLogin();
-
-            // Verify can login with new password
-            await loginPage.login(testUser.email, newPassword);
-            await loginPage.expectRedirectToGameList();
-        } finally {
-            await cleanupTestUser(testUser.email);
-        }
-    });
-
-    test.skip('should display error for expired confirmation code', async ({ page }) => {
-        const passwordResetPage = new PasswordResetPage(page);
-        const newPassword = `NewPass${Date.now()}!`;
-
-        const testUser = await createTestUser();
-
-        try {
-            // Request password reset
-            await passwordResetPage.goto();
-            await passwordResetPage.fillEmail(testUser.email);
-            await passwordResetPage.clickSubmit();
-            await passwordResetPage.expectConfirmationMessage();
-            await page.waitForTimeout(2500); // Wait for auto-transition
-
-            // Wait for code to expire (Cognito codes typically expire after 1 hour)
-            // In practice, this would use a mock or test-specific endpoint
-            // to simulate an expired code
-
-            // Submit with expired confirmation code
-            const expiredCode = '999999';
-            await passwordResetPage.submitPasswordReset(testUser.email, expiredCode, newPassword);
-
-            // Verify error message is displayed
-            await passwordResetPage.expectErrorMessage('');
-        } finally {
-            await cleanupTestUser(testUser.email);
-        }
-    });
-    */
 });
