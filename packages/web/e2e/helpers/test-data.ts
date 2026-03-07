@@ -3,8 +3,8 @@
  * Manages test games and candidates in DynamoDB
  */
 
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { getDynamoDocClient, withCredentialRefresh } from './aws-client-factory';
 
 export interface TestGame {
   gameId: string;
@@ -45,11 +45,7 @@ export async function createTestGame(): Promise<TestGame> {
       };
     }
 
-    const client = new DynamoDBClient({
-      region: process.env.AWS_REGION || 'ap-northeast-1',
-    });
-    const docClient = DynamoDBDocumentClient.from(client);
-
+    // withCredentialRefresh でラップし、ExpiredTokenException 時にリトライ
     // Create initial board state (empty Othello board)
     const initialBoardState = Array(8)
       .fill(null)
@@ -74,12 +70,16 @@ export async function createTestGame(): Promise<TestGame> {
       updatedAt: new Date().toISOString(),
     };
 
-    const command = new PutCommand({
-      TableName: tableName,
-      Item: game,
-    });
+    await withCredentialRefresh(async () => {
+      const docClient = getDynamoDocClient();
 
-    await docClient.send(command);
+      const command = new PutCommand({
+        TableName: tableName,
+        Item: game,
+      });
+
+      await docClient.send(command);
+    });
 
     console.log(`[CreateTestGame] Successfully created test game: ${gameId}`);
 
@@ -122,11 +122,6 @@ export async function createTestCandidate(gameId: string): Promise<TestCandidate
       };
     }
 
-    const client = new DynamoDBClient({
-      region: process.env.AWS_REGION || 'ap-northeast-1',
-    });
-    const docClient = DynamoDBDocumentClient.from(client);
-
     // Create a test move (e.g., place at position [2, 3])
     const moveData = JSON.stringify({ row: 2, col: 3 });
     const description = 'テスト候補: 中央付近に配置して優位を確保する戦略です。';
@@ -142,12 +137,16 @@ export async function createTestCandidate(gameId: string): Promise<TestCandidate
       createdAt: new Date().toISOString(),
     };
 
-    const command = new PutCommand({
-      TableName: tableName,
-      Item: candidate,
-    });
+    await withCredentialRefresh(async () => {
+      const docClient = getDynamoDocClient();
 
-    await docClient.send(command);
+      const command = new PutCommand({
+        TableName: tableName,
+        Item: candidate,
+      });
+
+      await docClient.send(command);
+    });
 
     console.log(`[CreateTestCandidate] Successfully created test candidate: ${candidateId}`);
 
@@ -182,34 +181,33 @@ export async function cleanupTestGame(game: TestGame): Promise<void> {
       return;
     }
 
-    const client = new DynamoDBClient({
-      region: process.env.AWS_REGION || 'ap-northeast-1',
-    });
-    const docClient = DynamoDBDocumentClient.from(client);
+    await withCredentialRefresh(async () => {
+      const docClient = getDynamoDocClient();
 
-    // Delete game
-    const deleteGameCommand = new DeleteCommand({
-      TableName: tableName,
-      Key: {
-        PK: `GAME#${game.gameId}`,
-        SK: `GAME#${game.gameId}`,
-      },
-    });
-
-    await docClient.send(deleteGameCommand);
-
-    // Delete candidates
-    for (const candidate of game.candidates) {
-      const deleteCandidateCommand = new DeleteCommand({
+      // Delete game
+      const deleteGameCommand = new DeleteCommand({
         TableName: tableName,
         Key: {
           PK: `GAME#${game.gameId}`,
-          SK: `CANDIDATE#${candidate.candidateId}`,
+          SK: `GAME#${game.gameId}`,
         },
       });
 
-      await docClient.send(deleteCandidateCommand);
-    }
+      await docClient.send(deleteGameCommand);
+
+      // Delete candidates
+      for (const candidate of game.candidates) {
+        const deleteCandidateCommand = new DeleteCommand({
+          TableName: tableName,
+          Key: {
+            PK: `GAME#${game.gameId}`,
+            SK: `CANDIDATE#${candidate.candidateId}`,
+          },
+        });
+
+        await docClient.send(deleteCandidateCommand);
+      }
+    });
 
     console.log(`[CleanupTestGame] Successfully cleaned up test game: ${game.gameId}`);
   } catch (error) {

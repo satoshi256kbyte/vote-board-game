@@ -39,9 +39,9 @@ describe('Playwright Config', () => {
       expect(config.retries).toBe(0);
     });
 
-    it('should set workers to 1 in CI environment', () => {
+    it('should set workers to 4 in CI environment', () => {
       const config = createPlaywrightConfig('https://example.com', true);
-      expect(config.workers).toBe(1);
+      expect(config.workers).toBe(4);
     });
 
     it('should set workers to undefined locally', () => {

@@ -3,10 +3,8 @@
  * Provides graceful test skipping when Cognito is unavailable
  */
 
-import {
-  CognitoIdentityProviderClient,
-  ListUserPoolsCommand,
-} from '@aws-sdk/client-cognito-identity-provider';
+import { ListUserPoolsCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { getCognitoClient, withCredentialRefresh } from './aws-client-factory';
 
 /**
  * Checks if Cognito service is available
@@ -36,13 +34,13 @@ export async function isCognitoAvailable(): Promise<boolean> {
       return false;
     }
 
-    const client = new CognitoIdentityProviderClient({
-      region: process.env.AWS_REGION || 'ap-northeast-1',
-    });
+    await withCredentialRefresh(async () => {
+      const client = getCognitoClient();
 
-    // Try to list user pools to verify Cognito is accessible
-    const command = new ListUserPoolsCommand({ MaxResults: 1 });
-    await client.send(command);
+      // Try to list user pools to verify Cognito is accessible
+      const command = new ListUserPoolsCommand({ MaxResults: 1 });
+      await client.send(command);
+    });
 
     return true;
   } catch (error) {

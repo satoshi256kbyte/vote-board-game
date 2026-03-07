@@ -88,15 +88,17 @@
     - _Preservation: ローカル環境からのリクエストの動作_
     - _Requirements: 2.1, 2.4_
 
-  - [~] 3.6 GitHubへプッシュとActionsログ確認（イテレーション3）
-    - CORS設定の修正をGitHubにプッシュ
+  - [ ] 3.6 GitHubへプッシュとActionsログ確認（イテレーション3）
+    - E2Eテストタイムアウトの根本原因修正をGitHubにプッシュ
+    - 修正内容:
+      - `playwright.config.ts`: CI環境の `workers` を `1` → `4` に変更（テスト並列化で1時間以内に完了）
+      - `aws-client-factory.ts`: AWS クライアントファクトリを新規作成（クライアントキャッシュ + ExpiredTokenException 時のリフレッシュ）
+      - `test-user.ts`, `cleanup.ts`, `test-data.ts`, `cognito-availability.ts`: ファクトリ経由でAWSクライアントを使用するよう更新
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
-      - CORSエラーが解消されているか
-      - API呼び出しが成功しているか
-      - リダイレクトが実行されているか
-    - 問題が解決したか、または別の問題が特定されたかを判断
-    - 次の修正方針を決定
+      - テストが1時間以内に完了しているか
+      - ExpiredTokenException が発生していないか
+      - 並列実行が正しく動作しているか
     - _Requirements: 2.1, 2.4_
 
   - [x] 3.7 Phase 4: 認証トークンの追加（必要に応じて）
@@ -108,7 +110,7 @@
     - _Preservation: 認証が不要なエンドポイント（ゲーム一覧取得など）の動作_
     - _Requirements: 2.1, 2.4_
 
-  - [~] 3.8 GitHubへプッシュとActionsログ確認（イテレーション4）
+  - [ ] 3.8 GitHubへプッシュとActionsログ確認（イテレーション4）
     - 認証トークンの追加をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -119,7 +121,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.4_
 
-  - [~] 3.9 Phase 5: タイムアウトとリトライの実装（必要に応じて）
+  - [ ] 3.9 Phase 5: タイムアウトとリトライの実装（必要に応じて）
     - `packages/web/src/lib/api/client.ts` の全API関数にタイムアウトを設定
       - `AbortController` を使用してタイムアウトを実装（例: 30秒）
     - リトライロジックを実装
@@ -130,7 +132,7 @@
     - _Preservation: 正常なレスポンスが返る場合の動作_
     - _Requirements: 2.1, 2.4_
 
-  - [~] 3.10 GitHubへプッシュとActionsログ確認（イテレーション5）
+  - [ ] 3.10 GitHubへプッシュとActionsログ確認（イテレーション5）
     - タイムアウトとリトライの実装をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -141,7 +143,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.4_
 
-  - [~] 3.11 Phase 6: DynamoDB結果整合性への対応（必要に応じて）
+  - [ ] 3.11 Phase 6: DynamoDB結果整合性への対応（必要に応じて）
     - `packages/web/src/app/games/[gameId]/page.tsx` にリトライロジックを追加
       - ゲームデータの取得に失敗した場合、短い間隔でリトライ（最大5回、各1秒間隔）
     - ローディング状態の改善
@@ -151,7 +153,7 @@
     - _Preservation: データが即座に利用可能な場合の動作_
     - _Requirements: 2.2_
 
-  - [~] 3.12 GitHubへプッシュとActionsログ確認（イテレーション6）
+  - [ ] 3.12 GitHubへプッシュとActionsログ確認（イテレーション6）
     - DynamoDB結果整合性への対応をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -161,14 +163,14 @@
     - 問題が完全に解決したことを確認
     - _Requirements: 2.2_
 
-  - [~] 3.13 デバッグログのクリーンアップ
+  - [ ] 3.13 デバッグログのクリーンアップ
     - 本番環境に不要な詳細ログを削除または条件付きに変更
     - 重要なエラーログは保持
     - ログレベルを適切に設定（開発環境: debug、本番環境: error）
     - _Preservation: ログ機能の既存動作_
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [~] 3.14 Verify bug condition exploration test now passes
+  - [ ] 3.14 Verify bug condition exploration test now passes
     - **Property 1: Expected Behavior** - CI環境でのゲーム作成成功
     - **IMPORTANT**: タスク1と同じテストを再実行 - 新しいテストを書かない
     - タスク1のテストは期待される動作をエンコードしている
@@ -177,7 +179,7 @@
     - **EXPECTED OUTCOME**: テストがパス（バグが修正されたことを確認）
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [~] 3.15 Verify preservation tests still pass
+  - [ ] 3.15 Verify preservation tests still pass
     - **Property 2: Preservation** - ローカル環境とその他の機能
     - **IMPORTANT**: タスク2と同じテストを再実行 - 新しいテストを書かない
     - ステップ2の保持プロパティテストを実行
@@ -185,7 +187,7 @@
     - 修正後もすべてのテストがパスすることを確認（リグレッションなし）
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [~] 4. Checkpoint - Ensure all tests pass
+- [ ] 4. Checkpoint - Ensure all tests pass
   - すべてのテストがパスすることを確認
   - CI環境でのE2Eテスト（GitHub Actions）がすべて成功することを確認
   - ローカル環境でのE2Eテストがすべて成功することを確認

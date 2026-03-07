@@ -3,10 +3,8 @@
  * Handles deletion of test users from Cognito after test completion
  */
 
-import {
-  CognitoIdentityProviderClient,
-  AdminDeleteUserCommand,
-} from '@aws-sdk/client-cognito-identity-provider';
+import { AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { getCognitoClient, withCredentialRefresh } from './aws-client-factory';
 
 /**
  * Deletes a test user from Cognito User Pool
@@ -31,18 +29,18 @@ export async function cleanupTestUser(email: string): Promise<void> {
       return;
     }
 
-    // Initialize Cognito client
-    const client = new CognitoIdentityProviderClient({
-      region: process.env.AWS_REGION || 'ap-northeast-1',
-    });
+    // withCredentialRefresh でラップし、ExpiredTokenException 時にリトライ
+    await withCredentialRefresh(async () => {
+      const client = getCognitoClient();
 
-    // Delete user from Cognito
-    const command = new AdminDeleteUserCommand({
-      UserPoolId: userPoolId,
-      Username: email,
-    });
+      // Delete user from Cognito
+      const command = new AdminDeleteUserCommand({
+        UserPoolId: userPoolId,
+        Username: email,
+      });
 
-    await client.send(command);
+      await client.send(command);
+    });
     console.log(`[Cleanup] Successfully deleted test user: ${email}`);
   } catch (error) {
     // Handle user not found error (user may have already been deleted)

@@ -5,13 +5,12 @@
 
 import type { Page } from '@playwright/test';
 import {
-  CognitoIdentityProviderClient,
   AdminCreateUserCommand,
   AdminSetUserPasswordCommand,
   MessageActionType,
 } from '@aws-sdk/client-cognito-identity-provider';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { getCognitoClient, getDynamoDocClient, withCredentialRefresh } from './aws-client-factory';
 
 export interface TestUser {
   email: string;
@@ -73,58 +72,62 @@ export async function createTestUser(): Promise<TestUser> {
       throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
     }
 
-    const region = process.env.AWS_REGION || 'ap-northeast-1';
-    const cognitoClient = new CognitoIdentityProviderClient({ region });
-
     // Generate username (max 20 characters)
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
     const shortTimestamp = timestamp.toString().slice(-10);
     const username = `test${shortTimestamp}${random}`;
 
-    // Create user in Cognito
-    const createCommand = new AdminCreateUserCommand({
-      UserPoolId: userPoolId,
-      Username: testUser.email,
-      UserAttributes: [
-        { Name: 'email', Value: testUser.email },
-        { Name: 'email_verified', Value: 'true' },
-      ],
-      MessageAction: MessageActionType.SUPPRESS,
+    // withCredentialRefresh でラップし、ExpiredTokenException 時にリトライ
+    const userId = await withCredentialRefresh(async () => {
+      const cognitoClient = getCognitoClient();
+
+      // Create user in Cognito
+      const createCommand = new AdminCreateUserCommand({
+        UserPoolId: userPoolId,
+        Username: testUser.email,
+        UserAttributes: [
+          { Name: 'email', Value: testUser.email },
+          { Name: 'email_verified', Value: 'true' },
+        ],
+        MessageAction: MessageActionType.SUPPRESS,
+      });
+
+      const createResponse = await cognitoClient.send(createCommand);
+      const uid = createResponse.User?.Username || testUser.email;
+
+      // Set permanent password
+      const setPasswordCommand = new AdminSetUserPasswordCommand({
+        UserPoolId: userPoolId,
+        Username: testUser.email,
+        Password: testUser.password,
+        Permanent: true,
+      });
+
+      await cognitoClient.send(setPasswordCommand);
+
+      return uid;
     });
 
-    const createResponse = await cognitoClient.send(createCommand);
-    const userId = createResponse.User?.Username || testUser.email;
-
-    // Set permanent password
-    const setPasswordCommand = new AdminSetUserPasswordCommand({
-      UserPoolId: userPoolId,
-      Username: testUser.email,
-      Password: testUser.password,
-      Permanent: true,
+    // Create user record in DynamoDB (also with credential refresh)
+    await withCredentialRefresh(async () => {
+      const docClient = getDynamoDocClient();
+      const now = new Date().toISOString();
+      await docClient.send(
+        new PutCommand({
+          TableName: tableName,
+          Item: {
+            PK: `USER#${userId}`,
+            SK: `USER#${userId}`,
+            userId,
+            email: testUser.email,
+            username,
+            createdAt: now,
+            updatedAt: now,
+          },
+        })
+      );
     });
-
-    await cognitoClient.send(setPasswordCommand);
-
-    // Create user record in DynamoDB
-    const dynamoClient = new DynamoDBClient({ region });
-    const docClient = DynamoDBDocumentClient.from(dynamoClient);
-
-    const now = new Date().toISOString();
-    await docClient.send(
-      new PutCommand({
-        TableName: tableName,
-        Item: {
-          PK: `USER#${userId}`,
-          SK: `USER#${userId}`,
-          userId,
-          email: testUser.email,
-          username,
-          createdAt: now,
-          updatedAt: now,
-        },
-      })
-    );
 
     console.log(`[CreateTestUser] Successfully created test user: ${testUser.email}`);
 

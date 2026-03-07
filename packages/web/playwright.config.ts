@@ -41,8 +41,9 @@ export function createPlaywrightConfig(
     // CI環境では2回リトライ、ローカルでは0回
     retries: isCI ? 2 : 0,
 
-    // CI環境では1ワーカー、ローカルでは並列実行
-    workers: isCI ? 1 : undefined,
+    // CI環境では4ワーカーで並列実行（OIDCセッション1時間以内に完了させるため）
+    // ローカルでは自動（CPUコア数に応じて並列実行）
+    workers: isCI ? 4 : undefined,
 
     // レポーター設定
     reporter: [
