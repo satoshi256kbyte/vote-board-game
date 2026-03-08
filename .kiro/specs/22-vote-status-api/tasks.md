@@ -9,9 +9,9 @@
   - [x] 2.1 `services/vote.ts` に `VoteNotFoundError` エラークラスを追加する
   - [x] 2.2 `services/vote.ts` に `toVoteStatusResponse` 変換関数を追加する
   - [x] 2.3 `services/vote.ts` の `VoteService` クラスに `getMyVote` メソッドを追加する
-- [ ] 3. ルーティングレイヤーの実装
-  - [~] 3.1 `routes/votes.ts` の `createGameVotesRouter` に GET `/games/:gameId/turns/:turnNumber/votes/me` エンドポイントを追加する
-  - [~] 3.2 `routes/votes.ts` に `VoteNotFoundError` のインポートとエラーハンドリングを追加する
+- [x] 3. ルーティングレイヤーの実装
+  - [x] 3.1 `routes/votes.ts` の `createGameVotesRouter` に GET `/games/:gameId/turns/:turnNumber/votes/me` エンドポイントを追加する
+  - [x] 3.2 `routes/votes.ts` に `VoteNotFoundError` のインポートとエラーハンドリングを追加する
 - [ ] 4. ユニットテストの作成
   - [~] 4.1 `schemas/vote.test.ts` に `getVoteParamSchema` のテストケースを追加する
   - [~] 4.2 `services/vote.test.ts` に `getMyVote` メソッドのテストケースを追加する

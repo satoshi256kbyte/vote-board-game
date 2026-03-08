@@ -2,6 +2,7 @@
  * Vote API Routes
  *
  * 投票管理のためのRESTful APIエンドポイント群
+ * - GET /games/:gameId/turns/:turnNumber/votes/me - 投票状況取得
  * - POST /games/:gameId/turns/:turnNumber/votes - 投票作成
  * - PUT /games/:gameId/turns/:turnNumber/votes/me - 投票変更
  * - POST / - 投票（レガシー、/api/votes にマウント）
@@ -21,6 +22,7 @@ import {
   AlreadyVotedError,
   NotVotedError,
   SameCandidateError,
+  VoteNotFoundError,
 } from '../services/vote.js';
 import { GameNotFoundError, TurnNotFoundError } from '../services/candidate.js';
 import { VoteRepository } from '../lib/dynamodb/repositories/vote.js';
@@ -32,6 +34,7 @@ import {
   postVoteParamSchema,
   putVoteBodySchema,
   putVoteParamSchema,
+  getVoteParamSchema,
 } from '../schemas/vote.js';
 import type { AuthVariables } from '../lib/auth/types.js';
 
@@ -62,6 +65,7 @@ const validationErrorHandler = (
 
 /**
  * 投票ルーターを作成
+ * GET /games/:gameId/turns/:turnNumber/votes/me - 投票状況取得
  * POST /games/:gameId/turns/:turnNumber/votes - 投票作成
  * PUT /games/:gameId/turns/:turnNumber/votes/me - 投票変更
  * /api にマウントされることを想定
@@ -79,6 +83,44 @@ export function createGameVotesRouter(
       new CandidateRepository(docClient, TABLE_NAME),
       new GameRepository()
     );
+
+  // GET /games/:gameId/turns/:turnNumber/votes/me - 投票状況取得
+  router.get(
+    '/games/:gameId/turns/:turnNumber/votes/me',
+    zValidator('param', getVoteParamSchema, validationErrorHandler),
+    async (c) => {
+      const { gameId, turnNumber } = c.req.valid('param');
+      const userId = c.get('userId');
+
+      if (!userId) {
+        return c.json(
+          {
+            error: 'UNAUTHORIZED',
+            message: 'Authorization header is required',
+          },
+          401
+        );
+      }
+
+      try {
+        const result = await service.getMyVote(gameId, turnNumber, userId);
+        return c.json(result, 200);
+      } catch (error) {
+        if (error instanceof VoteNotFoundError) {
+          return c.json({ error: 'NOT_FOUND', message: 'Vote not found' }, 404);
+        }
+
+        console.error('Failed to get vote', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          gameId: c.req.param('gameId'),
+          turnNumber: c.req.param('turnNumber'),
+          timestamp: new Date().toISOString(),
+        });
+
+        return c.json({ error: 'INTERNAL_ERROR', message: 'Failed to get vote' }, 500);
+      }
+    }
+  );
 
   // POST /games/:gameId/turns/:turnNumber/votes - 投票作成
   router.post(
