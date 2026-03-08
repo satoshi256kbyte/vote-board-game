@@ -6,8 +6,8 @@
 
 ## Tasks
 
-- [ ] 1. スキーマ定義とバリデーション
-  - [ ] 1.1 パスパラメータのZodスキーマを定義
+- [-] 1. スキーマ定義とバリデーション
+  - [x] 1.1 パスパラメータのZodスキーマを定義
     - `packages/api/src/schemas/candidate.ts` にスキーマを作成
     - gameId（UUID v4形式）とturnNumber（正の整数）のバリデーションルールを定義
     - _Requirements: 2.1, 2.2_
@@ -19,7 +19,7 @@
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
 - [ ] 2. サービスレイヤーの実装
-  - [ ] 2.1 CandidateServiceクラスを実装
+  - [~] 2.1 CandidateServiceクラスを実装
     - `packages/api/src/services/candidate.ts` にサービスを作成
     - listCandidatesメソッドを実装（ゲーム存在確認、ターン存在確認、候補取得、ソート処理）
     - GameNotFoundError、TurnNotFoundErrorのカスタムエラークラスを定義
@@ -40,7 +40,7 @@
     - _Requirements: 1.2_
 
 - [ ] 3. ルーティングレイヤーの実装
-  - [ ] 3.1 候補一覧取得エンドポイントを実装
+  - [~] 3.1 候補一覧取得エンドポイントを実装
     - `packages/api/src/routes/candidates.ts` にルーターを作成
     - GET /games/:gameId/turns/:turnNumber/candidates エンドポイントを定義
     - zValidatorミドルウェアでパスパラメータをバリデーション
@@ -48,14 +48,14 @@
     - レスポンスをJSON形式で返却（200 OK）
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 3.2 エラーハンドリングを実装
+  - [~] 3.2 エラーハンドリングを実装
     - バリデーションエラー（400）のハンドリング
     - Not Foundエラー（404）のハンドリング
     - Internal Server Error（500）のハンドリング
     - エラーログの出力（CloudWatch Logs）
     - _Requirements: 2.3, 2.4, 3.3, 3.4, 5.4_
 
-  - [ ] 3.3 メインアプリケーションにルーターを統合
+  - [~] 3.3 メインアプリケーションにルーターを統合
     - `packages/api/src/index.ts` に候補ルーターを追加
     - `/api` プレフィックスでマウント
     - CORSミドルウェアが適用されていることを確認
