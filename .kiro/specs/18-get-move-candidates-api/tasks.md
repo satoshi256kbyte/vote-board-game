@@ -18,7 +18,7 @@
     - 無効なturnNumber（負の数、小数、文字列）のテスト
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [-] 2. サービスレイヤーの実装
+- [x] 2. サービスレイヤーの実装
   - [x] 2.1 CandidateServiceクラスを実装
     - `packages/api/src/services/candidate.ts` にサービスを作成
     - listCandidatesメソッドを実装（ゲーム存在確認、ターン存在確認、候補取得、ソート処理）
@@ -39,7 +39,7 @@
     - すべての隣接ペアで降順を確認
     - _Requirements: 1.2_
 
-- [-] 3. ルーティングレイヤーの実装
+- [x] 3. ルーティングレイヤーの実装
   - [x] 3.1 候補一覧取得エンドポイントを実装
     - `packages/api/src/routes/candidates.ts` にルーターを作成
     - GET /games/:gameId/turns/:turnNumber/candidates エンドポイントを定義
@@ -74,7 +74,7 @@
   - 質問があればユーザーに確認
 
 - [ ] 5. プロパティベーステストの実装
-  - [~] 5.1 レスポンス形式のプロパティテストを作成
+  - [x] 5.1 レスポンス形式のプロパティテストを作成
     - **Property 3: 成功レスポンスの形式**
     - **Validates: Requirements 1.3, 1.4, 4.2, 4.3, 6.1, 6.2**
     - ステータスコード200、Content-Type、JSON構造を検証
@@ -115,7 +115,7 @@
     - 主要なシナリオ（正常系、エラー系）をカバー
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 3.1, 3.2, 4.1_
 
-- [ ] 7. Final Checkpoint - 全体の動作確認
+- [x] 7. Final Checkpoint - 全体の動作確認
   - すべてのテスト（ユニット、プロパティ、統合）が成功することを確認
   - TypeScriptの型チェックが成功することを確認
   - ESLintのチェックが成功することを確認
