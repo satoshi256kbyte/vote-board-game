@@ -63,7 +63,6 @@
     - CandidateService.createCandidate を呼び出し
     - 成功時 201 Created でレスポンスを返却
     - エラーハンドリング（各エラークラスに応じたステータスコードとエラーレスポンス）
-    - _Requirements: 1.1, 1.2, 1.3, 2.7, 3.3, 4.3, 5.3, 6.2, 7.1, 8.1, 8.2, 8.3, 8.4, 9.1, 9.2_
 
   - [x] 4.2 認証ミドルウェアの適用を確認・更新
     - `packages/api/src/index.ts` で POST /api/games/:gameId/turns/:turnNumber/candidates に認証ミドルウェアが適用されるよう設定
