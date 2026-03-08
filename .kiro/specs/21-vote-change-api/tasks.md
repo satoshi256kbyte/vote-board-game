@@ -25,19 +25,19 @@
     - 無効なパスパラメータ（非UUID gameId、負の turnNumber）のテスト
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 2. サービスレイヤーの拡張
-  - [~] 2.1 新規エラークラスの追加
+- [x] 2. サービスレイヤーの拡張
+  - [x] 2.1 新規エラークラスの追加
     - `packages/api/src/services/vote.ts` に追加
     - `NotVotedError` - まだ投票していない場合のエラー
     - `SameCandidateError` - 同じ候補への変更の場合のエラー
     - _Requirements: 6.2, 7.2_
 
-  - [~] 2.2 VoteService.changeVote メソッドを実装
+  - [x] 2.2 VoteService.changeVote メソッドを実装
     - `packages/api/src/services/vote.ts` の VoteService クラスに追加
     - ゲーム存在確認 → ゲームステータス確認 → ターン存在確認 → 候補一覧取得 → 新候補存在確認 → 投票締切チェック → 候補ステータスチェック → 既存投票確認（未投票チェック） → 同一候補チェック → upsertWithTransaction（oldCandidateId 付き）実行
     - _Requirements: 3.1, 3.2, 4.1, 4.2, 4.3, 5.1, 6.1, 7.1, 8.1, 8.2, 8.3, 8.4, 8.5_
 
-  - [~] 2.3 サービスレイヤーのユニットテストを追加
+  - [x] 2.3 サービスレイヤーのユニットテストを追加
     - `packages/api/src/services/vote.test.ts` に追加
     - 正常系: 有効なリクエストで投票が変更される
     - エラー系: ゲーム未存在（GameNotFoundError）

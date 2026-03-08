@@ -10,6 +10,8 @@ import {
   CandidateNotFoundError,
   VotingClosedError,
   AlreadyVotedError,
+  NotVotedError,
+  SameCandidateError,
 } from './vote.js';
 import { GameNotFoundError, TurnNotFoundError } from './candidate.js';
 import type { VoteRepository } from '../lib/dynamodb/repositories/vote.js';
@@ -223,6 +225,162 @@ describe('VoteService', () => {
       await expect(service.createVote(GAME_ID, TURN_NUMBER, CANDIDATE_ID, USER_ID)).rejects.toThrow(
         AlreadyVotedError
       );
+    });
+  });
+
+  describe('changeVote - 正常系', () => {
+    const NEW_CANDIDATE_ID = '111e2222-e89b-12d3-a456-426614174099';
+    const OLD_CANDIDATE_ID = CANDIDATE_ID;
+
+    function setupSuccessScenario() {
+      const existingVote = createVoteEntity({ candidateId: OLD_CANDIDATE_ID });
+      const updatedVote = createVoteEntity({
+        candidateId: NEW_CANDIDATE_ID,
+        updatedAt: '2024-01-16T00:00:00.000Z',
+      });
+      mockGameRepo.getById.mockResolvedValue(createGameEntity());
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({ candidateId: OLD_CANDIDATE_ID }),
+        createCandidateEntity({ candidateId: NEW_CANDIDATE_ID }),
+      ]);
+      mockVoteRepo.getByUser.mockResolvedValue(existingVote);
+      mockVoteRepo.upsertWithTransaction.mockResolvedValue(updatedVote);
+      return { existingVote, updatedVote };
+    }
+
+    it('有効なリクエストで投票が変更される', async () => {
+      setupSuccessScenario();
+
+      const result = await service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID);
+
+      expect(result.gameId).toBe(GAME_ID);
+      expect(result.turnNumber).toBe(TURN_NUMBER);
+      expect(result.userId).toBe(USER_ID);
+      expect(result.candidateId).toBe(NEW_CANDIDATE_ID);
+    });
+
+    it('レスポンスに必須フィールドがすべて含まれる（gameId, turnNumber, userId, candidateId, createdAt, updatedAt）', async () => {
+      setupSuccessScenario();
+
+      const result = await service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID);
+
+      expect(result).toHaveProperty('gameId');
+      expect(result).toHaveProperty('turnNumber');
+      expect(result).toHaveProperty('userId');
+      expect(result).toHaveProperty('candidateId');
+      expect(result).toHaveProperty('createdAt');
+      expect(result).toHaveProperty('updatedAt');
+    });
+
+    it('日時フィールドがISO 8601形式である', async () => {
+      setupSuccessScenario();
+
+      const result = await service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID);
+
+      const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+      expect(result.createdAt).toMatch(iso8601Regex);
+      expect(result.updatedAt).toMatch(iso8601Regex);
+    });
+
+    it('upsertWithTransaction が oldCandidateId 付きで呼ばれる', async () => {
+      setupSuccessScenario();
+
+      await service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID);
+
+      expect(mockVoteRepo.upsertWithTransaction).toHaveBeenCalledWith({
+        gameId: GAME_ID,
+        turnNumber: TURN_NUMBER,
+        userId: USER_ID,
+        candidateId: NEW_CANDIDATE_ID,
+        oldCandidateId: OLD_CANDIDATE_ID,
+      });
+    });
+  });
+
+  describe('changeVote - エラー系', () => {
+    const NEW_CANDIDATE_ID = '111e2222-e89b-12d3-a456-426614174099';
+    const OLD_CANDIDATE_ID = CANDIDATE_ID;
+
+    it('ゲームが存在しない場合 GameNotFoundError をスローする', async () => {
+      mockGameRepo.getById.mockResolvedValue(null);
+
+      await expect(
+        service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID)
+      ).rejects.toThrow(GameNotFoundError);
+    });
+
+    it('ゲームが非アクティブの場合 VotingClosedError をスローする', async () => {
+      mockGameRepo.getById.mockResolvedValue(createGameEntity({ status: 'FINISHED' }));
+
+      await expect(
+        service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID)
+      ).rejects.toThrow(VotingClosedError);
+    });
+
+    it('ターンが存在しない場合 TurnNotFoundError をスローする', async () => {
+      mockGameRepo.getById.mockResolvedValue(createGameEntity({ currentTurn: 3 }));
+
+      await expect(
+        service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID)
+      ).rejects.toThrow(TurnNotFoundError);
+    });
+
+    it('候補が存在しない場合 CandidateNotFoundError をスローする', async () => {
+      mockGameRepo.getById.mockResolvedValue(createGameEntity());
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({ candidateId: 'other-candidate-id' }),
+      ]);
+
+      await expect(
+        service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID)
+      ).rejects.toThrow(CandidateNotFoundError);
+    });
+
+    it('投票締切済みの場合 VotingClosedError をスローする', async () => {
+      const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      mockGameRepo.getById.mockResolvedValue(createGameEntity());
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({ candidateId: NEW_CANDIDATE_ID, votingDeadline: pastDate }),
+      ]);
+
+      await expect(
+        service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID)
+      ).rejects.toThrow(VotingClosedError);
+    });
+
+    it('候補ステータスがVOTINGでない場合 VotingClosedError をスローする', async () => {
+      mockGameRepo.getById.mockResolvedValue(createGameEntity());
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({ candidateId: NEW_CANDIDATE_ID, status: 'CLOSED' }),
+      ]);
+
+      await expect(
+        service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID)
+      ).rejects.toThrow(VotingClosedError);
+    });
+
+    it('未投票の場合 NotVotedError をスローする', async () => {
+      mockGameRepo.getById.mockResolvedValue(createGameEntity());
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({ candidateId: NEW_CANDIDATE_ID }),
+      ]);
+      mockVoteRepo.getByUser.mockResolvedValue(null);
+
+      await expect(
+        service.changeVote(GAME_ID, TURN_NUMBER, NEW_CANDIDATE_ID, USER_ID)
+      ).rejects.toThrow(NotVotedError);
+    });
+
+    it('同一候補への変更の場合 SameCandidateError をスローする', async () => {
+      mockGameRepo.getById.mockResolvedValue(createGameEntity());
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({ candidateId: OLD_CANDIDATE_ID }),
+      ]);
+      mockVoteRepo.getByUser.mockResolvedValue(createVoteEntity({ candidateId: OLD_CANDIDATE_ID }));
+
+      await expect(
+        service.changeVote(GAME_ID, TURN_NUMBER, OLD_CANDIDATE_ID, USER_ID)
+      ).rejects.toThrow(SameCandidateError);
     });
   });
 });
