@@ -19,7 +19,7 @@
     - GET /games/:gameId/turns/:turnNumber/votes/me を呼び出す
     - 認証トークンをヘッダーに含める
     - _Requirements: 5.5, 8.4_
-  - [~] 1.3 投票作成APIクライアント関数を実装
+  - [x] 1.3 投票作成APIクライアント関数を実装
     - `lib/api/candidates.ts` に `createVote()` 関数を作成
     - POST /votes を呼び出す
     - 認証トークンをヘッダーに含める
