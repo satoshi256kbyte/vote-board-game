@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Update WBS on Task Completion",
+  "description": "After a task in a spec's tasks.md is marked as completed, update the corresponding WBS entry in docs/1-wbs.md.",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A task has been completed. Check docs/1-wbs.md and update the status of the corresponding WBS item to '完了'. Also fill in the Spec column with the spec name. If no matching item exists in the WBS, add a new row in the appropriate section."
+  }
+}
