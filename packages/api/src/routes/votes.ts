@@ -3,10 +3,11 @@
  *
  * 投票管理のためのRESTful APIエンドポイント群
  * - POST /games/:gameId/turns/:turnNumber/votes - 投票作成
+ * - PUT /games/:gameId/turns/:turnNumber/votes/me - 投票変更
  * - POST / - 投票（レガシー、/api/votes にマウント）
  * - GET /my - 自分の投票取得（レガシー、/api/votes にマウント）
  *
- * Requirements: 1.1, 1.2, 1.3, 2.1-2.5, 8.1, 8.2, 9.1, 9.2
+ * Requirements: 1.1, 1.2, 1.3, 2.1-2.5, 8.1, 8.2, 9.1, 9.2, 10.1, 10.2
  */
 
 import { Hono } from 'hono';
@@ -18,13 +19,20 @@ import {
   CandidateNotFoundError,
   VotingClosedError,
   AlreadyVotedError,
+  NotVotedError,
+  SameCandidateError,
 } from '../services/vote.js';
 import { GameNotFoundError, TurnNotFoundError } from '../services/candidate.js';
 import { VoteRepository } from '../lib/dynamodb/repositories/vote.js';
 import { CandidateRepository } from '../lib/dynamodb/repositories/candidate.js';
 import { GameRepository } from '../lib/dynamodb/repositories/game.js';
 import { docClient, TABLE_NAME } from '../lib/dynamodb/index.js';
-import { postVoteBodySchema, postVoteParamSchema } from '../schemas/vote.js';
+import {
+  postVoteBodySchema,
+  postVoteParamSchema,
+  putVoteBodySchema,
+  putVoteParamSchema,
+} from '../schemas/vote.js';
 import type { AuthVariables } from '../lib/auth/types.js';
 
 // バリデーションエラーハンドラー
@@ -55,6 +63,7 @@ const validationErrorHandler = (
 /**
  * 投票ルーターを作成
  * POST /games/:gameId/turns/:turnNumber/votes - 投票作成
+ * PUT /games/:gameId/turns/:turnNumber/votes/me - 投票変更
  * /api にマウントされることを想定
  * @param voteService VoteServiceインスタンス（テスト時にモックを注入可能）
  */
@@ -124,6 +133,70 @@ export function createGameVotesRouter(
         });
 
         return c.json({ error: 'INTERNAL_ERROR', message: 'Failed to create vote' }, 500);
+      }
+    }
+  );
+
+  // PUT /games/:gameId/turns/:turnNumber/votes/me - 投票変更
+  router.put(
+    '/games/:gameId/turns/:turnNumber/votes/me',
+    zValidator('param', putVoteParamSchema, validationErrorHandler),
+    zValidator('json', putVoteBodySchema, validationErrorHandler),
+    async (c) => {
+      try {
+        const { gameId, turnNumber } = c.req.valid('param');
+        const { candidateId } = c.req.valid('json');
+        const userId = c.get('userId');
+
+        if (!userId) {
+          return c.json(
+            {
+              error: 'UNAUTHORIZED',
+              message: 'Authorization header is required',
+            },
+            401
+          );
+        }
+
+        const result = await service.changeVote(gameId, turnNumber, candidateId, userId);
+
+        return c.json(result, 200);
+      } catch (error) {
+        if (error instanceof GameNotFoundError) {
+          return c.json({ error: 'NOT_FOUND', message: 'Game not found' }, 404);
+        }
+
+        if (error instanceof TurnNotFoundError) {
+          return c.json({ error: 'NOT_FOUND', message: 'Turn not found' }, 404);
+        }
+
+        if (error instanceof CandidateNotFoundError) {
+          return c.json({ error: 'NOT_FOUND', message: 'Candidate not found' }, 404);
+        }
+
+        if (error instanceof VotingClosedError) {
+          return c.json({ error: 'VOTING_CLOSED', message: 'Voting period has ended' }, 400);
+        }
+
+        if (error instanceof NotVotedError) {
+          return c.json({ error: 'NOT_VOTED', message: 'Not voted yet in this turn' }, 409);
+        }
+
+        if (error instanceof SameCandidateError) {
+          return c.json(
+            { error: 'SAME_CANDIDATE', message: 'Already voting for this candidate' },
+            400
+          );
+        }
+
+        console.error('Failed to change vote', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          gameId: c.req.param('gameId'),
+          turnNumber: c.req.param('turnNumber'),
+          timestamp: new Date().toISOString(),
+        });
+
+        return c.json({ error: 'INTERNAL_ERROR', message: 'Failed to change vote' }, 500);
       }
     }
   );

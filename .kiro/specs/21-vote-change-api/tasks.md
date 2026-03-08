@@ -52,11 +52,11 @@
     - レスポンスフィールドの検証（gameId, turnNumber, userId, candidateId, createdAt, updatedAt）
     - _Requirements: 3.1, 3.2, 4.1, 4.2, 4.3, 5.1, 6.1, 7.1, 8.1, 8.2, 8.3, 8.4, 8.5, 9.3, 9.4_
 
-- [~] 3. チェックポイント - サービスレイヤーの確認
+- [x] 3. チェックポイント - サービスレイヤーの確認
   - すべてのテストが成功することを確認し、ユーザーに質問があれば確認する。
 
-- [ ] 4. ルーティングレイヤーの拡張
-  - [~] 4.1 PUT エンドポイントを追加
+- [x] 4. ルーティングレイヤーの拡張
+  - [x] 4.1 PUT エンドポイントを追加
     - `packages/api/src/routes/votes.ts` の `createGameVotesRouter` に追加
     - PUT /games/:gameId/turns/:turnNumber/votes/me エンドポイントを実装
     - zValidator でパスパラメータ（putVoteParamSchema）とリクエストボディ（putVoteBodySchema）をバリデーション
@@ -66,12 +66,12 @@
     - NotVotedError → 409 NOT_VOTED、SameCandidateError → 400 SAME_CANDIDATE のエラーハンドリングを追加
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5, 9.1, 9.2, 10.1, 10.2_
 
-  - [~] 4.2 index.ts の認証ミドルウェア設定を更新
+  - [x] 4.2 index.ts の認証ミドルウェア設定を更新
     - `packages/api/src/index.ts` を更新
     - PUT /api/games/:gameId/turns/:turnNumber/votes/me に認証ミドルウェアを適用
     - _Requirements: 1.1, 1.2, 1.3, 11.1, 11.2, 11.3_
 
-  - [~] 4.3 エンドポイントのユニットテストを追加
+  - [x] 4.3 エンドポイントのユニットテストを追加
     - `packages/api/src/routes/votes.test.ts` に追加
     - 正常系: 200 OK のテスト
     - バリデーションエラー: 400 VALIDATION_ERROR のテスト

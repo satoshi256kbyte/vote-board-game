@@ -41,6 +41,7 @@ app.use('*', corsMiddleware(process.env.ALLOWED_ORIGINS || ''));
 // 保護対象ルートにミドルウェアを適用（ルート登録前に適用）
 app.use('/api/votes/*', authMiddleware);
 app.use('/api/games/:gameId/turns/:turnNumber/votes', authMiddleware);
+app.use('/api/games/:gameId/turns/:turnNumber/votes/me', authMiddleware);
 app.use('/api/candidates', async (c, next) => {
   // POSTのみ認証必須、GETは公開
   if (c.req.method === 'POST') {
