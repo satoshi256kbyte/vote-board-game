@@ -14,7 +14,7 @@
     - GET /games/:gameId/turns/:turnNumber/candidates を呼び出す
     - エラーハンドリング（404、ネットワークエラー）を実装
     - _Requirements: 1.2, 8.1, 8.3, 8.4, 8.5_
-  - [~] 1.2 投票状況取得APIクライアント関数を実装
+  - [x] 1.2 投票状況取得APIクライアント関数を実装
     - `lib/api/candidates.ts` に `getVoteStatus()` 関数を作成
     - GET /games/:gameId/turns/:turnNumber/votes/me を呼び出す
     - 認証トークンをヘッダーに含める
