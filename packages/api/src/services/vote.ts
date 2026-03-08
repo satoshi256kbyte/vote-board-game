@@ -9,7 +9,7 @@ import { CandidateRepository } from '../lib/dynamodb/repositories/candidate.js';
 import { GameRepository } from '../lib/dynamodb/repositories/game.js';
 import { GameNotFoundError, TurnNotFoundError } from './candidate.js';
 import type { VoteEntity } from '../lib/dynamodb/types.js';
-import type { VoteResponse, VoteChangeResponse } from '../types/vote.js';
+import type { VoteResponse, VoteChangeResponse, VoteStatusResponse } from '../types/vote.js';
 
 /**
  * 候補が存在しない場合のエラー
@@ -62,6 +62,16 @@ export class SameCandidateError extends Error {
 }
 
 /**
+ * 投票が存在しない場合のエラー
+ */
+export class VoteNotFoundError extends Error {
+  constructor() {
+    super('Vote not found');
+    this.name = 'VoteNotFoundError';
+  }
+}
+
+/**
  * VoteEntity を VoteResponse に変換
  */
 function toVoteResponse(entity: VoteEntity): VoteResponse {
@@ -88,12 +98,36 @@ function toVoteChangeResponse(entity: VoteEntity): VoteChangeResponse {
   };
 }
 
+/**
+ * VoteEntity を VoteStatusResponse に変換
+ */
+function toVoteStatusResponse(entity: VoteEntity): VoteStatusResponse {
+  return {
+    gameId: entity.gameId,
+    turnNumber: entity.turnNumber,
+    userId: entity.userId,
+    candidateId: entity.candidateId,
+    createdAt: entity.createdAt,
+    updatedAt: entity.updatedAt ?? entity.createdAt,
+  };
+}
+
 export class VoteService {
   constructor(
     private voteRepository: VoteRepository,
     private candidateRepository: CandidateRepository,
     private gameRepository: GameRepository
   ) {}
+
+  /**
+   * 自分の投票状況を取得
+   * @throws VoteNotFoundError - 投票が存在しない場合
+   */
+  async getMyVote(gameId: string, turnNumber: number, userId: string): Promise<VoteStatusResponse> {
+    const vote = await this.voteRepository.getByUser(gameId, turnNumber, userId);
+    if (!vote) throw new VoteNotFoundError();
+    return toVoteStatusResponse(vote);
+  }
 
   /**
    * 投票を作成

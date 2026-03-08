@@ -5,10 +5,10 @@
 - [x] 1. 型定義・スキーマの追加
   - [x] 1.1 `types/vote.ts` に `VoteStatusResponse` 型を追加する
   - [x] 1.2 `schemas/vote.ts` に `getVoteParamSchema` を追加する
-- [ ] 2. サービスレイヤーの実装
-  - [~] 2.1 `services/vote.ts` に `VoteNotFoundError` エラークラスを追加する
-  - [~] 2.2 `services/vote.ts` に `toVoteStatusResponse` 変換関数を追加する
-  - [~] 2.3 `services/vote.ts` の `VoteService` クラスに `getMyVote` メソッドを追加する
+- [x] 2. サービスレイヤーの実装
+  - [x] 2.1 `services/vote.ts` に `VoteNotFoundError` エラークラスを追加する
+  - [x] 2.2 `services/vote.ts` に `toVoteStatusResponse` 変換関数を追加する
+  - [x] 2.3 `services/vote.ts` の `VoteService` クラスに `getMyVote` メソッドを追加する
 - [ ] 3. ルーティングレイヤーの実装
   - [~] 3.1 `routes/votes.ts` の `createGameVotesRouter` に GET `/games/:gameId/turns/:turnNumber/votes/me` エンドポイントを追加する
   - [~] 3.2 `routes/votes.ts` に `VoteNotFoundError` のインポートとエラーハンドリングを追加する
