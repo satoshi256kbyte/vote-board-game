@@ -12,6 +12,7 @@ import {
   AlreadyVotedError,
   NotVotedError,
   SameCandidateError,
+  VoteNotFoundError,
 } from './vote.js';
 import { GameNotFoundError, TurnNotFoundError } from './candidate.js';
 import type { VoteRepository } from '../lib/dynamodb/repositories/vote.js';
@@ -381,6 +382,66 @@ describe('VoteService', () => {
       await expect(
         service.changeVote(GAME_ID, TURN_NUMBER, OLD_CANDIDATE_ID, USER_ID)
       ).rejects.toThrow(SameCandidateError);
+    });
+  });
+});
+
+/**
+ * VoteService.getMyVote ユニットテスト
+ *
+ * Requirements: 3.1, 3.2, 4.1, 4.2, 4.3, 4.4
+ */
+describe('VoteService - getMyVote', () => {
+  let service: VoteService;
+  let mockVoteRepo: ReturnType<typeof createMockVoteRepo>;
+  let mockCandidateRepo: ReturnType<typeof createMockCandidateRepo>;
+  let mockGameRepo: ReturnType<typeof createMockGameRepo>;
+
+  beforeEach(() => {
+    mockVoteRepo = createMockVoteRepo();
+    mockCandidateRepo = createMockCandidateRepo();
+    mockGameRepo = createMockGameRepo();
+    service = new VoteService(
+      mockVoteRepo as unknown as VoteRepository,
+      mockCandidateRepo as unknown as CandidateRepository,
+      mockGameRepo as unknown as GameRepository
+    );
+  });
+
+  describe('正常系', () => {
+    it('投票が存在する場合 VoteStatusResponse を返す', async () => {
+      const voteEntity = createVoteEntity({
+        updatedAt: '2024-01-16T00:00:00.000Z',
+      });
+      mockVoteRepo.getByUser.mockResolvedValue(voteEntity);
+
+      const result = await service.getMyVote(GAME_ID, TURN_NUMBER, USER_ID);
+
+      expect(result.gameId).toBe(GAME_ID);
+      expect(result.turnNumber).toBe(TURN_NUMBER);
+      expect(result.userId).toBe(USER_ID);
+      expect(result.candidateId).toBe(CANDIDATE_ID);
+      expect(result.createdAt).toBe('2024-01-15T00:00:00.000Z');
+      expect(result.updatedAt).toBe('2024-01-16T00:00:00.000Z');
+    });
+
+    it('updatedAt が未定義の場合 createdAt をフォールバックとして使用する', async () => {
+      const voteEntity = createVoteEntity({ updatedAt: undefined });
+      mockVoteRepo.getByUser.mockResolvedValue(voteEntity);
+
+      const result = await service.getMyVote(GAME_ID, TURN_NUMBER, USER_ID);
+
+      expect(result.updatedAt).toBe(voteEntity.createdAt);
+    });
+  });
+
+  describe('エラー系', () => {
+    it('投票が存在しない場合 VoteNotFoundError をスローする', async () => {
+      mockVoteRepo.getByUser.mockResolvedValue(null);
+
+      await expect(service.getMyVote(GAME_ID, TURN_NUMBER, USER_ID)).rejects.toThrow(
+        VoteNotFoundError
+      );
     });
   });
 });

@@ -10,6 +10,7 @@ import {
   postVoteParamSchema,
   putVoteBodySchema,
   putVoteParamSchema,
+  getVoteParamSchema,
 } from './vote.js';
 
 describe('postVoteBodySchema', () => {
@@ -288,6 +289,86 @@ describe('putVoteParamSchema', () => {
     it('turnNumberが未指定の場合を拒否する', () => {
       const result = putVoteParamSchema.safeParse({
         gameId: '550e8400-e29b-41d4-a716-446655440000',
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+});
+
+/**
+ * 投票状況取得API バリデーションスキーマのユニットテスト
+ *
+ * Requirements: 2.1, 2.2
+ */
+
+describe('getVoteParamSchema', () => {
+  describe('有効なパラメータ', () => {
+    it('有効なUUID gameIdと正のturnNumberを受け入れる', () => {
+      const result = getVoteParamSchema.safeParse({
+        gameId: '550e8400-e29b-41d4-a716-446655440000',
+        turnNumber: '5',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.gameId).toBe('550e8400-e29b-41d4-a716-446655440000');
+        expect(result.data.turnNumber).toBe(5);
+      }
+    });
+
+    it('turnNumber 0を受け入れる', () => {
+      const result = getVoteParamSchema.safeParse({
+        gameId: '550e8400-e29b-41d4-a716-446655440000',
+        turnNumber: '0',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.turnNumber).toBe(0);
+      }
+    });
+
+    it('文字列のturnNumberを数値に変換する', () => {
+      const result = getVoteParamSchema.safeParse({
+        gameId: '550e8400-e29b-41d4-a716-446655440000',
+        turnNumber: '5',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.turnNumber).toBe(5);
+      }
+    });
+  });
+
+  describe('無効なgameId', () => {
+    it('非UUID形式のgameIdを拒否する', () => {
+      const result = getVoteParamSchema.safeParse({
+        gameId: 'not-a-uuid',
+        turnNumber: '1',
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('無効なturnNumber', () => {
+    it('負のturnNumberを拒否する', () => {
+      const result = getVoteParamSchema.safeParse({
+        gameId: '550e8400-e29b-41d4-a716-446655440000',
+        turnNumber: '-1',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('小数のturnNumberを拒否する', () => {
+      const result = getVoteParamSchema.safeParse({
+        gameId: '550e8400-e29b-41d4-a716-446655440000',
+        turnNumber: '1.5',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('非数値のturnNumberを拒否する', () => {
+      const result = getVoteParamSchema.safeParse({
+        gameId: '550e8400-e29b-41d4-a716-446655440000',
+        turnNumber: 'abc',
       });
       expect(result.success).toBe(false);
     });

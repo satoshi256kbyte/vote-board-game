@@ -13,10 +13,11 @@ import {
   AlreadyVotedError,
   NotVotedError,
   SameCandidateError,
+  VoteNotFoundError,
 } from '../services/vote.js';
 import { GameNotFoundError, TurnNotFoundError } from '../services/candidate.js';
 import type { AuthVariables } from '../lib/auth/types.js';
-import type { VoteResponse, VoteChangeResponse } from '../types/vote.js';
+import type { VoteResponse, VoteChangeResponse, VoteStatusResponse } from '../types/vote.js';
 
 const validGameId = '550e8400-e29b-41d4-a716-446655440000';
 const validCandidateId = '789e0123-e89b-12d3-a456-426614174002';
@@ -414,6 +415,117 @@ describe('PUT /api/games/:gameId/turns/:turnNumber/votes/me', () => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidateId: validCandidateId }),
+      });
+      const data = await res.json();
+
+      expect(res.status).toBe(401);
+      expect(data.error).toBe('UNAUTHORIZED');
+    });
+  });
+});
+
+/**
+ * GET /api/games/:gameId/turns/:turnNumber/votes/me Unit Tests
+ *
+ * Requirements: 1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2
+ */
+describe('GET /api/games/:gameId/turns/:turnNumber/votes/me', () => {
+  let app: Hono;
+  let mockService: {
+    createVote: ReturnType<typeof vi.fn>;
+    changeVote: ReturnType<typeof vi.fn>;
+    getMyVote: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(() => {
+    mockService = { createVote: vi.fn(), changeVote: vi.fn(), getMyVote: vi.fn() };
+    app = new Hono<{ Variables: AuthVariables }>();
+    // 認証ミドルウェアのモック: userId をセット
+    app.use('*', async (c, next) => {
+      c.set('userId', userId);
+      await next();
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    app.route('/api', createGameVotesRouter(mockService as any));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('正常系 (200 OK)', () => {
+    it('投票状況を取得して200を返す', async () => {
+      const mockResponse: VoteStatusResponse = {
+        gameId: validGameId,
+        turnNumber: 5,
+        userId,
+        candidateId: validCandidateId,
+        createdAt: '2024-01-15T00:00:00.000Z',
+        updatedAt: '2024-01-15T01:00:00.000Z',
+      };
+      mockService.getMyVote.mockResolvedValue(mockResponse);
+
+      const res = await app.request(`/api/games/${validGameId}/turns/5/votes/me`, {
+        method: 'GET',
+      });
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.gameId).toBe(validGameId);
+      expect(data.turnNumber).toBe(5);
+      expect(data.userId).toBe(userId);
+      expect(data.candidateId).toBe(validCandidateId);
+      expect(data.createdAt).toBe('2024-01-15T00:00:00.000Z');
+      expect(data.updatedAt).toBe('2024-01-15T01:00:00.000Z');
+      expect(mockService.getMyVote).toHaveBeenCalledWith(validGameId, 5, userId);
+    });
+  });
+
+  describe('投票未存在 (404)', () => {
+    it('VoteNotFoundErrorで404を返す', async () => {
+      mockService.getMyVote.mockRejectedValue(new VoteNotFoundError());
+
+      const res = await app.request(`/api/games/${validGameId}/turns/5/votes/me`, {
+        method: 'GET',
+      });
+      const data = await res.json();
+
+      expect(res.status).toBe(404);
+      expect(data.error).toBe('NOT_FOUND');
+      expect(data.message).toBe('Vote not found');
+    });
+  });
+
+  describe('バリデーションエラー (400)', () => {
+    it('無効なgameIdで400を返す', async () => {
+      const res = await app.request('/api/games/not-a-uuid/turns/5/votes/me', {
+        method: 'GET',
+      });
+      const data = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(data.error).toBe('VALIDATION_ERROR');
+    });
+
+    it('無効なturnNumberで400を返す', async () => {
+      const res = await app.request(`/api/games/${validGameId}/turns/-1/votes/me`, {
+        method: 'GET',
+      });
+      const data = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(data.error).toBe('VALIDATION_ERROR');
+    });
+  });
+
+  describe('認証なし (401)', () => {
+    it('userIdが未設定の場合401を返す', async () => {
+      const noAuthApp = new Hono<{ Variables: AuthVariables }>();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      noAuthApp.route('/api', createGameVotesRouter(mockService as any));
+
+      const res = await noAuthApp.request(`/api/games/${validGameId}/turns/5/votes/me`, {
+        method: 'GET',
       });
       const data = await res.json();
 
