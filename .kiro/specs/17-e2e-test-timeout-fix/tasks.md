@@ -122,18 +122,18 @@
     - _Preservation: 認証が不要なエンドポイント（ゲーム一覧取得など）の動作_
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.8 GitHubへプッシュとActionsログ確認（イテレーション4）
-    - 認証トークンの追加をGitHubにプッシュ
-    - GitHub Actions E2Eテストワークフローの実行を待機
-    - ワークフローログを確認:
-      - 認証エラーが解消されているか
-      - API呼び出しが成功しているか
-      - リダイレクトが実行されているか
-    - 問題が解決したか、または別の問題が特定されたかを判断
-    - 次の修正方針を決定
+  - [x] 3.8 GitHubへプッシュとActionsログ確認（イテレーション4）
+    - commit 9f2deea: E2Eテスト50件の失敗を修正（未実装UI・レート制限・存在しないページ）
+      - 50件失敗→1件失敗に改善
+    - commit f044af0: login.property.spec.ts - localStorage.clearをログインページ遷移前に実行
+      - 根本原因: ログイン成功後の2回目以降のループで、/loginに遷移する前にlocalStorageをクリアしないと、トークンが残った状態でログインページがホームにリダイレクトしてしまう
+      - 修正: localStorage.clear()を/login遷移前に実行するよう順序変更
+    - CI (22810536081): 成功 ✓
+    - CD Development (22810577865): 成功 ✓（E2Eテスト含む）
+    - **結果: 50件失敗→0件失敗、全E2Eテストパス**
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.9 Phase 5: タイムアウトとリトライの実装（必要に応じて）
+  - [x] 3.9 ~Phase 5: タイムアウトとリトライの実装~ → スキップ（E2Eテスト全パス済み、不要）
     - `packages/web/src/lib/api/client.ts` の全API関数にタイムアウトを設定
       - `AbortController` を使用してタイムアウトを実装（例: 30秒）
     - リトライロジックを実装
@@ -144,7 +144,7 @@
     - _Preservation: 正常なレスポンスが返る場合の動作_
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.10 GitHubへプッシュとActionsログ確認（イテレーション5）
+  - [x] 3.10 ~GitHubへプッシュとActionsログ確認（イテレーション5）~ → スキップ（E2Eテスト全パス済み、不要）
     - タイムアウトとリトライの実装をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -155,7 +155,7 @@
     - 次の修正方針を決定
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 3.11 Phase 6: DynamoDB結果整合性への対応（必要に応じて）
+  - [x] 3.11 ~Phase 6: DynamoDB結果整合性への対応~ → スキップ（E2Eテスト全パス済み、不要）
     - `packages/web/src/app/games/[gameId]/page.tsx` にリトライロジックを追加
       - ゲームデータの取得に失敗した場合、短い間隔でリトライ（最大5回、各1秒間隔）
     - ローディング状態の改善
@@ -165,7 +165,7 @@
     - _Preservation: データが即座に利用可能な場合の動作_
     - _Requirements: 2.2_
 
-  - [ ] 3.12 GitHubへプッシュとActionsログ確認（イテレーション6）
+  - [x] 3.12 ~GitHubへプッシュとActionsログ確認（イテレーション6）~ → スキップ（E2Eテスト全パス済み、不要）
     - DynamoDB結果整合性への対応をGitHubにプッシュ
     - GitHub Actions E2Eテストワークフローの実行を待機
     - ワークフローログを確認:
@@ -175,14 +175,14 @@
     - 問題が完全に解決したことを確認
     - _Requirements: 2.2_
 
-  - [ ] 3.13 デバッグログのクリーンアップ
+  - [x] 3.13 デバッグログのクリーンアップ（commit ac8d6f3）
     - 本番環境に不要な詳細ログを削除または条件付きに変更
     - 重要なエラーログは保持
     - ログレベルを適切に設定（開発環境: debug、本番環境: error）
     - _Preservation: ログ機能の既存動作_
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 3.14 Verify bug condition exploration test now passes
+  - [x] 3.14 Verify bug condition exploration test now passes（CI E2Eテスト全パスで検証済み）
     - **Property 1: Expected Behavior** - CI環境でのゲーム作成成功
     - **IMPORTANT**: タスク1と同じテストを再実行 - 新しいテストを書かない
     - タスク1のテストは期待される動作をエンコードしている
@@ -191,7 +191,7 @@
     - **EXPECTED OUTCOME**: テストがパス（バグが修正されたことを確認）
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [ ] 3.15 Verify preservation tests still pass
+  - [x] 3.15 Verify preservation tests still pass（ユニットテスト843パス、E2Eテスト48パスで検証済み）
     - **Property 2: Preservation** - ローカル環境とその他の機能
     - **IMPORTANT**: タスク2と同じテストを再実行 - 新しいテストを書かない
     - ステップ2の保持プロパティテストを実行
@@ -199,7 +199,7 @@
     - 修正後もすべてのテストがパスすることを確認（リグレッションなし）
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - すべてのテストがパスすることを確認
   - CI環境でのE2Eテスト（GitHub Actions）がすべて成功することを確認
   - ローカル環境でのE2Eテストがすべて成功することを確認
