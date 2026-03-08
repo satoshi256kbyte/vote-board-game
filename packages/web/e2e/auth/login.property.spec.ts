@@ -43,10 +43,10 @@ test.describe('User Login Flow - Property Tests', () => {
         console.log(`[Property Test] Testing login with user: ${user.email}`);
 
         // Clear localStorage before each iteration
-        await page.evaluate(() => localStorage.clear());
-
-        // Navigate to login page
+        // Navigate to login page first to avoid SecurityError when page is in about:blank state
         await navigateWithErrorHandling(page, '/login');
+        await page.waitForLoadState('domcontentloaded');
+        await page.evaluate(() => localStorage.clear());
         await expect(page.locator('h1')).toContainText('ログイン', { timeout: 10000 });
 
         // Fill login form
