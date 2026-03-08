@@ -42,11 +42,17 @@ test.describe('User Login Flow - Property Tests', () => {
       for (const user of testUsers) {
         console.log(`[Property Test] Testing login with user: ${user.email}`);
 
-        // Clear localStorage before each iteration
-        // Navigate to login page first to avoid SecurityError when page is in about:blank state
+        // Clear localStorage BEFORE navigating to /login to prevent auth redirect.
+        // After a successful login, tokens are in localStorage. If we navigate to /login
+        // with tokens still present, the login page detects them and redirects back to /.
+        // So we clear first (on whatever page we're on), then navigate.
+        const pageUrl = page.url();
+        if (pageUrl && !pageUrl.startsWith('about:')) {
+          await page.evaluate(() => localStorage.clear());
+        }
+
         await navigateWithErrorHandling(page, '/login');
         await page.waitForLoadState('domcontentloaded');
-        await page.evaluate(() => localStorage.clear());
         await expect(page.locator('h1')).toContainText('ログイン', { timeout: 10000 });
 
         // Fill login form
