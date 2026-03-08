@@ -106,20 +106,17 @@ describe('API Client - Authentication Token Handling', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        text: async () =>
-          JSON.stringify({
-            gameId: 'new-game-id',
-            gameType: 'OTHELLO',
-            status: 'ACTIVE',
-            aiSide: 'BLACK',
-            currentTurn: 'BLACK',
-            boardState: { board: Array(8).fill(Array(8).fill(0)) },
-            moveHistory: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }),
-        headers: new Headers(),
-        url: 'http://localhost:3001/api/games',
+        json: async () => ({
+          gameId: 'new-game-id',
+          gameType: 'OTHELLO',
+          status: 'ACTIVE',
+          aiSide: 'BLACK',
+          currentTurn: 'BLACK',
+          boardState: { board: Array(8).fill(Array(8).fill(0)) },
+          moveHistory: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }),
       } as Response);
 
       await createGame({ gameType: 'OTHELLO', aiSide: 'BLACK' });

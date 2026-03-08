@@ -36,26 +36,15 @@ export class ApiError extends Error {
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL;
 
-  // Debug: Log environment variable state
-  console.log('[getApiBaseUrl] Environment check:', {
-    NEXT_PUBLIC_API_URL: url,
-    NODE_ENV: process.env.NODE_ENV,
-    isDefined: url !== undefined,
-    isEmpty: url === '',
-  });
-
   if (!url) {
     // Development fallback
     if (process.env.NODE_ENV === 'development') {
-      console.log('[getApiBaseUrl] Using development fallback: http://localhost:3001');
       return 'http://localhost:3001';
     }
 
     const errorMsg =
       'NEXT_PUBLIC_API_URL is not defined. Please ensure the environment variable is set correctly.';
-    console.error('[getApiBaseUrl] Error:', errorMsg, {
-      availableEnvVars: Object.keys(process.env).filter((key) => key.startsWith('NEXT_PUBLIC_')),
-    });
+    console.error('[getApiBaseUrl] Error:', errorMsg);
     throw new Error(errorMsg);
   }
 
@@ -66,7 +55,6 @@ function getApiBaseUrl(): string {
     throw new Error(errorMsg);
   }
 
-  console.log('[getApiBaseUrl] Using API URL:', url);
   return url;
 }
 
@@ -96,9 +84,6 @@ function buildHeaders(includeAuth: boolean = false): HeadersInit {
     const token = getAuthToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
-      console.log('[buildHeaders] Added Authorization header');
-    } else {
-      console.log('[buildHeaders] No token available, skipping Authorization header');
     }
   }
 
@@ -205,8 +190,6 @@ export async function fetchGame(gameId: string): Promise<Game> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/api/games/${gameId}`;
 
-  console.log('[fetchGame] Requesting:', url);
-
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -215,11 +198,8 @@ export async function fetchGame(gameId: string): Promise<Game> {
       },
     });
 
-    console.log('[fetchGame] Response status:', response.status);
-
     return handleResponse<Game>(response);
   } catch (error) {
-    console.error('[fetchGame] Error:', error);
     if (error instanceof ApiError) {
       throw error;
     }
@@ -258,19 +238,6 @@ export async function createGame(data: CreateGameRequest): Promise<Game> {
   const url = `${baseUrl}/api/games`;
   const headers = buildHeaders(false); // Game creation is public (no auth required per API middleware)
 
-  // Debug: Log request details
-  console.log('[createGame] Request:', {
-    url,
-    method: 'POST',
-    headers,
-    body: JSON.stringify(data),
-    apiBaseUrl: baseUrl,
-    env: {
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-      NODE_ENV: process.env.NODE_ENV,
-    },
-  });
-
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -278,52 +245,8 @@ export async function createGame(data: CreateGameRequest): Promise<Game> {
       body: JSON.stringify(data),
     });
 
-    // Debug: Log response details
-    console.log('[createGame] Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers ? Object.fromEntries(response.headers.entries()) : {},
-      url: response.url,
-      ok: response.ok,
-    });
-
-    // Debug: Log response body before parsing
-    const responseText = await response.text();
-    console.log('[createGame] Response body:', responseText);
-
-    // Parse response manually since we already consumed the body
-    if (!response.ok) {
-      let errorData: { error?: string; message?: string; details?: Record<string, unknown> };
-
-      try {
-        errorData = JSON.parse(responseText);
-      } catch {
-        throw new ApiError(response.statusText || 'Unknown error', response.status);
-      }
-
-      throw new ApiError(
-        errorData.message || 'API request failed',
-        response.status,
-        errorData.error,
-        errorData.details
-      );
-    }
-
-    const result = JSON.parse(responseText) as Game;
-    console.log('[createGame] Parsed game:', { gameId: result.gameId, status: result.status });
-    return result;
+    return await handleResponse<Game>(response);
   } catch (error) {
-    // Debug: Log error details
-    console.error('[createGame] Error:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      isApiError: error instanceof ApiError,
-      statusCode: error instanceof ApiError ? error.statusCode : undefined,
-      errorCode: error instanceof ApiError ? error.errorCode : undefined,
-      details: error instanceof ApiError ? error.details : undefined,
-    });
-
     if (error instanceof ApiError) {
       throw error;
     }
@@ -404,12 +327,6 @@ export async function createCandidate(
   const url = `${baseUrl}/api/games/${gameId}/candidates`;
   const headers = buildHeaders(true); // Candidate creation requires authentication
 
-  console.log('[createCandidate] Request:', {
-    url,
-    method: 'POST',
-    hasAuthHeader: 'Authorization' in headers,
-  });
-
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -419,12 +336,6 @@ export async function createCandidate(
 
     return handleResponse<Candidate>(response);
   } catch (error) {
-    console.error('[createCandidate] Error:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : String(error),
-      statusCode: error instanceof ApiError ? error.statusCode : undefined,
-    });
-
     if (error instanceof ApiError) {
       throw error;
     }
@@ -461,12 +372,6 @@ export async function vote(gameId: string, candidateId: string): Promise<void> {
   const url = `${baseUrl}/api/games/${gameId}/candidates/${candidateId}/vote`;
   const headers = buildHeaders(true); // Voting requires authentication
 
-  console.log('[vote] Request:', {
-    url,
-    method: 'POST',
-    hasAuthHeader: 'Authorization' in headers,
-  });
-
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -475,12 +380,6 @@ export async function vote(gameId: string, candidateId: string): Promise<void> {
 
     await handleResponse<void>(response);
   } catch (error) {
-    console.error('[vote] Error:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : String(error),
-      statusCode: error instanceof ApiError ? error.statusCode : undefined,
-    });
-
     if (error instanceof ApiError) {
       throw error;
     }
