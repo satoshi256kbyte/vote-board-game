@@ -158,3 +158,231 @@ describe('CandidateService', () => {
     });
   });
 });
+
+import { InvalidMoveError, VotingClosedError, DuplicatePositionError } from './candidate.js';
+import { createInitialBoard } from '../lib/othello/board.js';
+
+// createCandidate 用のモックリポジトリ
+function createMockCandidateRepoForCreate(): {
+  listByTurn: ReturnType<typeof vi.fn>;
+  create: ReturnType<typeof vi.fn>;
+} {
+  return {
+    listByTurn: vi.fn(),
+    create: vi.fn(),
+  };
+}
+
+function createMockGameRepoFull(): {
+  getById: ReturnType<typeof vi.fn>;
+} {
+  return { getById: vi.fn() };
+}
+
+// 初期盤面の JSON 文字列
+const initialBoardState = JSON.stringify({ board: createInitialBoard() });
+
+// 未来の投票締切
+const futureDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+// 過去の投票締切
+const pastDeadline = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+function createActiveGame(overrides: Partial<GameEntity> = {}): GameEntity {
+  return {
+    PK: 'GAME#game-1',
+    SK: 'GAME#game-1',
+    entityType: 'GAME',
+    GSI1PK: 'GAME#STATUS#ACTIVE',
+    GSI1SK: '2024-01-14T00:00:00.000Z',
+    gameId: 'game-1',
+    gameType: 'OTHELLO',
+    status: 'ACTIVE',
+    aiSide: 'BLACK',
+    currentTurn: 0,
+    boardState: initialBoardState,
+    createdAt: '2024-01-14T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+describe('CandidateService - createCandidate', () => {
+  let service: CandidateService;
+  let mockCandidateRepo: ReturnType<typeof createMockCandidateRepoForCreate>;
+  let mockGameRepo: ReturnType<typeof createMockGameRepoFull>;
+
+  beforeEach(() => {
+    mockCandidateRepo = createMockCandidateRepoForCreate();
+    mockGameRepo = createMockGameRepoFull();
+    service = new CandidateService(
+      mockCandidateRepo as unknown as CandidateRepository,
+      mockGameRepo as unknown as GameRepository
+    );
+  });
+
+  describe('正常系', () => {
+    it('有効なリクエストで候補が作成される', async () => {
+      const game = createActiveGame();
+      mockGameRepo.getById.mockResolvedValue(game);
+      mockCandidateRepo.listByTurn.mockResolvedValue([]);
+      mockCandidateRepo.create.mockImplementation(async (params: Record<string, unknown>) => ({
+        PK: `GAME#game-1#TURN#0`,
+        SK: `CANDIDATE#${params.candidateId}`,
+        entityType: 'CANDIDATE',
+        candidateId: params.candidateId,
+        gameId: params.gameId,
+        turnNumber: params.turnNumber,
+        position: params.position,
+        description: params.description,
+        voteCount: 0,
+        createdBy: params.createdBy,
+        status: 'VOTING',
+        votingDeadline: params.votingDeadline,
+        createdAt: '2024-01-14T12:00:00.000Z',
+      }));
+
+      // aiSide=BLACK → collective=WHITE, valid WHITE moves on initial board: (2,4), (3,5), (4,2), (5,3)
+      const result = await service.createCandidate('game-1', 0, '2,4', 'テスト説明', 'user-123');
+
+      expect(result.gameId).toBe('game-1');
+      expect(result.turnNumber).toBe(0);
+      expect(result.position).toBe('2,4');
+      expect(result.description).toBe('テスト説明');
+      expect(result.voteCount).toBe(0);
+      expect(result.status).toBe('VOTING');
+      expect(result.createdBy).toBe('USER#user-123');
+      expect(result.candidateId).toBeDefined();
+    });
+
+    it('既存候補がある場合、同じ votingDeadline が使用される', async () => {
+      const game = createActiveGame();
+      mockGameRepo.getById.mockResolvedValue(game);
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({
+          position: '3,5',
+          votingDeadline: futureDeadline,
+        }),
+      ]);
+      mockCandidateRepo.create.mockImplementation(async (params: Record<string, unknown>) => ({
+        PK: 'GAME#game-1#TURN#0',
+        SK: `CANDIDATE#${params.candidateId}`,
+        entityType: 'CANDIDATE',
+        candidateId: params.candidateId,
+        gameId: params.gameId,
+        turnNumber: params.turnNumber,
+        position: params.position,
+        description: params.description,
+        voteCount: 0,
+        createdBy: params.createdBy,
+        status: 'VOTING',
+        votingDeadline: params.votingDeadline,
+        createdAt: '2024-01-14T12:00:00.000Z',
+      }));
+
+      const result = await service.createCandidate('game-1', 0, '2,4', 'テスト', 'user-123');
+
+      expect(mockCandidateRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ votingDeadline: futureDeadline })
+      );
+      expect(result.votingDeadline).toBe(futureDeadline);
+    });
+  });
+
+  describe('エラー系', () => {
+    it('ゲームが存在しない場合 GameNotFoundError をスロー', async () => {
+      mockGameRepo.getById.mockResolvedValue(null);
+
+      await expect(
+        service.createCandidate('nonexistent', 0, '2,4', 'テスト', 'user-123')
+      ).rejects.toThrow(GameNotFoundError);
+    });
+
+    it('ゲームが FINISHED の場合 VotingClosedError をスロー', async () => {
+      mockGameRepo.getById.mockResolvedValue(createActiveGame({ status: 'FINISHED' }));
+
+      await expect(
+        service.createCandidate('game-1', 0, '2,4', 'テスト', 'user-123')
+      ).rejects.toThrow(VotingClosedError);
+    });
+
+    it('ターンが存在しない場合 TurnNotFoundError をスロー', async () => {
+      mockGameRepo.getById.mockResolvedValue(createActiveGame({ currentTurn: 3 }));
+
+      await expect(
+        service.createCandidate('game-1', 10, '2,4', 'テスト', 'user-123')
+      ).rejects.toThrow(TurnNotFoundError);
+    });
+
+    it('投票締切済みの場合 VotingClosedError をスロー', async () => {
+      mockGameRepo.getById.mockResolvedValue(createActiveGame());
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({ votingDeadline: pastDeadline }),
+      ]);
+
+      await expect(
+        service.createCandidate('game-1', 0, '2,4', 'テスト', 'user-123')
+      ).rejects.toThrow(VotingClosedError);
+    });
+
+    it('重複ポジションの場合 DuplicatePositionError をスロー', async () => {
+      mockGameRepo.getById.mockResolvedValue(createActiveGame());
+      mockCandidateRepo.listByTurn.mockResolvedValue([
+        createCandidateEntity({
+          position: '2,4',
+          votingDeadline: futureDeadline,
+        }),
+      ]);
+
+      await expect(
+        service.createCandidate('game-1', 0, '2,4', 'テスト', 'user-123')
+      ).rejects.toThrow(DuplicatePositionError);
+    });
+
+    it('オセロルール上無効な手の場合 InvalidMoveError をスロー', async () => {
+      mockGameRepo.getById.mockResolvedValue(createActiveGame());
+      mockCandidateRepo.listByTurn.mockResolvedValue([]);
+
+      // (0,0) は初期盤面では有効な手ではない
+      await expect(
+        service.createCandidate('game-1', 0, '0,0', 'テスト', 'user-123')
+      ).rejects.toThrow(InvalidMoveError);
+    });
+
+    it('既に石がある位置の場合 InvalidMoveError をスロー', async () => {
+      mockGameRepo.getById.mockResolvedValue(createActiveGame());
+      mockCandidateRepo.listByTurn.mockResolvedValue([]);
+
+      // (3,3) は初期盤面で White の石がある
+      await expect(
+        service.createCandidate('game-1', 0, '3,3', 'テスト', 'user-123')
+      ).rejects.toThrow(InvalidMoveError);
+    });
+  });
+
+  describe('初期値の検証', () => {
+    it('voteCount=0, status=VOTING, createdBy=USER# 形式で作成される', async () => {
+      mockGameRepo.getById.mockResolvedValue(createActiveGame());
+      mockCandidateRepo.listByTurn.mockResolvedValue([]);
+      mockCandidateRepo.create.mockImplementation(async (params: Record<string, unknown>) => ({
+        PK: 'GAME#game-1#TURN#0',
+        SK: `CANDIDATE#${params.candidateId}`,
+        entityType: 'CANDIDATE',
+        candidateId: params.candidateId,
+        gameId: params.gameId,
+        turnNumber: params.turnNumber,
+        position: params.position,
+        description: params.description,
+        voteCount: 0,
+        createdBy: params.createdBy,
+        status: 'VOTING',
+        votingDeadline: params.votingDeadline,
+        createdAt: '2024-01-14T12:00:00.000Z',
+      }));
+
+      const result = await service.createCandidate('game-1', 0, '2,4', 'テスト', 'user-456');
+
+      expect(result.voteCount).toBe(0);
+      expect(result.status).toBe('VOTING');
+      expect(result.createdBy).toBe('USER#user-456');
+    });
+  });
+});

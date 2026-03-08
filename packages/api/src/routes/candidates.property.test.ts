@@ -314,3 +314,201 @@ describe('Property 14: 認証状態に依存しないデータ', () => {
     );
   });
 });
+
+/**
+ * 候補投稿API プロパティベーステスト
+ *
+ * Property 8: 成功レスポンスの形式 (Requirements: 8.1, 8.2, 8.3, 8.4)
+ * Property 9: 初期値の正確性 (Requirements: 7.2, 7.3, 7.4, 7.5)
+ * Property 11: エラーレスポンスの一貫性 (Requirements: 9.1)
+ */
+
+import type { AuthVariables } from '../lib/auth/types.js';
+import type { PostCandidateResponse } from '../types/candidate.js';
+import {
+  GameNotFoundError,
+  TurnNotFoundError,
+  InvalidMoveError,
+  VotingClosedError,
+  DuplicatePositionError,
+} from '../services/candidate.js';
+
+const POST_REQUIRED_FIELDS: (keyof PostCandidateResponse)[] = [
+  'candidateId',
+  'gameId',
+  'turnNumber',
+  'position',
+  'description',
+  'voteCount',
+  'createdBy',
+  'status',
+  'votingDeadline',
+  'createdAt',
+];
+
+function createPostMockService() {
+  return {
+    listCandidates: vi.fn(),
+    createCandidate: vi.fn(),
+  };
+}
+
+function postCandidateResponseArb(): fc.Arbitrary<PostCandidateResponse> {
+  return fc.record({
+    candidateId: fc.uuid(),
+    gameId: fc.constant(validGameId),
+    turnNumber: fc.nat({ max: 60 }),
+    position: fc
+      .tuple(fc.integer({ min: 0, max: 7 }), fc.integer({ min: 0, max: 7 }))
+      .map(([r, c]) => `${r},${c}`),
+    description: fc.string({ minLength: 1, maxLength: 200 }),
+    voteCount: fc.constant(0),
+    createdBy: fc.uuid().map((id) => `USER#${id}`),
+    status: fc.constant('VOTING' as const),
+    votingDeadline: fc
+      .integer({ min: new Date('2020-01-01').getTime(), max: new Date('2030-12-31').getTime() })
+      .map((ts) => new Date(ts).toISOString()),
+    createdAt: fc
+      .integer({ min: new Date('2020-01-01').getTime(), max: new Date('2030-12-31').getTime() })
+      .map((ts) => new Date(ts).toISOString()),
+  });
+}
+
+describe('Property 8: 成功レスポンスの形式（POST）', () => {
+  let app: Hono<{ Variables: AuthVariables }>;
+  let mockService: ReturnType<typeof createPostMockService>;
+
+  beforeEach(() => {
+    mockService = createPostMockService();
+    app = new Hono<{ Variables: AuthVariables }>();
+    app.use('/api/games/:gameId/turns/:turnNumber/candidates', async (c, next) => {
+      if (c.req.method === 'POST') {
+        c.set('userId', 'test-user');
+      }
+      await next();
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    app.route('/api', createGameCandidatesRouter(mockService as any));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return 201 with all required fields for any valid POST response', async () => {
+    await fc.assert(
+      fc.asyncProperty(postCandidateResponseArb(), async (response) => {
+        mockService.createCandidate.mockResolvedValue(response);
+
+        const res = await app.request(`/api/games/${validGameId}/turns/0/candidates`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ position: '2,3', description: 'テスト' }),
+        });
+        const data = await res.json();
+
+        expect(res.status).toBe(201);
+        expect(res.headers.get('content-type')).toContain('application/json');
+        for (const field of POST_REQUIRED_FIELDS) {
+          expect(data).toHaveProperty(field);
+        }
+      }),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});
+
+describe('Property 9: 初期値の正確性（POST）', () => {
+  let app: Hono<{ Variables: AuthVariables }>;
+  let mockService: ReturnType<typeof createPostMockService>;
+
+  beforeEach(() => {
+    mockService = createPostMockService();
+    app = new Hono<{ Variables: AuthVariables }>();
+    app.use('/api/games/:gameId/turns/:turnNumber/candidates', async (c, next) => {
+      if (c.req.method === 'POST') {
+        c.set('userId', 'test-user');
+      }
+      await next();
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    app.route('/api', createGameCandidatesRouter(mockService as any));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should have voteCount=0, status=VOTING, createdBy=USER# format', async () => {
+    await fc.assert(
+      fc.asyncProperty(postCandidateResponseArb(), async (response) => {
+        mockService.createCandidate.mockResolvedValue(response);
+
+        const res = await app.request(`/api/games/${validGameId}/turns/0/candidates`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ position: '2,3', description: 'テスト' }),
+        });
+        const data = await res.json();
+
+        expect(data.voteCount).toBe(0);
+        expect(data.status).toBe('VOTING');
+        expect(data.createdBy).toMatch(/^USER#/);
+        expect(data.candidateId).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        );
+      }),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});
+
+describe('Property 11: エラーレスポンスの一貫性（POST）', () => {
+  let app: Hono<{ Variables: AuthVariables }>;
+  let mockService: ReturnType<typeof createPostMockService>;
+
+  beforeEach(() => {
+    mockService = createPostMockService();
+    app = new Hono<{ Variables: AuthVariables }>();
+    app.use('/api/games/:gameId/turns/:turnNumber/candidates', async (c, next) => {
+      if (c.req.method === 'POST') {
+        c.set('userId', 'test-user');
+      }
+      await next();
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    app.route('/api', createGameCandidatesRouter(mockService as any));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return { error, message } structure for all error types', async () => {
+    const errorCases = [
+      new GameNotFoundError(validGameId),
+      new TurnNotFoundError(validGameId, 99),
+      new InvalidMoveError('0,0', 'Move would not flip any discs'),
+      new VotingClosedError(),
+      new DuplicatePositionError('2,3'),
+      new Error('Unexpected error'),
+    ];
+
+    for (const errorCase of errorCases) {
+      mockService.createCandidate.mockRejectedValue(errorCase);
+
+      const res = await app.request(`/api/games/${validGameId}/turns/0/candidates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position: '2,3', description: 'テスト' }),
+      });
+      const data = await res.json();
+
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(data).toHaveProperty('error');
+      expect(data).toHaveProperty('message');
+      expect(typeof data.error).toBe('string');
+      expect(typeof data.message).toBe('string');
+    }
+  });
+});

@@ -48,6 +48,14 @@ app.use('/api/candidates', async (c, next) => {
   await next();
 });
 
+// POST /api/games/:gameId/turns/:turnNumber/candidates は認証必須
+app.use('/api/games/:gameId/turns/:turnNumber/candidates', async (c, next) => {
+  if (c.req.method === 'POST') {
+    return authMiddleware(c, next);
+  }
+  await next();
+});
+
 // ヘルスチェック
 app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });

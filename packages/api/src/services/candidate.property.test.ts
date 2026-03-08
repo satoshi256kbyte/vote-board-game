@@ -88,3 +88,83 @@ describe('Property 2: 投票数降順ソート', () => {
     );
   });
 });
+
+/**
+ * Property 7: 同一ポジション重複拒否 (Requirements: 6.1, 6.2)
+ */
+import { DuplicatePositionError } from './candidate.js';
+import { createInitialBoard } from '../lib/othello/board.js';
+
+describe('Property 7: 同一ポジション重複拒否', () => {
+  let service: CandidateService;
+  let mockCandidateRepo: {
+    listByTurn: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+  };
+  let mockGameRepo: { getById: ReturnType<typeof vi.fn> };
+
+  const initialBoardState = JSON.stringify({ board: createInitialBoard() });
+  const futureDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+  beforeEach(() => {
+    mockCandidateRepo = {
+      listByTurn: vi.fn(),
+      create: vi.fn(),
+    };
+    mockGameRepo = { getById: vi.fn() };
+    service = new CandidateService(
+      mockCandidateRepo as unknown as CandidateRepository,
+      mockGameRepo as unknown as GameRepository
+    );
+  });
+
+  it('should throw DuplicatePositionError when candidate with same position exists', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 0, max: 7 }),
+        fc.integer({ min: 0, max: 7 }),
+        async (row, col) => {
+          const position = `${row},${col}`;
+          const game: GameEntity = {
+            PK: 'GAME#game-1',
+            SK: 'GAME#game-1',
+            entityType: 'GAME',
+            GSI1PK: 'GAME#STATUS#ACTIVE',
+            GSI1SK: '2024-01-14T00:00:00.000Z',
+            gameId: 'game-1',
+            gameType: 'OTHELLO',
+            status: 'ACTIVE',
+            aiSide: 'BLACK',
+            currentTurn: 0,
+            boardState: initialBoardState,
+            createdAt: '2024-01-14T00:00:00.000Z',
+          };
+
+          const existingCandidate: CandidateEntity = {
+            PK: 'GAME#game-1#TURN#0',
+            SK: `CANDIDATE#existing`,
+            entityType: 'CANDIDATE',
+            candidateId: 'existing',
+            gameId: 'game-1',
+            turnNumber: 0,
+            position,
+            description: '既存の候補',
+            voteCount: 5,
+            createdBy: 'USER#other-user',
+            status: 'VOTING',
+            votingDeadline: futureDeadline,
+            createdAt: '2024-01-14T00:00:00.000Z',
+          };
+
+          mockGameRepo.getById.mockResolvedValue(game);
+          mockCandidateRepo.listByTurn.mockResolvedValue([existingCandidate]);
+
+          await expect(
+            service.createCandidate('game-1', 0, position, 'テスト', 'user-123')
+          ).rejects.toThrow(DuplicatePositionError);
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});

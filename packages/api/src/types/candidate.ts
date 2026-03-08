@@ -35,3 +35,41 @@ export interface GetCandidatesResponse {
   /** 候補のリスト（投票数降順） */
   candidates: CandidateResponse[];
 }
+
+/**
+ * 候補投稿APIのリクエストボディ
+ * POST /api/games/:gameId/turns/:turnNumber/candidates
+ */
+export interface PostCandidateRequest {
+  /** 位置（"row,col"形式、例: "2,3"） */
+  position: string;
+  /** 説明文（1〜200文字） */
+  description: string;
+}
+
+/**
+ * 候補投稿APIのレスポンス
+ * POST /api/games/:gameId/turns/:turnNumber/candidates
+ */
+export interface PostCandidateResponse {
+  /** 候補ID（UUID v4） */
+  candidateId: string;
+  /** 対局ID */
+  gameId: string;
+  /** ターン番号 */
+  turnNumber: number;
+  /** 位置（"row,col"形式） */
+  position: string;
+  /** 説明文 */
+  description: string;
+  /** 投票数（初期値: 0） */
+  voteCount: number;
+  /** 作成者（"USER#<userId>"形式） */
+  createdBy: string;
+  /** ステータス（初期値: "VOTING"） */
+  status: 'VOTING';
+  /** 投票締切（ISO 8601形式） */
+  votingDeadline: string;
+  /** 作成日時（ISO 8601形式） */
+  createdAt: string;
+}

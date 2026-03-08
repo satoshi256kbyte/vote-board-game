@@ -12,11 +12,23 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import type { Context } from 'hono';
-import { CandidateService, GameNotFoundError, TurnNotFoundError } from '../services/candidate.js';
+import {
+  CandidateService,
+  GameNotFoundError,
+  TurnNotFoundError,
+  InvalidMoveError,
+  VotingClosedError,
+  DuplicatePositionError,
+} from '../services/candidate.js';
 import { CandidateRepository } from '../lib/dynamodb/repositories/candidate.js';
 import { GameRepository } from '../lib/dynamodb/repositories/game.js';
 import { docClient, TABLE_NAME } from '../lib/dynamodb/index.js';
-import { getCandidatesParamSchema } from '../schemas/candidate.js';
+import {
+  getCandidatesParamSchema,
+  postCandidateParamSchema,
+  postCandidateBodySchema,
+} from '../schemas/candidate.js';
+import type { AuthVariables } from '../lib/auth/types.js';
 
 // バリデーションエラーハンドラー（共通）
 const validationErrorHandler = (
@@ -53,12 +65,16 @@ const createCandidateSchema = z.object({
 });
 
 /**
- * 候補一覧取得ルーターを作成（GET /games/:gameId/turns/:turnNumber/candidates）
+ * 候補一覧取得・候補投稿ルーターを作成
+ * GET /games/:gameId/turns/:turnNumber/candidates - 候補一覧取得
+ * POST /games/:gameId/turns/:turnNumber/candidates - 候補投稿
  * /api にマウントされることを想定
  * @param candidateService CandidateServiceインスタンス（テスト時にモックを注入可能）
  */
-export function createGameCandidatesRouter(candidateService?: CandidateService): Hono {
-  const router = new Hono();
+export function createGameCandidatesRouter(
+  candidateService?: CandidateService
+): Hono<{ Variables: AuthVariables }> {
+  const router = new Hono<{ Variables: AuthVariables }>();
 
   const service =
     candidateService ||
@@ -107,6 +123,105 @@ export function createGameCandidatesRouter(candidateService?: CandidateService):
           {
             error: 'INTERNAL_ERROR',
             message: 'Failed to retrieve candidates',
+          },
+          500
+        );
+      }
+    }
+  );
+
+  // POST /games/:gameId/turns/:turnNumber/candidates - 候補投稿
+  router.post(
+    '/games/:gameId/turns/:turnNumber/candidates',
+    zValidator('param', postCandidateParamSchema, validationErrorHandler),
+    zValidator('json', postCandidateBodySchema, validationErrorHandler),
+    async (c) => {
+      try {
+        const { gameId, turnNumber } = c.req.valid('param');
+        const { position, description } = c.req.valid('json');
+        const userId = c.get('userId');
+
+        if (!userId) {
+          return c.json(
+            {
+              error: 'UNAUTHORIZED',
+              message: 'Authorization header is required',
+            },
+            401
+          );
+        }
+
+        const result = await service.createCandidate(
+          gameId,
+          turnNumber,
+          position,
+          description,
+          userId
+        );
+
+        return c.json(result, 201);
+      } catch (error) {
+        if (error instanceof GameNotFoundError) {
+          return c.json(
+            {
+              error: 'NOT_FOUND',
+              message: 'Game not found',
+            },
+            404
+          );
+        }
+
+        if (error instanceof TurnNotFoundError) {
+          return c.json(
+            {
+              error: 'NOT_FOUND',
+              message: 'Turn not found',
+            },
+            404
+          );
+        }
+
+        if (error instanceof InvalidMoveError) {
+          return c.json(
+            {
+              error: 'INVALID_MOVE',
+              message: error.message,
+            },
+            400
+          );
+        }
+
+        if (error instanceof VotingClosedError) {
+          return c.json(
+            {
+              error: 'VOTING_CLOSED',
+              message: 'Voting period has ended',
+            },
+            400
+          );
+        }
+
+        if (error instanceof DuplicatePositionError) {
+          return c.json(
+            {
+              error: 'CONFLICT',
+              message: error.message,
+            },
+            409
+          );
+        }
+
+        console.error('Failed to create candidate', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          gameId: c.req.param('gameId'),
+          turnNumber: c.req.param('turnNumber'),
+          timestamp: new Date().toISOString(),
+        });
+
+        return c.json(
+          {
+            error: 'INTERNAL_ERROR',
+            message: 'Failed to create candidate',
           },
           500
         );
