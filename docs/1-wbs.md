@@ -168,7 +168,7 @@ inclusion: manual
 | 6.1.2 候補投稿 API             | 完了       | 19-post-move-candidate-api |
 | 6.1.3 投票 API                 | 完了       | 20-vote-api                |
 | 6.1.4 投票変更 API             | 完了       | 21-vote-change-api         |
-| 6.1.5 投票状況取得 API         | 進行中     | 22-vote-status-api         |
+| 6.1.5 投票状況取得 API         | 完了       | 22-vote-status-api         |
 
 ### 6.2 フロントエンド開発
 

@@ -18,6 +18,7 @@ import {
   postVoteParamSchema,
   putVoteBodySchema,
   putVoteParamSchema,
+  getVoteParamSchema,
 } from './vote.js';
 
 describe('postVoteBodySchema - プロパティテスト', () => {
@@ -161,6 +162,64 @@ describe('putVoteParamSchema - プロパティテスト', () => {
         fc.double({ min: 0.01, max: 100, noNaN: true }).filter((n) => !Number.isInteger(n)),
         (decimalTurn) => {
           const result = putVoteParamSchema.safeParse({
+            gameId: '550e8400-e29b-41d4-a716-446655440000',
+            turnNumber: String(decimalTurn),
+          });
+          expect(result.success).toBe(false);
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});
+
+/**
+ * Feature: 22-vote-status-api, Property 2: パスパラメータのバリデーション
+ *
+ * UUID形式でないgameIdまたは0以上の整数でないturnNumberに対して、
+ * getVoteParamSchema.safeParse は success: false を返す
+ *
+ * **Validates: Requirements 2.1, 2.2, 2.3**
+ */
+describe('getVoteParamSchema - プロパティテスト', () => {
+  it('Property 2: 不正な gameId はバリデーションエラーになる', () => {
+    fc.assert(
+      fc.property(
+        fc.string().filter((s) => {
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          return !uuidRegex.test(s);
+        }),
+        (invalidGameId) => {
+          const result = getVoteParamSchema.safeParse({
+            gameId: invalidGameId,
+            turnNumber: '1',
+          });
+          expect(result.success).toBe(false);
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  it('Property 2: 負の turnNumber はバリデーションエラーになる', () => {
+    fc.assert(
+      fc.property(fc.integer({ max: -1 }), (negativeTurn) => {
+        const result = getVoteParamSchema.safeParse({
+          gameId: '550e8400-e29b-41d4-a716-446655440000',
+          turnNumber: String(negativeTurn),
+        });
+        expect(result.success).toBe(false);
+      }),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  it('Property 2: 小数の turnNumber はバリデーションエラーになる', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0.01, max: 100, noNaN: true }).filter((n) => !Number.isInteger(n)),
+        (decimalTurn) => {
+          const result = getVoteParamSchema.safeParse({
             gameId: '550e8400-e29b-41d4-a716-446655440000',
             turnNumber: String(decimalTurn),
           });

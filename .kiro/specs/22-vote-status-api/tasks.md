@@ -16,7 +16,7 @@
   - [x] 4.1 `schemas/vote.test.ts` に `getVoteParamSchema` のテストケースを追加する
   - [x] 4.2 `services/vote.test.ts` に `getMyVote` メソッドのテストケースを追加する
   - [x] 4.3 `routes/votes.test.ts` に GET エンドポイントのテストケースを追加する
-- [ ] 5. プロパティベーステストの作成
-  - [~] 5.1 [PBT] `schemas/vote.property.test.ts` に GET パスパラメータのプロパティテストを追加する (Property 2: パスパラメータのバリデーション)
-  - [~] 5.2 [PBT] `services/vote.property.test.ts` に成功レスポンスのプロパティテストを追加する (Property 4: 成功レスポンスの形式)
-  - [~] 5.3 [PBT] `routes/votes.property.test.ts` にエラーレスポンスのプロパティテストを追加する (Property 6: エラーレスポンスの一貫性)
+- [x] 5. プロパティベーステストの作成
+  - [x] 5.1 [PBT] `schemas/vote.property.test.ts` に GET パスパラメータのプロパティテストを追加する (Property 2: パスパラメータのバリデーション)
+  - [x] 5.2 [PBT] `services/vote.property.test.ts` に成功レスポンスのプロパティテストを追加する (Property 4: 成功レスポンスの形式)
+  - [x] 5.3 [PBT] `routes/votes.property.test.ts` にエラーレスポンスのプロパティテストを追加する (Property 6: エラーレスポンスの一貫性)

@@ -20,6 +20,7 @@ import {
   AlreadyVotedError,
   NotVotedError,
   SameCandidateError,
+  VoteNotFoundError,
 } from '../services/vote.js';
 import { GameNotFoundError, TurnNotFoundError } from '../services/candidate.js';
 import type { AuthVariables } from '../lib/auth/types.js';
@@ -29,10 +30,14 @@ const validCandidateId = '789e0123-e89b-12d3-a456-426614174002';
 
 describe('Vote API - プロパティテスト', () => {
   let app: Hono;
-  let mockService: { createVote: ReturnType<typeof vi.fn>; changeVote: ReturnType<typeof vi.fn> };
+  let mockService: {
+    createVote: ReturnType<typeof vi.fn>;
+    changeVote: ReturnType<typeof vi.fn>;
+    getMyVote: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
-    mockService = { createVote: vi.fn(), changeVote: vi.fn() };
+    mockService = { createVote: vi.fn(), changeVote: vi.fn(), getMyVote: vi.fn() };
     app = new Hono<{ Variables: AuthVariables }>();
     app.use('*', async (c, next) => {
       c.set('userId', 'user-123');
@@ -115,6 +120,66 @@ describe('Vote API - プロパティテスト', () => {
           expect(typeof data.error).toBe('string');
           expect(typeof data.message).toBe('string');
           expect(res.status).toBeGreaterThanOrEqual(400);
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  /**
+   * Feature: 22-vote-status-api, Property 6: エラーレスポンスの一貫性
+   * GET /games/:gameId/turns/:turnNumber/votes/me の各種エラーケースで
+   * { error, message } 構造が返されることを検証
+   * **Validates: Requirements 6.1, 6.2**
+   */
+  it('Property 6: GET 投票状況取得の各種エラーケースで { error, message } 構造が返される', async () => {
+    const errorFactories = [
+      { factory: () => new VoteNotFoundError(), expectedStatus: 404 },
+      { factory: () => new Error('Unexpected error'), expectedStatus: 500 },
+    ];
+
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 0, max: errorFactories.length - 1 }),
+        async (errorIndex) => {
+          mockService.getMyVote.mockClear();
+          mockService.getMyVote.mockRejectedValue(errorFactories[errorIndex].factory());
+
+          const res = await app.request(`/api/games/${validGameId}/turns/5/votes/me`, {
+            method: 'GET',
+          });
+          const data = await res.json();
+
+          expect(data).toHaveProperty('error');
+          expect(data).toHaveProperty('message');
+          expect(typeof data.error).toBe('string');
+          expect(typeof data.message).toBe('string');
+          expect(res.status).toBe(errorFactories[errorIndex].expectedStatus);
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  it('Property 6: GET バリデーションエラーで { error, message } 構造が返される', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.string().filter((s) => {
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          return !uuidRegex.test(s) && s.length > 0;
+        }),
+        async (invalidGameId) => {
+          const encodedId = encodeURIComponent(invalidGameId);
+          const res = await app.request(`/api/games/${encodedId}/turns/5/votes/me`, {
+            method: 'GET',
+          });
+          const data = await res.json();
+
+          expect(res.status).toBe(400);
+          expect(data).toHaveProperty('error');
+          expect(data).toHaveProperty('message');
+          expect(typeof data.error).toBe('string');
+          expect(typeof data.message).toBe('string');
         }
       ),
       { numRuns: 10, endOnFailure: true }

@@ -366,3 +366,82 @@ describe('VoteService.changeVote - プロパティテスト', () => {
     );
   });
 });
+
+/**
+ * getMyVote プロパティベーステスト
+ *
+ * Feature: 22-vote-status-api, Property 4: 成功レスポンスの形式
+ *
+ * 投票が存在するユーザーからの有効なリクエストに対して、
+ * gameId, turnNumber, userId, candidateId, createdAt, updatedAt のすべてのフィールドを含む。
+ * updatedAt が未定義の場合は createdAt の値をフォールバックとして使用する。
+ *
+ * **Validates: Requirements 4.1, 4.2, 4.3, 4.4**
+ */
+describe('VoteService.getMyVote - プロパティテスト', () => {
+  let service: VoteService;
+  let mockVoteRepo: ReturnType<typeof createMockVoteRepo>;
+  let mockCandidateRepo: ReturnType<typeof createMockCandidateRepo>;
+  let mockGameRepo: ReturnType<typeof createMockGameRepo>;
+
+  beforeEach(() => {
+    mockVoteRepo = createMockVoteRepo();
+    mockCandidateRepo = createMockCandidateRepo();
+    mockGameRepo = createMockGameRepo();
+    service = new VoteService(
+      mockVoteRepo as unknown as VoteRepository,
+      mockCandidateRepo as unknown as CandidateRepository,
+      mockGameRepo as unknown as GameRepository
+    );
+  });
+
+  it('Property 4: 成功レスポンスに必須フィールドが含まれ updatedAt が createdAt にフォールバックする', async () => {
+    await fc.assert(
+      fc.asyncProperty(fc.uuid(), fc.boolean(), async (userId, hasUpdatedAt) => {
+        mockVoteRepo.getByUser.mockClear();
+
+        const now = new Date().toISOString();
+        const entity: VoteEntity = {
+          PK: `GAME#${GAME_ID}#TURN#${TURN_NUMBER}`,
+          SK: `VOTE#${userId}`,
+          GSI2PK: `USER#${userId}`,
+          GSI2SK: `VOTE#${now}`,
+          entityType: 'VOTE',
+          gameId: GAME_ID,
+          turnNumber: TURN_NUMBER,
+          userId,
+          candidateId: CANDIDATE_ID,
+          createdAt: now,
+          updatedAt: hasUpdatedAt ? now : undefined,
+        };
+        mockVoteRepo.getByUser.mockResolvedValue(entity);
+
+        const result = await service.getMyVote(GAME_ID, TURN_NUMBER, userId);
+
+        // 必須フィールドの存在確認
+        expect(result).toHaveProperty('gameId');
+        expect(result).toHaveProperty('turnNumber');
+        expect(result).toHaveProperty('userId');
+        expect(result).toHaveProperty('candidateId');
+        expect(result).toHaveProperty('createdAt');
+        expect(result).toHaveProperty('updatedAt');
+
+        // 値の一致確認
+        expect(result.gameId).toBe(GAME_ID);
+        expect(result.turnNumber).toBe(TURN_NUMBER);
+        expect(result.userId).toBe(userId);
+        expect(result.candidateId).toBe(CANDIDATE_ID);
+
+        // ISO 8601 形式の検証
+        expect(new Date(result.createdAt).toISOString()).toBe(result.createdAt);
+        expect(new Date(result.updatedAt).toISOString()).toBe(result.updatedAt);
+
+        // updatedAt フォールバックの検証
+        if (!hasUpdatedAt) {
+          expect(result.updatedAt).toBe(result.createdAt);
+        }
+      }),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});
