@@ -108,7 +108,7 @@
     - _Requirements: 8.1, 8.2, 8.3_
 
 - [ ] 6. 統合テストの実装
-  - [~] 6.1 エンドツーエンド統合テストを作成
+  - [-] 6.1 エンドツーエンド統合テストを作成
     - `packages/api/src/routes/candidates.integration.test.ts` を作成
     - モックDynamoDBを使用した統合テスト
     - 実際のリポジトリとサービスを使用したテスト
