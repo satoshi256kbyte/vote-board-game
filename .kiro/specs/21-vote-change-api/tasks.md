@@ -84,8 +84,8 @@
     - 認証なし: 401 UNAUTHORIZED のテスト
     - _Requirements: 1.1, 3.1, 3.2, 4.1, 4.2, 5.1, 6.1, 7.1, 9.1, 10.1, 10.2_
 
-- [ ] 5. プロパティベーステスト
-  - [~] 5.1 リクエストバリデーションのプロパティテストを追加
+- [x] 5. プロパティベーステスト
+  - [x] 5.1 リクエストバリデーションのプロパティテストを追加
     - `packages/api/src/schemas/vote.property.test.ts` に追加
     - **Property 2: リクエストバリデーション**
     - 不正な candidateId / gameId / turnNumber に対するバリデーションエラー検証
@@ -93,35 +93,35 @@
     - `numRuns: 10`, `endOnFailure: true`
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
 
-  - [~] 5.2 未投票ユーザー拒否のプロパティテストを追加
+  - [x] 5.2 未投票ユーザー拒否のプロパティテストを追加
     - `packages/api/src/services/vote.property.test.ts` に追加
     - **Property 5: 未投票ユーザーの拒否**
     - ランダムなユーザーで既存投票がない場合に NotVotedError がスローされることを検証
     - `numRuns: 10`, `endOnFailure: true`
     - **Validates: Requirements 6.1, 6.2**
 
-  - [~] 5.3 同一候補変更拒否のプロパティテストを追加
+  - [x] 5.3 同一候補変更拒否のプロパティテストを追加
     - `packages/api/src/services/vote.property.test.ts` に追加
     - **Property 6: 同一候補への変更の拒否**
     - ランダムな candidateId で既存投票と同一の場合に SameCandidateError がスローされることを検証
     - `numRuns: 10`, `endOnFailure: true`
     - **Validates: Requirements 7.1, 7.2**
 
-  - [~] 5.4 アトミックな投票数更新のプロパティテストを追加
+  - [x] 5.4 アトミックな投票数更新のプロパティテストを追加
     - `packages/api/src/services/vote.property.test.ts` に追加
     - **Property 7: アトミックな投票数更新**
     - upsertWithTransaction が oldCandidateId（旧候補ID）付きで呼ばれることを検証
     - `numRuns: 10`, `endOnFailure: true`
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.4**
 
-  - [~] 5.5 成功レスポンス形式のプロパティテストを追加
+  - [x] 5.5 成功レスポンス形式のプロパティテストを追加
     - `packages/api/src/services/vote.property.test.ts` に追加
     - **Property 8: 成功レスポンスの形式**
     - 成功レスポンスに gameId, turnNumber, userId, candidateId, createdAt, updatedAt が含まれ、日時フィールドが ISO 8601 形式であることを検証
     - `numRuns: 10`, `endOnFailure: true`
     - **Validates: Requirements 8.5, 9.1, 9.2, 9.3, 9.4**
 
-  - [~] 5.6 エラーレスポンス一貫性のプロパティテストを追加
+  - [x] 5.6 エラーレスポンス一貫性のプロパティテストを追加
     - `packages/api/src/routes/votes.property.test.ts` に追加
     - **Property 9: エラーレスポンスの一貫性**
     - 各種エラーケースで `{ error, message }` 構造が返されることを検証

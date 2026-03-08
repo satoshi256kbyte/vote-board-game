@@ -1,16 +1,26 @@
 /**
  * Vote API Routes プロパティベーステスト
  *
- * Property 10: エラーレスポンスの一貫性検証
+ * POST:
+ *   Property 10: エラーレスポンスの一貫性検証
  *
- * Requirements: 9.1, 9.2
+ * PUT (Feature: 21-vote-change-api):
+ *   Property 9: エラーレスポンスの一貫性検証
+ *
+ * Requirements: 9.1, 9.2, 10.1, 10.2
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fc from 'fast-check';
 import { Hono } from 'hono';
 import { createGameVotesRouter } from './votes.js';
-import { CandidateNotFoundError, VotingClosedError, AlreadyVotedError } from '../services/vote.js';
+import {
+  CandidateNotFoundError,
+  VotingClosedError,
+  AlreadyVotedError,
+  NotVotedError,
+  SameCandidateError,
+} from '../services/vote.js';
 import { GameNotFoundError, TurnNotFoundError } from '../services/candidate.js';
 import type { AuthVariables } from '../lib/auth/types.js';
 
@@ -19,10 +29,10 @@ const validCandidateId = '789e0123-e89b-12d3-a456-426614174002';
 
 describe('Vote API - プロパティテスト', () => {
   let app: Hono;
-  let mockService: { createVote: ReturnType<typeof vi.fn> };
+  let mockService: { createVote: ReturnType<typeof vi.fn>; changeVote: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    mockService = { createVote: vi.fn() };
+    mockService = { createVote: vi.fn(), changeVote: vi.fn() };
     app = new Hono<{ Variables: AuthVariables }>();
     app.use('*', async (c, next) => {
       c.set('userId', 'user-123');
@@ -54,6 +64,47 @@ describe('Vote API - プロパティテスト', () => {
 
           const res = await app.request(`/api/games/${validGameId}/turns/5/votes`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ candidateId: validCandidateId }),
+          });
+          const data = await res.json();
+
+          expect(data).toHaveProperty('error');
+          expect(data).toHaveProperty('message');
+          expect(typeof data.error).toBe('string');
+          expect(typeof data.message).toBe('string');
+          expect(res.status).toBeGreaterThanOrEqual(400);
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+
+  /**
+   * Feature: 21-vote-change-api, Property 9: エラーレスポンスの一貫性
+   * PUT /games/:gameId/turns/:turnNumber/votes/me の各種エラーケースで
+   * { error, message } 構造が返されることを検証
+   * **Validates: Requirements 10.1, 10.2**
+   */
+  it('Property 9: PUT 投票変更の各種エラーケースで { error, message } 構造が返される', async () => {
+    const errorFactories = [
+      () => new GameNotFoundError(validGameId),
+      () => new TurnNotFoundError(validGameId, 99),
+      () => new CandidateNotFoundError(validCandidateId),
+      () => new VotingClosedError(),
+      () => new NotVotedError(),
+      () => new SameCandidateError(),
+    ];
+
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 0, max: errorFactories.length - 1 }),
+        async (errorIndex) => {
+          mockService.changeVote.mockClear();
+          mockService.changeVote.mockRejectedValue(errorFactories[errorIndex]());
+
+          const res = await app.request(`/api/games/${validGameId}/turns/5/votes/me`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ candidateId: validCandidateId }),
           });
