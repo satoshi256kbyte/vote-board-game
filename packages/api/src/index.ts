@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { gamesRouter } from './routes/games.js';
-import { candidatesRouter } from './routes/candidates.js';
+import { candidatesRouter, gameCandidatesRouter } from './routes/candidates.js';
 import { votesRouter } from './routes/votes.js';
 import { authRouter } from './routes/auth.js';
 import { profileRouter } from './routes/profile.js';
@@ -55,6 +55,7 @@ app.get('/health', (c) => {
 
 // ルーティング
 app.route('/api/games', gamesRouter);
+app.route('/api', gameCandidatesRouter);
 app.route('/api/candidates', candidatesRouter);
 app.route('/api/votes', votesRouter);
 app.route('/api/profile', profileRouter);

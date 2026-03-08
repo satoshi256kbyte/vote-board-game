@@ -1,8 +1,47 @@
+/**
+ * Candidate API Routes
+ *
+ * 候補管理のためのRESTful APIエンドポイント群
+ * - GET /games/:gameId/turns/:turnNumber/candidates - 候補一覧取得
+ * - POST / - 候補投稿（レガシー、/api/candidates にマウント）
+ *
+ * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.3, 2.4, 3.3, 3.4, 5.4, 6.1, 6.2, 6.3, 6.4
+ */
+
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
+import type { Context } from 'hono';
+import { CandidateService, GameNotFoundError, TurnNotFoundError } from '../services/candidate.js';
+import { CandidateRepository } from '../lib/dynamodb/repositories/candidate.js';
+import { GameRepository } from '../lib/dynamodb/repositories/game.js';
+import { docClient, TABLE_NAME } from '../lib/dynamodb/index.js';
+import { getCandidatesParamSchema } from '../schemas/candidate.js';
 
-const candidatesRouter = new Hono();
+// バリデーションエラーハンドラー（共通）
+const validationErrorHandler = (
+  result: {
+    success: boolean;
+    error?: { issues: Array<{ path: PropertyKey[]; message: string }> };
+  },
+  c: Context
+) => {
+  if (!result.success) {
+    const fields: Record<string, string> = {};
+    result.error!.issues.forEach((issue) => {
+      const fieldName = issue.path.map(String).join('.');
+      fields[fieldName] = issue.message;
+    });
+    return c.json(
+      {
+        error: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: { fields },
+      },
+      400
+    );
+  }
+};
 
 const createCandidateSchema = z.object({
   gameId: z.string(),
@@ -13,19 +52,75 @@ const createCandidateSchema = z.object({
   description: z.string().max(200),
 });
 
-// GET /api/candidates?gameId=xxx - 候補一覧取得
-candidatesRouter.get('/', async (c) => {
-  const gameId = c.req.query('gameId');
+/**
+ * 候補一覧取得ルーターを作成（GET /games/:gameId/turns/:turnNumber/candidates）
+ * /api にマウントされることを想定
+ * @param candidateService CandidateServiceインスタンス（テスト時にモックを注入可能）
+ */
+export function createGameCandidatesRouter(candidateService?: CandidateService): Hono {
+  const router = new Hono();
 
-  if (!gameId) {
-    return c.json({ error: 'gameId is required' }, 400);
-  }
+  const service =
+    candidateService ||
+    new CandidateService(new CandidateRepository(docClient, TABLE_NAME), new GameRepository());
 
-  // TODO: DynamoDB から取得
-  return c.json({
-    candidates: [],
-  });
-});
+  // GET /games/:gameId/turns/:turnNumber/candidates - 候補一覧取得
+  router.get(
+    '/games/:gameId/turns/:turnNumber/candidates',
+    zValidator('param', getCandidatesParamSchema, validationErrorHandler),
+    async (c) => {
+      try {
+        const { gameId, turnNumber } = c.req.valid('param');
+
+        const result = await service.listCandidates(gameId, turnNumber);
+
+        return c.json(result, 200);
+      } catch (error) {
+        if (error instanceof GameNotFoundError) {
+          return c.json(
+            {
+              error: 'NOT_FOUND',
+              message: 'Game not found',
+            },
+            404
+          );
+        }
+
+        if (error instanceof TurnNotFoundError) {
+          return c.json(
+            {
+              error: 'NOT_FOUND',
+              message: 'Turn not found',
+            },
+            404
+          );
+        }
+
+        console.error('Failed to retrieve candidates', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          gameId: c.req.param('gameId'),
+          turnNumber: c.req.param('turnNumber'),
+          timestamp: new Date().toISOString(),
+        });
+
+        return c.json(
+          {
+            error: 'INTERNAL_ERROR',
+            message: 'Failed to retrieve candidates',
+          },
+          500
+        );
+      }
+    }
+  );
+
+  return router;
+}
+
+/**
+ * レガシー候補ルーター（POST /api/candidates 用）
+ */
+const candidatesRouter = new Hono();
 
 // POST /api/candidates - 候補投稿
 candidatesRouter.post('/', zValidator('json', createCandidateSchema), async (c) => {
@@ -41,5 +136,8 @@ candidatesRouter.post('/', zValidator('json', createCandidateSchema), async (c) 
     201
   );
 });
+
+// デフォルトエクスポート（本番環境用）
+export const gameCandidatesRouter = createGameCandidatesRouter();
 
 export { candidatesRouter };
