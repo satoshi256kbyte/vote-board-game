@@ -8,7 +8,7 @@
 
 ## Tasks
 
-- [ ] 1. API クライアント関数の実装
+- [x] 1. API クライアント関数の実装
   - [x] 1.1 候補取得APIクライアント関数を実装
     - `lib/api/candidates.ts` に `getCandidates()` 関数を作成
     - GET /games/:gameId/turns/:turnNumber/candidates を呼び出す
@@ -34,7 +34,7 @@
     - APIレスポンスをモック化
     - _Requirements: 13.1, 13.5_
 
-- [ ] 2. ユーティリティ関数の実装
+- [x] 2. ユーティリティ関数の実装
   - [x] 2.1 ソート関数を実装
     - `lib/utils/sort-filter.ts` に `sortCandidates()` 関数を作成
     - 投票数と作成日時でソート可能にする
@@ -68,7 +68,7 @@
   - ユーティリティ関数のテストがすべて通ることを確認
   - 質問があればユーザーに確認
 
-- [ ] 4. 基本コンポーネントの実装
+- [x] 4. 基本コンポーネントの実装
   - [x] 4.1 VoteStatusIndicator コンポーネントを実装
     - `app/games/[gameId]/_components/vote-status-indicator.tsx` を作成
     - "✓投票済み" ラベルを表示
@@ -96,7 +96,7 @@
     - レンダリング、アクセシビリティをテスト
     - _Requirements: 13.1, 13.2, 13.6_
 
-- [ ] 5. 投票ボタンコンポーネントの実装
+- [x] 5. 投票ボタンコンポーネントの実装
   - [x] 5.1 VoteButton コンポーネントを実装
     - `app/games/[gameId]/_components/vote-button.tsx` を作成
     - "投票する" ボタンを表示（未投票時）
@@ -112,7 +112,7 @@
     - 未認証時の無効化をテスト
     - _Requirements: 13.1, 13.2, 13.3_
 
-- [ ] 6. 候補カードコンポーネントの実装
+- [x] 6. 候補カードコンポーネントの実装
   - [x] 6.1 CandidateCard コンポーネントを実装
     - `app/games/[gameId]/_components/candidate-card.tsx` を作成
     - 候補の手の位置を表示
@@ -139,7 +139,7 @@
     - ランダムな候補データを生成し、すべての必須フィールドが表示されることを検証
     - _Requirements: 13.8_
 
-- [ ] 7. ソート・フィルターコンポーネントの実装
+- [x] 7. ソート・フィルターコンポーネントの実装
   - [x] 7.1 CandidateSortFilter コンポーネントを実装
     - `app/games/[gameId]/_components/candidate-sort-filter.tsx` を作成
     - ソートオプション（投票数、作成日時）の選択UI
@@ -153,11 +153,11 @@
     - URLクエリパラメータの同期をテスト
     - _Requirements: 13.1, 13.2_
 
-- [~] 8. Checkpoint - コンポーネントの動作確認
+- [x] 8. Checkpoint - コンポーネントの動作確認
   - 各コンポーネントのテストがすべて通ることを確認
   - 質問があればユーザーに確認
 
-- [ ] 9. 候補一覧コンポーネントの実装
+- [x] 9. 候補一覧コンポーネントの実装
   - [x] 9.1 CandidateList コンポーネントを実装（Client Component）
     - `app/games/[gameId]/_components/candidate-list.tsx` を作成
     - 候補一覧をグリッドレイアウトで表示
@@ -184,7 +184,7 @@
     - ランダムなエラーシナリオを生成し、エラーメッセージに機密情報が含まれないことを検証
     - _Requirements: 13.8_
 
-- [ ] 10. 候補一覧セクションコンポーネントの実装
+- [x] 10. 候補一覧セクションコンポーネントの実装
   - [x] 10.1 CandidateListSection コンポーネントを実装（Server Component）
     - `app/games/[gameId]/_components/candidate-list-section.tsx` を作成
     - 初期候補データを取得（Server-side fetch）
@@ -198,14 +198,14 @@
     - 既存のレイアウトを維持
     - _Requirements: 1.1_
 
-- [~] 11. Checkpoint - 候補一覧機能の動作確認
+- [x] 11. Checkpoint - 候補一覧機能の動作確認
   - 候補一覧が正しく表示されることを確認
   - ソート・フィルター機能が動作することを確認
   - 投票機能が動作することを確認
   - ポーリング更新が動作することを確認
   - 質問があればユーザーに確認
 
-- [ ] 12. アクセシビリティとレスポンシブデザインの実装
+- [x] 12. アクセシビリティとレスポンシブデザインの実装
   - [x] 12.1 アクセシビリティ対応を実装
     - セマンティックHTML（section, article, button）を使用
     - ARIAラベル（aria-label, aria-describedby）を追加
@@ -228,7 +228,7 @@
     - コントラスト比をテスト
     - _Requirements: 13.6_
 
-- [ ] 13. パフォーマンス最適化
+- [x] 13. パフォーマンス最適化
   - [x] 13.1 パフォーマンス最適化を実装
     - React.memo を使用して不要な再レンダリングを防止
     - useMemo でソート・フィルター処理をメモ化
@@ -236,47 +236,47 @@
     - 初期レンダリングを1秒以内に完了するよう最適化
     - _Requirements: 11.1, 11.2, 11.3, 11.6_
 
-- [ ] 14. E2Eテストの更新
-  - [-] 14.1 既存の対局詳細E2Eテストを更新
+- [x] 14. E2Eテストの更新
+  - [x] 14.1 既存の対局詳細E2Eテストを更新
     - `tests/e2e/game/game-detail.spec.ts` を更新
     - 候補一覧セクションの表示確認を追加
     - _Requirements: 14.1, 14.7_
-  - [~] 14.2 候補一覧表示のE2Eテストを作成
+  - [x] 14.2 候補一覧表示のE2Eテストを作成
     - `tests/e2e/game/move-candidates.spec.ts` を作成
     - 候補一覧の表示テストケースを追加
     - _Requirements: 14.1_
-  - [~] 14.3 投票フローのE2Eテストを作成
+  - [x] 14.3 投票フローのE2Eテストを作成
     - `tests/e2e/game/move-candidates.spec.ts` に追加
     - 認証済みユーザーの投票フローをテスト
     - _Requirements: 14.2_
-  - [~] 14.4 投票変更フローのE2Eテストを作成
+  - [x] 14.4 投票変更フローのE2Eテストを作成
     - `tests/e2e/game/move-candidates.spec.ts` に追加
     - 投票変更の確認ダイアログをテスト
     - _Requirements: 14.3_
-  - [~] 14.5 未認証ユーザーのE2Eテストを作成
+  - [x] 14.5 未認証ユーザーのE2Eテストを作成
     - `tests/e2e/game/move-candidates.spec.ts` に追加
     - 未認証ユーザーの候補閲覧をテスト
     - 投票ボタンの無効化をテスト
     - _Requirements: 14.4_
-  - [~] 14.6 ソート・フィルター機能のE2Eテストを作成
+  - [x] 14.6 ソート・フィルター機能のE2Eテストを作成
     - `tests/e2e/game/move-candidates.spec.ts` に追加
     - ソート・フィルター変更をテスト
     - URLクエリパラメータの更新をテスト
     - _Requirements: 14.1_
-  - [~] 14.7 モバイルビューポートのE2Eテストを作成
+  - [x] 14.7 モバイルビューポートのE2Eテストを作成
     - `tests/e2e/game/move-candidates.spec.ts` に追加
     - モバイルビューポートでのレイアウトをテスト
     - _Requirements: 14.6_
-  - [~] 14.8 エラーハンドリングのE2Eテストを作成
+  - [x] 14.8 エラーハンドリングのE2Eテストを作成
     - `tests/e2e/game/move-candidates.spec.ts` に追加
     - APIエラー時のエラーメッセージ表示をテスト
     - _Requirements: 14.5_
-  - [~] 14.9 ページオブジェクトを更新
+  - [x] 14.9 ページオブジェクトを更新
     - `tests/e2e/pages/game-detail.page.ts` を更新
     - 候補一覧関連のページオブジェクトメソッドを追加
     - _Requirements: 14.7_
 
-- [~] 15. 最終チェックポイント
+- [x] 15. 最終チェックポイント
   - すべてのテストが通ることを確認
   - 候補一覧機能が要件を満たしていることを確認
   - パフォーマンスが要件を満たしていることを確認（初期レンダリング1秒以内）
