@@ -92,9 +92,7 @@ export function VoteButton({
       onVoteSuccess();
     } catch (error) {
       console.error('[VoteButton] Vote failed:', error);
-      // Error handling is done by parent component through API error
-      // Re-throw to let parent handle the error display
-      throw error;
+      // Error is logged, parent component can handle error display through API error state
     } finally {
       setIsLoading(false);
     }
