@@ -81,13 +81,12 @@ export function CandidateList({
           setVoteStatus(updatedVoteStatus);
         } catch (voteError) {
           // Vote status fetch failure should not block polling
-          console.warn('[CandidateList] Failed to fetch vote status during polling:', voteError);
+          console.error('[CandidateList] Failed to fetch vote status during polling:', voteError);
         }
       }
     } catch (err) {
-      console.error('[CandidateList] Polling error:', err);
-      // Don't show error for polling failures - just log them
-      // The user can still see the last successful data
+      console.error('[CandidateList] Failed to fetch candidates:', err);
+      setError('候補の取得に失敗しました');
     } finally {
       setIsPolling(false);
     }
@@ -184,7 +183,7 @@ export function CandidateList({
           role="status"
           data-testid="empty-message"
         >
-          <p className="text-gray-600">候補が見つかりません</p>
+          <p className="text-gray-500">まだ候補がありません</p>
         </div>
       ) : (
         <div

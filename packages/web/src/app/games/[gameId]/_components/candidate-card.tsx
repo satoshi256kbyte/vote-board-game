@@ -81,24 +81,32 @@ export function CandidateCard({
 
   return (
     <article
-      className="relative border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white"
+      className="relative border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       data-testid="candidate-card"
+      role="article"
+      aria-label={`候補 ${candidate.position}`}
     >
       {/* Status Badge */}
       <div className="absolute top-2 right-2" data-testid="status-badge">
         {isClosed ? (
-          <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800">
+          <span
+            className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800"
+            aria-label="締切済み"
+          >
             締切済み
           </span>
         ) : (
-          <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+          <span
+            className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800"
+            aria-label="投票受付中"
+          >
             投票受付中
           </span>
         )}
       </div>
 
       {/* Move Position */}
-      <h3 className="text-xl font-bold mb-3 pr-24" data-testid="candidate-position">
+      <h3 className="text-xl font-bold mb-3 pr-24 text-gray-900" data-testid="candidate-position">
         {candidate.position}
       </h3>
 
@@ -112,20 +120,27 @@ export function CandidateCard({
       </div>
 
       {/* Description */}
-      <p className="text-gray-700 mb-4 line-clamp-3" data-testid="candidate-description">
+      <p
+        className="text-gray-700 mb-4 line-clamp-3"
+        data-testid="candidate-description"
+        id={`description-${candidate.id}`}
+      >
         {candidate.description}
       </p>
 
       {/* Metadata */}
-      <div className="space-y-2 text-sm text-gray-600 mb-4">
+      <div className="space-y-2 text-sm mb-4">
         {/* Poster Username */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-gray-600">
           <span className="font-medium">投稿者:</span>
           <span data-testid="candidate-poster">{candidate.postedByUsername}</span>
         </div>
 
         {/* Vote Count */}
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2 text-gray-600"
+          aria-label={`投票数 ${candidate.voteCount}`}
+        >
           <span className="font-medium">投票数:</span>
           <span className="font-semibold text-gray-900" data-testid="candidate-vote-count">
             {candidate.voteCount}
@@ -133,17 +148,23 @@ export function CandidateCard({
         </div>
 
         {/* Voting Deadline */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-gray-600">
           <span className="font-medium">締切:</span>
-          <span className={timeRemaining.colorClass} data-testid="candidate-deadline">
+          <time
+            className={timeRemaining.colorClass}
+            data-testid="candidate-deadline"
+            dateTime={candidate.deadline}
+          >
             {timeRemaining.displayText}
-          </span>
+          </time>
         </div>
 
         {/* Creation Date */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-gray-600">
           <span className="font-medium">投稿日時:</span>
-          <span data-testid="candidate-created-at">{formatDate(candidate.createdAt)}</span>
+          <time data-testid="candidate-created-at" dateTime={candidate.createdAt}>
+            {formatDate(candidate.createdAt)}
+          </time>
         </div>
       </div>
 

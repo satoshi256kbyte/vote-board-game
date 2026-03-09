@@ -226,7 +226,7 @@ describe('CandidateList', () => {
 
     it('should render candidate grid with proper styling', () => {
       render(<CandidateList {...defaultProps} />);
-      const grid = screen.getByTestId('candidate-grid');
+      const grid = screen.getByTestId('candidates-grid');
       expect(grid).toHaveClass('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-4');
     });
 
@@ -245,7 +245,7 @@ describe('CandidateList', () => {
 
     it('should not display grid when no candidates', () => {
       render(<CandidateList {...defaultProps} initialCandidates={[]} />);
-      expect(screen.queryByTestId('candidate-grid')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('candidates-grid')).not.toBeInTheDocument();
     });
   });
 
@@ -674,7 +674,7 @@ describe('CandidateList', () => {
     it('should apply responsive grid classes', () => {
       render(<CandidateList {...defaultProps} />);
 
-      const grid = screen.getByTestId('candidate-grid');
+      const grid = screen.getByTestId('candidates-grid');
       expect(grid).toHaveClass('grid-cols-1'); // Mobile: 1 column
       expect(grid).toHaveClass('md:grid-cols-2'); // Desktop: 2 columns
     });
@@ -841,7 +841,7 @@ describe('CandidateList', () => {
       it('should have proper role on grid container', () => {
         render(<CandidateList {...defaultProps} />);
 
-        const grid = screen.getByTestId('candidate-grid');
+        const grid = screen.getByTestId('candidates-grid');
         expect(grid).toHaveAttribute('role', 'list');
       });
 
@@ -1018,7 +1018,7 @@ describe('CandidateList', () => {
       it('should use list structure for candidates', () => {
         render(<CandidateList {...defaultProps} />);
 
-        const grid = screen.getByTestId('candidate-grid');
+        const grid = screen.getByTestId('candidates-grid');
         expect(grid).toHaveAttribute('role', 'list');
       });
 
@@ -1035,7 +1035,7 @@ describe('CandidateList', () => {
       it('should maintain accessibility on mobile layout', () => {
         render(<CandidateList {...defaultProps} />);
 
-        const grid = screen.getByTestId('candidate-grid');
+        const grid = screen.getByTestId('candidates-grid');
         // Mobile: single column
         expect(grid).toHaveClass('grid-cols-1');
       });
@@ -1043,7 +1043,7 @@ describe('CandidateList', () => {
       it('should maintain accessibility on desktop layout', () => {
         render(<CandidateList {...defaultProps} />);
 
-        const grid = screen.getByTestId('candidate-grid');
+        const grid = screen.getByTestId('candidates-grid');
         // Desktop: 2 columns
         expect(grid).toHaveClass('md:grid-cols-2');
       });
@@ -1051,7 +1051,7 @@ describe('CandidateList', () => {
       it('should have adequate spacing for touch targets', () => {
         render(<CandidateList {...defaultProps} />);
 
-        const grid = screen.getByTestId('candidate-grid');
+        const grid = screen.getByTestId('candidates-grid');
         expect(grid).toHaveClass('gap-4');
       });
     });
