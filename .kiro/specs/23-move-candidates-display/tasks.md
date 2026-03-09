@@ -24,7 +24,7 @@
     - POST /votes を呼び出す
     - 認証トークンをヘッダーに含める
     - _Requirements: 4.4, 8.2, 8.4_
-  - [~] 1.4 投票変更APIクライアント関数を実装
+  - [x] 1.4 投票変更APIクライアント関数を実装
     - `lib/api/candidates.ts` に `changeVote()` 関数を作成
     - PUT /votes を呼び出す
     - 認証トークンをヘッダーに含める
@@ -36,16 +36,16 @@
     - _Requirements: 13.1, 13.5_
 
 - [ ] 2. ユーティリティ関数の実装
-  - [~] 2.1 ソート関数を実装
+  - [x] 2.1 ソート関数を実装
     - `lib/utils/sort-filter.ts` に `sortCandidates()` 関数を作成
     - 投票数と作成日時でソート可能にする
     - 昇順・降順の両方をサポート
     - _Requirements: 1.3, 16.1, 16.2, 16.5_
-  - [~] 2.2 フィルター関数を実装
+  - [x] 2.2 フィルター関数を実装
     - `lib/utils/sort-filter.ts` に `filterCandidates()` 関数を作成
     - 'all', 'my-vote', 'ai', 'user' フィルターをサポート
     - _Requirements: 16.4, 16.6_
-  - [~] 2.3 残り時間計算関数を実装
+  - [x] 2.3 残り時間計算関数を実装
     - `lib/utils/time-remaining.ts` に `calculateTimeRemaining()` 関数を作成
     - 締切までの残り時間を計算
     - 相対時間形式の表示テキストを生成
@@ -70,7 +70,7 @@
   - 質問があればユーザーに確認
 
 - [ ] 4. 基本コンポーネントの実装
-  - [~] 4.1 VoteStatusIndicator コンポーネントを実装
+  - [x] 4.1 VoteStatusIndicator コンポーネントを実装
     - `app/games/[gameId]/_components/vote-status-indicator.tsx` を作成
     - "✓投票済み" ラベルを表示
     - 緑色の背景スタイルを適用

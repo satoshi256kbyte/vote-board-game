@@ -319,3 +319,84 @@ export async function createVote(
     throw new ApiError(error instanceof Error ? error.message : '投票に失敗しました', 0);
   }
 }
+
+/**
+ * Change vote to a different move candidate
+ *
+ * @param gameId - The game ID (UUID v4)
+ * @param turnNumber - The turn number (non-negative integer)
+ * @param candidateId - The new candidate ID to vote for (UUID v4)
+ * @returns Promise that resolves when vote is changed
+ *
+ * @throws {ApiError} When authentication fails (401), validation fails (400), or other errors occur
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await changeVote('123e4567-e89b-12d3-a456-426614174000', 5, '987fcdeb-51a2-43f1-b456-426614174222');
+ *   console.log('投票を変更しました');
+ * } catch (error) {
+ *   if (error instanceof ApiError && error.statusCode === 401) {
+ *     console.error('認証が必要です');
+ *     // Redirect to login
+ *   } else {
+ *     console.error('投票の変更に失敗しました');
+ *   }
+ * }
+ * ```
+ */
+export async function changeVote(
+  gameId: string,
+  turnNumber: number,
+  candidateId: string
+): Promise<void> {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}/api/votes`;
+
+  // Get authentication token
+  const token = getAuthToken();
+  if (!token) {
+    throw new ApiError('認証が必要です', 401);
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        gameId,
+        turnNumber,
+        candidateId,
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new ApiError('認証が必要です', 401);
+      }
+      if (response.status === 400) {
+        let errorData: { error?: string; message?: string };
+        try {
+          errorData = await response.json();
+          throw new ApiError(errorData.message || '投票の変更に失敗しました', 400);
+        } catch (parseError) {
+          if (parseError instanceof ApiError) {
+            throw parseError;
+          }
+          throw new ApiError('投票の変更に失敗しました', 400);
+        }
+      }
+      throw new ApiError('投票の変更に失敗しました', response.status);
+    }
+
+    // Success - no response body expected for 200 OK
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(error instanceof Error ? error.message : '投票の変更に失敗しました', 0);
+  }
+}
