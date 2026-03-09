@@ -11,13 +11,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { fetchGame, fetchCandidates, ApiError } from '@/lib/api/client';
+import { fetchGame, ApiError } from '@/lib/api/client';
+import { getCandidates, getVoteStatus } from '@/lib/api/candidates';
+import type { Candidate, VoteStatus } from '@/lib/api/candidates';
 import { Board } from '@/components/board';
 import { MoveHistory } from '@/components/move-history';
-import { CandidateCard } from '@/components/candidate-card';
+import { CandidateList } from '@/app/games/[gameId]/_components/candidate-list';
 import { ShareButton } from '@/components/share-button';
+import { storageService } from '@/lib/services/storage-service';
 import Link from 'next/link';
-import type { Game, Candidate } from '@/types/game';
+import type { Game } from '@/types/game';
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -26,9 +29,18 @@ export default function GameDetailPage() {
 
   const [game, setGame] = useState<Game | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [voteStatus, setVoteStatus] = useState<VoteStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [candidatesLoading, setCandidatesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication status
+  useEffect(() => {
+    const token = storageService.getAccessToken();
+    setIsAuthenticated(!!token);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -45,12 +57,30 @@ export default function GameDetailPage() {
         console.log('[GameDetailPage] Game fetched successfully:', gameData.gameId);
         setGame(gameData);
         setError(null);
+        setLoading(false);
 
-        // Fetch candidates
+        // Fetch candidates and vote status after game is loaded
+        setCandidatesLoading(true);
         try {
-          const candidatesData = await fetchCandidates(gameId);
+          const candidatesData = await getCandidates(gameId, gameData.currentTurn);
           if (mounted) {
             setCandidates(candidatesData);
+          }
+
+          // Fetch vote status if authenticated
+          if (isAuthenticated) {
+            try {
+              const voteStatusData = await getVoteStatus(gameId, gameData.currentTurn);
+              if (mounted) {
+                setVoteStatus(voteStatusData);
+              }
+            } catch (voteErr) {
+              console.warn('[GameDetailPage] Failed to fetch vote status:', voteErr);
+              // Vote status fetch failure should not block the page
+              if (mounted) {
+                setVoteStatus(null);
+              }
+            }
           }
         } catch (err) {
           console.error('[GameDetailPage] Failed to fetch candidates:', err);
@@ -58,10 +88,10 @@ export default function GameDetailPage() {
           if (mounted) {
             setCandidates([]);
           }
-        }
-
-        if (mounted) {
-          setLoading(false);
+        } finally {
+          if (mounted) {
+            setCandidatesLoading(false);
+          }
         }
       } catch (err) {
         console.error('[GameDetailPage] Failed to fetch game:', {
@@ -106,7 +136,7 @@ export default function GameDetailPage() {
         clearTimeout(retryTimeout);
       }
     };
-  }, [gameId, router, retryCount]);
+  }, [gameId, router, retryCount, isAuthenticated]);
 
   if (loading) {
     return (
@@ -276,7 +306,7 @@ export default function GameDetailPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-gray-900">次の一手候補</h2>
-                {game.status === 'ACTIVE' && (
+                {game.status === 'ACTIVE' && isAuthenticated && (
                   <Link
                     href={`/games/${game.gameId}/candidates/new`}
                     className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -287,26 +317,26 @@ export default function GameDetailPage() {
                 )}
               </div>
 
-              {candidates.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  まだ候補がありません。
-                  <br />
-                  最初の候補を投稿しましょう！
-                </p>
-              ) : (
+              {candidatesLoading ? (
                 <div className="space-y-4">
-                  {candidates.map((candidate) => (
-                    <CandidateCard
-                      key={candidate.candidateId}
-                      candidate={candidate}
-                      isVoted={false}
-                      onVote={(candidateId) => {
-                        // TODO: Implement vote functionality
-                        console.log('Vote for:', candidateId);
-                      }}
-                    />
-                  ))}
+                  <div className="animate-pulse">
+                    <div className="h-32 bg-gray-200 rounded mb-4" />
+                    <div className="h-32 bg-gray-200 rounded" />
+                  </div>
                 </div>
+              ) : candidates.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-2">まだ候補がありません</p>
+                  <p className="text-sm text-gray-400">最初の候補を投稿しましょう！</p>
+                </div>
+              ) : (
+                <CandidateList
+                  initialCandidates={candidates}
+                  initialVoteStatus={voteStatus}
+                  gameId={game.gameId}
+                  turnNumber={game.currentTurn}
+                  isAuthenticated={isAuthenticated}
+                />
               )}
             </div>
           </div>

@@ -73,4 +73,48 @@ export class GameDetailPage {
       await expect(joinButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     });
   }
+
+  // Candidate List Assertions
+  async expectCandidateListSectionVisible(): Promise<void> {
+    await retryAssertion(async () => {
+      await waitForDynamicContent(this.page, '[data-testid="candidate-list-section"]');
+      const candidateListSection = this.page.getByTestId('candidate-list-section');
+      await expect(candidateListSection).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    });
+  }
+
+  async expectCandidateCardsVisible(): Promise<void> {
+    await retryAssertion(async () => {
+      await waitForDynamicContent(this.page, '[data-testid="candidate-card"]');
+      const candidateCards = this.page.getByTestId('candidate-card');
+      await expect(candidateCards.first()).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    });
+  }
+
+  async expectSortDropdownVisible(): Promise<void> {
+    await retryAssertion(async () => {
+      const sortDropdown = this.page.getByTestId('candidate-sort-dropdown');
+      await expect(sortDropdown).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    });
+  }
+
+  async expectFilterDropdownVisible(): Promise<void> {
+    await retryAssertion(async () => {
+      const filterDropdown = this.page.getByTestId('candidate-filter-dropdown');
+      await expect(filterDropdown).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    });
+  }
+
+  async expectPostCandidateButtonVisible(): Promise<void> {
+    await retryAssertion(async () => {
+      const postCandidateButton = this.page.getByTestId('post-candidate-button');
+      await expect(postCandidateButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    });
+  }
+
+  async getCandidateCardCount(): Promise<number> {
+    await waitForDynamicContent(this.page, '[data-testid="candidate-card"]');
+    const candidateCards = this.page.getByTestId('candidate-card');
+    return await candidateCards.count();
+  }
 }

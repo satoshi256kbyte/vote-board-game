@@ -1,0 +1,184 @@
+'use client';
+
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+/**
+ * VoteButton component props
+ *
+ * Handles voting and vote change actions for move candidates
+ */
+export interface VoteButtonProps {
+  /** The candidate ID to vote for */
+  candidateId: string;
+  /** The game ID */
+  gameId: string;
+  /** The turn number */
+  turnNumber: number;
+  /** Whether the user is authenticated */
+  isAuthenticated: boolean;
+  /** The candidate ID the user has currently voted for (if any) */
+  currentVotedCandidateId?: string;
+  /** Callback when vote is successfully submitted */
+  onVoteSuccess: () => void;
+}
+
+/**
+ * VoteButton Component
+ *
+ * Displays voting button with different states:
+ * - "投票する" when user hasn't voted
+ * - "投票を変更" when user has voted for another candidate
+ * - Disabled with tooltip when unauthenticated
+ * - Loading indicator during submission
+ * - Confirmation dialog for vote changes
+ *
+ * Requirements: 4.1, 4.2, 4.3, 4.8, 4.9, 6.1, 6.2, 6.3, 10.2, 10.3
+ */
+export function VoteButton({
+  candidateId,
+  gameId,
+  turnNumber,
+  isAuthenticated,
+  currentVotedCandidateId,
+  onVoteSuccess,
+}: VoteButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Determine if user has voted for this candidate
+  const isVotedForThis = currentVotedCandidateId === candidateId;
+
+  // Determine if user has voted for another candidate
+  const hasVotedOther = currentVotedCandidateId && currentVotedCandidateId !== candidateId;
+
+  // Don't show button if user has already voted for this candidate
+  if (isVotedForThis) {
+    return null;
+  }
+
+  /**
+   * Handle vote button click
+   * Shows confirmation dialog if changing vote, otherwise votes directly
+   */
+  const handleClick = () => {
+    if (hasVotedOther) {
+      setShowConfirmDialog(true);
+    } else {
+      handleVote();
+    }
+  };
+
+  /**
+   * Handle vote submission
+   * Calls the appropriate API based on whether it's a new vote or vote change
+   */
+  const handleVote = async () => {
+    setIsLoading(true);
+    setShowConfirmDialog(false);
+
+    try {
+      // Import API functions dynamically to avoid circular dependencies
+      const { createVote, changeVote } = await import('@/lib/api/candidates');
+
+      if (hasVotedOther) {
+        await changeVote(gameId, turnNumber, candidateId);
+      } else {
+        await createVote(gameId, turnNumber, candidateId);
+      }
+
+      // Notify parent component of successful vote
+      onVoteSuccess();
+    } catch (error) {
+      console.error('[VoteButton] Vote failed:', error);
+      // Error handling is done by parent component through API error
+      // Re-throw to let parent handle the error display
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handle confirmation dialog cancel
+   */
+  const handleCancel = () => {
+    setShowConfirmDialog(false);
+  };
+
+  return (
+    <>
+      {/* Vote Button */}
+      <div className="relative">
+        <Button
+          onClick={handleClick}
+          disabled={!isAuthenticated || isLoading}
+          className="w-full min-h-[44px]"
+          aria-label={hasVotedOther ? '投票を変更' : '投票する'}
+          data-testid="vote-button"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              <span>処理中...</span>
+            </>
+          ) : hasVotedOther ? (
+            '投票を変更'
+          ) : (
+            '投票する'
+          )}
+        </Button>
+
+        {/* Tooltip for unauthenticated users */}
+        {!isAuthenticated && (
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            role="tooltip"
+            aria-label="ログインして投票"
+          >
+            <span className="sr-only">ログインして投票</span>
+          </div>
+        )}
+      </div>
+
+      {/* Confirmation Dialog for Vote Change */}
+      {showConfirmDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-dialog-title"
+          data-testid="vote-change-dialog"
+        >
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h2 id="confirm-dialog-title" className="text-lg font-semibold mb-4">
+              投票を変更しますか？
+            </h2>
+            <p className="text-gray-700 mb-6">現在の投票を取り消して、この候補に投票しますか？</p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isLoading}
+                data-testid="cancel-button"
+              >
+                キャンセル
+              </Button>
+              <Button onClick={handleVote} disabled={isLoading} data-testid="confirm-button">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                    <span>処理中...</span>
+                  </>
+                ) : (
+                  '変更する'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
