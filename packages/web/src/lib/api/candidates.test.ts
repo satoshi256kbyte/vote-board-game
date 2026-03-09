@@ -82,7 +82,7 @@ describe('candidates API client', () => {
     ];
 
     it('should fetch candidates successfully', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ candidates: mockCandidates }),
       });
@@ -103,7 +103,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError with 404 when game is not found', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
       });
@@ -122,7 +122,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError with generic message for other errors', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
       });
@@ -141,7 +141,7 @@ describe('candidates API client', () => {
     });
 
     it('should handle network errors', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      mockFetch.mockRejectedValue(new Error('Network error'));
 
       await expect(getCandidates(mockGameId, mockTurnNumber)).rejects.toThrow(ApiError);
       await expect(getCandidates(mockGameId, mockTurnNumber)).rejects.toThrow('Network error');
@@ -162,7 +162,7 @@ describe('candidates API client', () => {
       delete process.env.NEXT_PUBLIC_API_URL;
       vi.stubEnv('NODE_ENV', 'development');
 
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ candidates: mockCandidates }),
       });
@@ -201,7 +201,7 @@ describe('candidates API client', () => {
     });
 
     it('should fetch vote status successfully', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: async () => mockVoteStatus,
       });
@@ -223,7 +223,7 @@ describe('candidates API client', () => {
     });
 
     it('should return null when user has not voted yet (404 with specific message)', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => ({ message: '投票が見つかりません' }),
@@ -235,7 +235,7 @@ describe('candidates API client', () => {
     });
 
     it('should return null when 404 response cannot be parsed', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => {
@@ -249,7 +249,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError when game is not found (404 with different message)', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => ({ message: 'Game not found' }),
@@ -262,7 +262,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError when authentication fails (401)', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 401,
       });
@@ -293,7 +293,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError for other server errors', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
       });
@@ -305,7 +305,7 @@ describe('candidates API client', () => {
     });
 
     it('should handle network errors', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      mockFetch.mockRejectedValue(new Error('Network error'));
 
       await expect(getVoteStatus(mockGameId, mockTurnNumber)).rejects.toThrow(ApiError);
       await expect(getVoteStatus(mockGameId, mockTurnNumber)).rejects.toThrow('Network error');
@@ -318,7 +318,7 @@ describe('candidates API client', () => {
     });
 
     it('should create vote successfully', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         status: 201,
       });
@@ -342,7 +342,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError when authentication fails (401)', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 401,
       });
@@ -382,7 +382,7 @@ describe('candidates API client', () => {
 
     it('should throw ApiError with custom message for validation errors (400)', async () => {
       const errorMessage = 'すでに投票済みです';
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
         json: async () => ({ message: errorMessage }),
@@ -404,7 +404,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw generic ApiError when 400 response cannot be parsed', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
         json: async () => {
@@ -421,7 +421,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError for other server errors', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
       });
@@ -442,7 +442,7 @@ describe('candidates API client', () => {
     });
 
     it('should handle network errors', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      mockFetch.mockRejectedValue(new Error('Network error'));
 
       await expect(createVote(mockGameId, mockTurnNumber, mockCandidateId)).rejects.toThrow(
         ApiError
@@ -459,7 +459,7 @@ describe('candidates API client', () => {
     });
 
     it('should change vote successfully', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
       });
@@ -483,7 +483,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError when authentication fails (401)', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 401,
       });
@@ -523,7 +523,7 @@ describe('candidates API client', () => {
 
     it('should throw ApiError with custom message for validation errors (400)', async () => {
       const errorMessage = '投票が見つかりません';
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
         json: async () => ({ message: errorMessage }),
@@ -545,7 +545,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw generic ApiError when 400 response cannot be parsed', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
         json: async () => {
@@ -562,7 +562,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw ApiError for other server errors', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
       });
@@ -583,7 +583,7 @@ describe('candidates API client', () => {
     });
 
     it('should handle network errors', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      mockFetch.mockRejectedValue(new Error('Network error'));
 
       await expect(changeVote(mockGameId, mockTurnNumber, mockCandidateId)).rejects.toThrow(
         ApiError
