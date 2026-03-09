@@ -19,8 +19,8 @@ const candidateArbitrary = fc.record({
   id: fc.uuid(),
   voteCount: fc.nat({ max: 1000 }),
   createdAt: fc
-    .date({ min: new Date('2024-01-01'), max: new Date('2024-12-31') })
-    .map((d) => d.toISOString()),
+    .integer({ min: Date.parse('2024-01-01'), max: Date.parse('2024-12-31') })
+    .map((timestamp) => new Date(timestamp).toISOString()),
   source: fc.constantFrom('ai' as const, 'user' as const),
 });
 
