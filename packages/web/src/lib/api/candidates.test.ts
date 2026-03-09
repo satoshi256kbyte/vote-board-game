@@ -149,16 +149,18 @@ describe('candidates API client', () => {
 
     it('should throw error when NEXT_PUBLIC_API_URL is not set', async () => {
       delete process.env.NEXT_PUBLIC_API_URL;
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       await expect(getCandidates(mockGameId, mockTurnNumber)).rejects.toThrow(
         'NEXT_PUBLIC_API_URL is not defined'
       );
+
+      vi.unstubAllEnvs();
     });
 
     it('should use development fallback URL when in development mode', async () => {
       delete process.env.NEXT_PUBLIC_API_URL;
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -171,6 +173,8 @@ describe('candidates API client', () => {
         `http://localhost:3001/api/games/${mockGameId}/turns/${mockTurnNumber}/candidates`,
         expect.any(Object)
       );
+
+      vi.unstubAllEnvs();
     });
 
     it('should throw error for invalid API URL format', async () => {

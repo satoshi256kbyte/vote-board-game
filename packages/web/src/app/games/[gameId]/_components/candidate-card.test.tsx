@@ -276,11 +276,9 @@ describe('CandidateCard', () => {
     it('should handle long description with line clamp', () => {
       const longDescription = 'あ'.repeat(300);
       const candidateWithLongDesc = { ...mockCandidate, description: longDescription };
-      const { container } = render(
-        <CandidateCard {...defaultProps} candidate={candidateWithLongDesc} />
-      );
-      const description = container.querySelector('.line-clamp-3');
-      expect(description).toBeInTheDocument();
+      render(<CandidateCard {...defaultProps} candidate={candidateWithLongDesc} />);
+      const description = screen.getByTestId('candidate-description');
+      expect(description).toHaveClass('line-clamp-3');
     });
 
     it('should handle special characters in username', () => {
@@ -502,7 +500,7 @@ describe('CandidateCard', () => {
       });
 
       it('should use time element for dates', () => {
-        render(<CandidateCard {...defaultProps} />);
+        const { container } = render(<CandidateCard {...defaultProps} />);
         const timeElements = container.querySelectorAll('time');
 
         // Should have time elements for deadline and created date

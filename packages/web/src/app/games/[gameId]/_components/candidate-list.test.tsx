@@ -124,9 +124,9 @@ vi.mock('@/lib/utils/sort-filter', () => ({
   }),
   filterCandidates: vi.fn((candidates, filter, votedCandidateId) => {
     if (filter === 'all') return candidates;
-    if (filter === 'my-vote') return candidates.filter((c) => c.id === votedCandidateId);
-    if (filter === 'ai') return candidates.filter((c) => c.createdBy === 'ai');
-    if (filter === 'user') return candidates.filter((c) => c.createdBy === 'user');
+    if (filter === 'my-vote') return candidates.filter((c: Candidate) => c.id === votedCandidateId);
+    if (filter === 'ai') return candidates.filter((c: Candidate) => c.source === 'ai');
+    if (filter === 'user') return candidates.filter((c: Candidate) => c.source === 'user');
     return candidates;
   }),
 }));

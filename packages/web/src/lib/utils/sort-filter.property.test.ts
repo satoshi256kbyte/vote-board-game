@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { sortCandidates, filterCandidates } from './sort-filter';
-import type { Candidate as _Candidate } from './sort-filter';
 
 /**
  * プロパティベーステスト: ソート・フィルター関数
@@ -22,7 +21,7 @@ const candidateArbitrary = fc.record({
   createdAt: fc
     .date({ min: new Date('2024-01-01'), max: new Date('2024-12-31') })
     .map((d) => d.toISOString()),
-  createdBy: fc.constantFrom('ai' as const, 'user' as const),
+  source: fc.constantFrom('ai' as const, 'user' as const),
 });
 
 /**
@@ -33,7 +32,7 @@ const candidatesArbitrary = fc.array(candidateArbitrary, { minLength: 0, maxLeng
 /**
  * SortBy を生成する Arbitrary
  */
-const sortByArbitrary = fc.constantFrom('votes' as const, 'createdAt' as const);
+const sortByArbitrary = fc.constantFrom('voteCount' as const, 'createdAt' as const);
 
 /**
  * SortOrder を生成する Arbitrary
@@ -84,7 +83,7 @@ describe('sortCandidates - Property-Based Tests', () => {
             let currentValue: number;
             let nextValue: number;
 
-            if (sortBy === 'votes') {
+            if (sortBy === 'voteCount') {
               currentValue = current.voteCount;
               nextValue = next.voteCount;
             } else {
@@ -183,7 +182,7 @@ describe('sortCandidates - Property-Based Tests', () => {
           // 全ての候補に同じ値を設定
           const sameCandidates = candidates.map((c, index) => ({
             ...c,
-            voteCount: sortBy === 'votes' ? 10 : c.voteCount,
+            voteCount: sortBy === 'voteCount' ? 10 : c.voteCount,
             createdAt: sortBy === 'createdAt' ? '2024-01-01T10:00:00Z' : c.createdAt,
             id: `id-${index}`, // 順序を追跡するためにIDを設定
           }));
@@ -236,10 +235,10 @@ describe('filterCandidates - Property-Based Tests', () => {
           }
         } else if (filter === 'ai') {
           // 'ai' の場合はAI生成候補のみ
-          expect(filtered.every((c) => c.createdBy === 'ai')).toBe(true);
+          expect(filtered.every((c) => c.source === 'ai')).toBe(true);
         } else if (filter === 'user') {
           // 'user' の場合はユーザー投稿候補のみ
-          expect(filtered.every((c) => c.createdBy === 'user')).toBe(true);
+          expect(filtered.every((c) => c.source === 'user')).toBe(true);
         }
       }),
       { numRuns: 10, endOnFailure: true }
@@ -291,7 +290,7 @@ describe('filterCandidates - Property-Based Tests', () => {
     fc.assert(
       fc.property(fc.array(candidateArbitrary, { minLength: 1, maxLength: 10 }), (candidates) => {
         // 全ての候補をAI生成に設定
-        const aiCandidates = candidates.map((c) => ({ ...c, createdBy: 'ai' as const }));
+        const aiCandidates = candidates.map((c) => ({ ...c, source: 'ai' as const }));
 
         const filtered = filterCandidates(aiCandidates, 'user');
 
@@ -305,7 +304,7 @@ describe('filterCandidates - Property-Based Tests', () => {
     fc.assert(
       fc.property(fc.array(candidateArbitrary, { minLength: 1, maxLength: 10 }), (candidates) => {
         // 全ての候補をユーザー投稿に設定
-        const userCandidates = candidates.map((c) => ({ ...c, createdBy: 'user' as const }));
+        const userCandidates = candidates.map((c) => ({ ...c, source: 'user' as const }));
 
         const filtered = filterCandidates(userCandidates, 'ai');
 
@@ -350,9 +349,9 @@ describe('sortCandidates + filterCandidates - Combined Properties', () => {
 
           // ソート後の配列がフィルター条件を満たしていることを確認
           if (filter === 'ai') {
-            expect(sorted.every((c) => c.createdBy === 'ai')).toBe(true);
+            expect(sorted.every((c) => c.source === 'ai')).toBe(true);
           } else if (filter === 'user') {
-            expect(sorted.every((c) => c.createdBy === 'user')).toBe(true);
+            expect(sorted.every((c) => c.source === 'user')).toBe(true);
           }
         }
       ),

@@ -30,7 +30,7 @@ export async function CandidateListSection({
   gameId,
   turnNumber,
   isAuthenticated,
-}: CandidateListSectionProps): Promise<JSX.Element> {
+}: CandidateListSectionProps) {
   let candidates: Candidate[] = [];
   let voteStatus: VoteStatus | null = null;
   let error: string | null = null;

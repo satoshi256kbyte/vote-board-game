@@ -3,15 +3,15 @@
  * 次の一手候補のソートとフィルタリングを行う
  */
 
-export interface Candidate {
+// Minimum Candidate interface for sorting and filtering
+export interface CandidateBase {
   id: string;
   voteCount: number;
   createdAt: string;
-  createdBy: 'ai' | 'user';
-  // ... other fields
+  source: 'ai' | 'user';
 }
 
-export type SortBy = 'votes' | 'createdAt';
+export type SortBy = 'voteCount' | 'createdAt';
 export type SortOrder = 'asc' | 'desc';
 export type Filter = 'all' | 'my-vote' | 'ai' | 'user';
 
@@ -19,31 +19,31 @@ export type Filter = 'all' | 'my-vote' | 'ai' | 'user';
  * 候補をソートする
  *
  * @param candidates - ソート対象の候補配列
- * @param sortBy - ソート基準（'votes' または 'createdAt'）
+ * @param sortBy - ソート基準（'voteCount' または 'createdAt'）
  * @param sortOrder - ソート順（'asc' または 'desc'）
  * @returns ソート済みの新しい候補配列
  *
  * Preconditions:
  * - candidates is a valid array of Candidate objects
- * - sortBy is either 'votes' or 'createdAt'
+ * - sortBy is either 'voteCount' or 'createdAt'
  * - sortOrder is either 'asc' or 'desc'
  *
  * Postconditions:
  * - Returns a new sorted array without mutating the input
- * - When sortBy is 'votes', candidates are sorted by voteCount
+ * - When sortBy is 'voteCount', candidates are sorted by voteCount
  * - When sortBy is 'createdAt', candidates are sorted by createdAt timestamp
  * - When sortOrder is 'desc', higher values come first
  * - When sortOrder is 'asc', lower values come first
  */
-export function sortCandidates(
-  candidates: Candidate[],
+export function sortCandidates<T extends CandidateBase>(
+  candidates: T[],
   sortBy: SortBy,
   sortOrder: SortOrder
-): Candidate[] {
+): T[] {
   const sorted = [...candidates].sort((a, b) => {
     let comparison = 0;
 
-    if (sortBy === 'votes') {
+    if (sortBy === 'voteCount') {
       comparison = a.voteCount - b.voteCount;
     } else if (sortBy === 'createdAt') {
       comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -72,14 +72,14 @@ export function sortCandidates(
  * - Returns a new filtered array without mutating the input
  * - When filter is 'all', returns all candidates
  * - When filter is 'my-vote', returns only the candidate matching votedCandidateId
- * - When filter is 'ai', returns only candidates where createdBy is 'ai'
- * - When filter is 'user', returns only candidates where createdBy is 'user'
+ * - When filter is 'ai', returns only candidates where source is 'ai'
+ * - When filter is 'user', returns only candidates where source is 'user'
  */
-export function filterCandidates(
-  candidates: Candidate[],
+export function filterCandidates<T extends CandidateBase>(
+  candidates: T[],
   filter: Filter,
   votedCandidateId?: string
-): Candidate[] {
+): T[] {
   if (filter === 'all') {
     return candidates;
   }
@@ -89,11 +89,11 @@ export function filterCandidates(
   }
 
   if (filter === 'ai') {
-    return candidates.filter((c) => c.createdBy === 'ai');
+    return candidates.filter((c) => c.source === 'ai');
   }
 
   if (filter === 'user') {
-    return candidates.filter((c) => c.createdBy === 'user');
+    return candidates.filter((c) => c.source === 'user');
   }
 
   return candidates;

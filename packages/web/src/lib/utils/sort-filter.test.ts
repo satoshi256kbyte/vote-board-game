@@ -1,32 +1,32 @@
 import { describe, it, expect } from 'vitest';
 import { sortCandidates, filterCandidates } from './sort-filter';
-import type { Candidate } from './sort-filter';
+import type { CandidateBase } from './sort-filter';
 
 describe('sortCandidates', () => {
-  const mockCandidates: Candidate[] = [
+  const mockCandidates: CandidateBase[] = [
     {
       id: '1',
       voteCount: 10,
       createdAt: '2024-01-01T10:00:00Z',
-      createdBy: 'ai',
+      source: 'ai',
     },
     {
       id: '2',
       voteCount: 5,
       createdAt: '2024-01-01T12:00:00Z',
-      createdBy: 'user',
+      source: 'user',
     },
     {
       id: '3',
       voteCount: 15,
       createdAt: '2024-01-01T09:00:00Z',
-      createdBy: 'ai',
+      source: 'ai',
     },
   ];
 
   describe('votes sorting', () => {
     it('should sort by votes in descending order', () => {
-      const result = sortCandidates(mockCandidates, 'votes', 'desc');
+      const result = sortCandidates(mockCandidates, 'voteCount', 'desc');
 
       expect(result[0].id).toBe('3'); // 15 votes
       expect(result[1].id).toBe('1'); // 10 votes
@@ -34,7 +34,7 @@ describe('sortCandidates', () => {
     });
 
     it('should sort by votes in ascending order', () => {
-      const result = sortCandidates(mockCandidates, 'votes', 'asc');
+      const result = sortCandidates(mockCandidates, 'voteCount', 'asc');
 
       expect(result[0].id).toBe('2'); // 5 votes
       expect(result[1].id).toBe('1'); // 10 votes
@@ -62,14 +62,14 @@ describe('sortCandidates', () => {
 
   describe('edge cases', () => {
     it('should return empty array when input is empty', () => {
-      const result = sortCandidates([], 'votes', 'desc');
+      const result = sortCandidates([], 'voteCount', 'desc');
 
       expect(result).toEqual([]);
     });
 
     it('should handle single candidate', () => {
       const singleCandidate = [mockCandidates[0]];
-      const result = sortCandidates(singleCandidate, 'votes', 'desc');
+      const result = sortCandidates(singleCandidate, 'voteCount', 'desc');
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('1');
@@ -77,27 +77,27 @@ describe('sortCandidates', () => {
 
     it('should not mutate original array', () => {
       const original = [...mockCandidates];
-      sortCandidates(mockCandidates, 'votes', 'desc');
+      sortCandidates(mockCandidates, 'voteCount', 'desc');
 
       expect(mockCandidates).toEqual(original);
     });
 
     it('should handle candidates with same vote count', () => {
-      const sameCandidates: Candidate[] = [
-        { id: '1', voteCount: 10, createdAt: '2024-01-01T10:00:00Z', createdBy: 'ai' },
-        { id: '2', voteCount: 10, createdAt: '2024-01-01T11:00:00Z', createdBy: 'user' },
+      const sameCandidates: CandidateBase[] = [
+        { id: '1', voteCount: 10, createdAt: '2024-01-01T10:00:00Z', source: 'ai' },
+        { id: '2', voteCount: 10, createdAt: '2024-01-01T11:00:00Z', source: 'user' },
       ];
 
-      const result = sortCandidates(sameCandidates, 'votes', 'desc');
+      const result = sortCandidates(sameCandidates, 'voteCount', 'desc');
 
       expect(result).toHaveLength(2);
       // Order should be stable for equal values
     });
 
     it('should handle candidates with same createdAt', () => {
-      const sameCandidates: Candidate[] = [
-        { id: '1', voteCount: 10, createdAt: '2024-01-01T10:00:00Z', createdBy: 'ai' },
-        { id: '2', voteCount: 5, createdAt: '2024-01-01T10:00:00Z', createdBy: 'user' },
+      const sameCandidates: CandidateBase[] = [
+        { id: '1', voteCount: 10, createdAt: '2024-01-01T10:00:00Z', source: 'ai' },
+        { id: '2', voteCount: 5, createdAt: '2024-01-01T10:00:00Z', source: 'user' },
       ];
 
       const result = sortCandidates(sameCandidates, 'createdAt', 'asc');
@@ -108,30 +108,30 @@ describe('sortCandidates', () => {
 });
 
 describe('filterCandidates', () => {
-  const mockCandidates: Candidate[] = [
+  const mockCandidates: CandidateBase[] = [
     {
       id: '1',
       voteCount: 10,
       createdAt: '2024-01-01T10:00:00Z',
-      createdBy: 'ai',
+      source: 'ai',
     },
     {
       id: '2',
       voteCount: 5,
       createdAt: '2024-01-01T12:00:00Z',
-      createdBy: 'user',
+      source: 'user',
     },
     {
       id: '3',
       voteCount: 15,
       createdAt: '2024-01-01T09:00:00Z',
-      createdBy: 'ai',
+      source: 'ai',
     },
     {
       id: '4',
       voteCount: 8,
       createdAt: '2024-01-01T11:00:00Z',
-      createdBy: 'user',
+      source: 'user',
     },
   ];
 
@@ -170,13 +170,13 @@ describe('filterCandidates', () => {
       const result = filterCandidates(mockCandidates, 'ai');
 
       expect(result).toHaveLength(2);
-      expect(result.every((c) => c.createdBy === 'ai')).toBe(true);
+      expect(result.every((c) => c.source === 'ai')).toBe(true);
       expect(result.map((c) => c.id)).toEqual(['1', '3']);
     });
 
     it('should return empty array when no AI candidates exist', () => {
-      const userOnlyCandidates: Candidate[] = [
-        { id: '1', voteCount: 10, createdAt: '2024-01-01T10:00:00Z', createdBy: 'user' },
+      const userOnlyCandidates: CandidateBase[] = [
+        { id: '1', voteCount: 10, createdAt: '2024-01-01T10:00:00Z', source: 'user' },
       ];
 
       const result = filterCandidates(userOnlyCandidates, 'ai');
@@ -190,13 +190,13 @@ describe('filterCandidates', () => {
       const result = filterCandidates(mockCandidates, 'user');
 
       expect(result).toHaveLength(2);
-      expect(result.every((c) => c.createdBy === 'user')).toBe(true);
+      expect(result.every((c) => c.source === 'user')).toBe(true);
       expect(result.map((c) => c.id)).toEqual(['2', '4']);
     });
 
     it('should return empty array when no user candidates exist', () => {
-      const aiOnlyCandidates: Candidate[] = [
-        { id: '1', voteCount: 10, createdAt: '2024-01-01T10:00:00Z', createdBy: 'ai' },
+      const aiOnlyCandidates: CandidateBase[] = [
+        { id: '1', voteCount: 10, createdAt: '2024-01-01T10:00:00Z', source: 'ai' },
       ];
 
       const result = filterCandidates(aiOnlyCandidates, 'user');
