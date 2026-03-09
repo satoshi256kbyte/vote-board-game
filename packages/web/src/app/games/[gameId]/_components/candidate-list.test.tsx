@@ -874,8 +874,9 @@ describe('CandidateList', () => {
         render(<CandidateList {...defaultProps} initialCandidates={[]} />);
 
         const emptyMessage = screen.getByTestId('empty-message');
-        // Empty state should have gray-500 or darker
-        expect(emptyMessage.className).toMatch(/text-gray-(500|600|700|800|900)/);
+        // Empty state should have gray-500 or darker text
+        const textElement = emptyMessage.querySelector('p');
+        expect(textElement?.className).toMatch(/text-gray-(500|600|700|800|900)/);
       });
 
       it('should maintain contrast in all states', () => {
