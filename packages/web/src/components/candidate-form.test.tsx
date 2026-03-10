@@ -1,0 +1,394 @@
+/**
+ * Unit tests for CandidateForm component
+ *
+ * Tests form interactions, validation, and submission.
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { CandidateForm } from './candidate-form';
+import * as candidatesApi from '@/lib/api/candidates';
+import { ApiError } from '@/lib/api/client';
+import type { BoardState } from '@/types/game';
+
+// Mock dependencies
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
+vi.mock('@/lib/api/candidates', () => ({
+  createCandidate: vi.fn(),
+}));
+
+vi.mock('@/components/board', () => ({
+  Board: ({
+    onCellClick,
+    highlightedCell,
+  }: {
+    onCellClick?: (row: number, col: number) => void;
+    highlightedCell?: { row: number; col: number };
+  }) => (
+    <div data-testid="board">
+      <button data-testid="cell-0-0" onClick={() => onCellClick?.(0, 0)}>
+        Cell 0,0
+      </button>
+      <button data-testid="cell-2-3" onClick={() => onCellClick?.(2, 3)}>
+        Cell 2,3
+      </button>
+      {highlightedCell && (
+        <div data-testid="highlighted-cell">
+          {highlightedCell.row},{highlightedCell.col}
+        </div>
+      )}
+    </div>
+  ),
+}));
+
+vi.mock('@/app/games/[gameId]/_components/board-preview', () => ({
+  BoardPreview: ({ highlightPosition }: { highlightPosition?: string }) => (
+    <div data-testid="board-preview">Preview: {highlightPosition}</div>
+  ),
+}));
+
+describe('CandidateForm', () => {
+  const mockBoardState: BoardState = {
+    board: [
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 2, 1, 0, 0, 0],
+      [0, 0, 0, 1, 2, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+    ],
+  };
+
+  const defaultProps = {
+    gameId: 'test-game-id',
+    turnNumber: 5,
+    currentBoardState: mockBoardState,
+    currentPlayer: 'black' as const,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('初期表示', () => {
+    it('should render form with all elements', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      expect(screen.getByText('位置を選択してください')).toBeInTheDocument();
+      expect(screen.getByLabelText('説明文（最大200文字）')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '候補を投稿' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'キャンセル' })).toBeInTheDocument();
+    });
+
+    it('should not show preview initially', () => {
+      render(<CandidateForm {...defaultProps} />);
+      expect(screen.queryByTestId('board-preview')).not.toBeInTheDocument();
+    });
+
+    it('should show character count as 0/200', () => {
+      render(<CandidateForm {...defaultProps} />);
+      expect(screen.getByText('0/200文字')).toBeInTheDocument();
+    });
+  });
+
+  describe('セル選択', () => {
+    it('should select cell when clicked', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const cell = screen.getByTestId('cell-0-0');
+      fireEvent.click(cell);
+
+      expect(screen.getByTestId('highlighted-cell')).toHaveTextContent('0,0');
+    });
+
+    it('should show preview when cell is selected', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const cell = screen.getByTestId('cell-2-3');
+      fireEvent.click(cell);
+
+      expect(screen.getByTestId('board-preview')).toBeInTheDocument();
+      expect(screen.getByTestId('board-preview')).toHaveTextContent('Preview: D3');
+    });
+
+    it('should clear position error when cell is selected', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      // Submit without selecting position
+      const submitButton = screen.getByRole('button', { name: '候補を投稿' });
+      fireEvent.click(submitButton);
+
+      expect(screen.getByText('位置を選択してください')).toBeInTheDocument();
+
+      // Select a cell
+      const cell = screen.getByTestId('cell-0-0');
+      fireEvent.click(cell);
+
+      expect(screen.queryByText('位置を選択してください')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('説明文入力', () => {
+    it('should update description when typing', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const textarea = screen.getByLabelText('説明文（最大200文字）');
+      fireEvent.change(textarea, { target: { value: 'テスト説明文' } });
+
+      expect(textarea).toHaveValue('テスト説明文');
+    });
+
+    it('should update character count', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const textarea = screen.getByLabelText('説明文（最大200文字）');
+      fireEvent.change(textarea, { target: { value: 'あいうえお' } });
+
+      expect(screen.getByText('5/200文字')).toBeInTheDocument();
+    });
+
+    it('should show error when exceeding 200 characters', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const textarea = screen.getByLabelText('説明文（最大200文字）');
+      const longText = 'a'.repeat(201);
+      fireEvent.change(textarea, { target: { value: longText } });
+
+      expect(screen.getByText('説明文は200文字以内で入力してください')).toBeInTheDocument();
+    });
+
+    it('should clear error when description is within limit', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const textarea = screen.getByLabelText('説明文（最大200文字）');
+
+      // Exceed limit
+      fireEvent.change(textarea, { target: { value: 'a'.repeat(201) } });
+      expect(screen.getByText('説明文は200文字以内で入力してください')).toBeInTheDocument();
+
+      // Fix it
+      fireEvent.change(textarea, { target: { value: 'a'.repeat(200) } });
+      expect(screen.queryByText('説明文は200文字以内で入力してください')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('フォーム送信', () => {
+    it('should show error when submitting without position', async () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const submitButton = screen.getByRole('button', { name: '候補を投稿' });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('位置を選択してください')).toBeInTheDocument();
+      });
+
+      expect(candidatesApi.createCandidate).not.toHaveBeenCalled();
+    });
+
+    it('should show error when submitting without description', async () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      // Select position
+      const cell = screen.getByTestId('cell-0-0');
+      fireEvent.click(cell);
+
+      // Submit
+      const submitButton = screen.getByRole('button', { name: '候補を投稿' });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('説明文を入力してください')).toBeInTheDocument();
+      });
+
+      expect(candidatesApi.createCandidate).not.toHaveBeenCalled();
+    });
+
+    it('should disable button and show loading state during submission', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Fill form
+      const cell = screen.getByTestId('cell-0-0');
+      fireEvent.click(cell);
+
+      const textarea = screen.getByLabelText('説明文（最大200文字）');
+      fireEvent.change(textarea, { target: { value: 'テスト説明文' } });
+
+      // Submit
+      const submitButton = screen.getByRole('button', { name: '候補を投稿' });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: '送信中...' })).toBeDisabled();
+      });
+    });
+
+    it('should call API with correct parameters on successful submission', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockResolvedValue({
+        candidateId: 'test-candidate-id',
+        gameId: 'test-game-id',
+        turnNumber: 5,
+        position: '0,0',
+        description: 'テスト説明文',
+        voteCount: 0,
+        createdBy: 'test-user',
+        status: 'VOTING',
+        votingDeadline: '2024-01-01T00:00:00Z',
+        createdAt: '2024-01-01T00:00:00Z',
+      });
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Fill form
+      const cell = screen.getByTestId('cell-2-3');
+      fireEvent.click(cell);
+
+      const textarea = screen.getByLabelText('説明文（最大200文字）');
+      fireEvent.change(textarea, { target: { value: 'テスト説明文' } });
+
+      // Submit
+      const submitButton = screen.getByRole('button', { name: '候補を投稿' });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(candidatesApi.createCandidate).toHaveBeenCalledWith(
+          'test-game-id',
+          5,
+          '2,3',
+          'テスト説明文'
+        );
+      });
+    });
+
+    it('should show error message on 401 authentication error', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockRejectedValue(
+        new ApiError('認証が必要です', 401)
+      );
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Fill and submit form
+      fireEvent.click(screen.getByTestId('cell-0-0'));
+      fireEvent.change(screen.getByLabelText('説明文（最大200文字）'), {
+        target: { value: 'テスト' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: '候補を投稿' }));
+
+      await waitFor(() => {
+        expect(screen.getByText('認証が必要です。ログインしてください。')).toBeInTheDocument();
+      });
+    });
+
+    it('should show error message on 409 conflict error', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockRejectedValue(
+        new ApiError('この位置の候補は既に存在します', 409, 'CONFLICT')
+      );
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Fill and submit form
+      fireEvent.click(screen.getByTestId('cell-0-0'));
+      fireEvent.change(screen.getByLabelText('説明文（最大200文字）'), {
+        target: { value: 'テスト' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: '候補を投稿' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('この位置の候補は既に存在します。別の位置を選択してください。')
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('should show error message on INVALID_MOVE error', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockRejectedValue(
+        new ApiError('無効な手です', 400, 'INVALID_MOVE')
+      );
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Fill and submit form
+      fireEvent.click(screen.getByTestId('cell-0-0'));
+      fireEvent.change(screen.getByLabelText('説明文（最大200文字）'), {
+        target: { value: 'テスト' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: '候補を投稿' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('この位置には石を置けません。別の位置を選択してください。')
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('should show error message on VOTING_CLOSED error', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockRejectedValue(
+        new ApiError('投票期間が終了しています', 400, 'VOTING_CLOSED')
+      );
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Fill and submit form
+      fireEvent.click(screen.getByTestId('cell-0-0'));
+      fireEvent.change(screen.getByLabelText('説明文（最大200文字）'), {
+        target: { value: 'テスト' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: '候補を投稿' }));
+
+      await waitFor(() => {
+        expect(screen.getByText('投票期間が終了しています。')).toBeInTheDocument();
+      });
+    });
+
+    it('should show generic error message on other errors', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockRejectedValue(new Error('Network error'));
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Fill and submit form
+      fireEvent.click(screen.getByTestId('cell-0-0'));
+      fireEvent.change(screen.getByLabelText('説明文（最大200文字）'), {
+        target: { value: 'テスト' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: '候補を投稿' }));
+
+      await waitFor(() => {
+        expect(screen.getByText('予期しないエラーが発生しました。')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('キャンセル', () => {
+    it('should call router.back when cancel button is clicked', async () => {
+      const mockBack = vi.fn();
+      const { useRouter } = await import('next/navigation');
+      vi.mocked(useRouter).mockReturnValue({
+        back: mockBack,
+        push: vi.fn(),
+        forward: vi.fn(),
+        refresh: vi.fn(),
+        replace: vi.fn(),
+        prefetch: vi.fn(),
+      });
+
+      render(<CandidateForm {...defaultProps} />);
+
+      const cancelButton = screen.getByRole('button', { name: 'キャンセル' });
+      fireEvent.click(cancelButton);
+
+      expect(mockBack).toHaveBeenCalled();
+    });
+  });
+});

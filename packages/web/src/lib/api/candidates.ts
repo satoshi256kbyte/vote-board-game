@@ -257,6 +257,101 @@ export async function getVoteStatus(
 }
 
 /**
+ * Create a new move candidate
+ *
+ * @param gameId - The game ID (UUID v4)
+ * @param turnNumber - The turn number (non-negative integer)
+ * @param position - The position in "row,col" format (e.g., "2,3")
+ * @param description - The description (1-200 characters)
+ * @returns Promise with created candidate response
+ *
+ * @throws {ApiError} When authentication fails (401), validation fails (400), conflict occurs (409), or other errors occur
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const candidate = await createCandidate(
+ *     '123e4567-e89b-12d3-a456-426614174000',
+ *     5,
+ *     '2,3',
+ *     'この手で中央を制圧できます'
+ *   );
+ *   console.log(`候補を投稿しました: ${candidate.candidateId}`);
+ * } catch (error) {
+ *   if (error instanceof ApiError) {
+ *     if (error.statusCode === 401) {
+ *       console.error('認証が必要です');
+ *     } else if (error.statusCode === 409) {
+ *       console.error('この位置の候補は既に存在します');
+ *     } else if (error.statusCode === 400 && error.code === 'INVALID_MOVE') {
+ *       console.error('この位置には石を置けません');
+ *     } else if (error.statusCode === 400 && error.code === 'VOTING_CLOSED') {
+ *       console.error('投票期間が終了しています');
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export async function createCandidate(
+  gameId: string,
+  turnNumber: number,
+  position: string,
+  description: string
+): Promise<CreateCandidateResponse> {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}/api/games/${gameId}/turns/${turnNumber}/candidates`;
+
+  // Get authentication token
+  const token = getAuthToken();
+  if (!token) {
+    throw new ApiError('認証が必要です', 401);
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        position,
+        description,
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new ApiError('認証が必要です', 401);
+      }
+      if (response.status === 409) {
+        throw new ApiError('この位置の候補は既に存在します', 409, 'CONFLICT');
+      }
+      if (response.status === 400) {
+        let errorData: { error?: string; message?: string };
+        try {
+          errorData = await response.json();
+          throw new ApiError(errorData.message || '候補の投稿に失敗しました', 400, errorData.error);
+        } catch (parseError) {
+          if (parseError instanceof ApiError) {
+            throw parseError;
+          }
+          throw new ApiError('候補の投稿に失敗しました', 400);
+        }
+      }
+      throw new ApiError('候補の投稿に失敗しました', response.status);
+    }
+
+    return await handleResponse<CreateCandidateResponse>(response);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(error instanceof Error ? error.message : '候補の投稿に失敗しました', 0);
+  }
+}
+
+/**
  * Create a vote for a move candidate
  *
  * @param gameId - The game ID (UUID v4)

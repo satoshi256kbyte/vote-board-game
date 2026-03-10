@@ -11,8 +11,10 @@ import {
   getVoteStatus,
   createVote,
   changeVote,
+  createCandidate,
   type Candidate,
   type VoteStatus,
+  type CreateCandidateResponse,
 } from './candidates';
 import { ApiError } from './client';
 import * as storageService from '@/lib/services/storage-service';
@@ -592,5 +594,248 @@ describe('candidates API client', () => {
         'Network error'
       );
     });
+  });
+});
+
+describe('createCandidate', () => {
+  const mockPosition = '2,3';
+  const mockDescription = 'この手で中央を制圧できます';
+  const mockCreateCandidateResponse: CreateCandidateResponse = {
+    candidateId: 'new-candidate-id',
+    gameId: mockGameId,
+    turnNumber: mockTurnNumber,
+    position: mockPosition,
+    description: mockDescription,
+    voteCount: 0,
+    createdBy: 'user-1',
+    status: 'VOTING',
+    votingDeadline: '2024-01-02T00:00:00Z',
+    createdAt: '2024-01-01T12:00:00Z',
+  };
+
+  beforeEach(() => {
+    vi.mocked(storageService.storageService.getAccessToken).mockReturnValue(mockToken);
+  });
+
+  it('should create candidate successfully', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => mockCreateCandidateResponse,
+    });
+
+    const result = await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+
+    expect(result).toEqual(mockCreateCandidateResponse);
+    expect(mockFetch).toHaveBeenCalledWith(
+      `https://api.example.com/api/games/${mockGameId}/turns/${mockTurnNumber}/candidates`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${mockToken}`,
+        },
+        body: JSON.stringify({
+          position: mockPosition,
+          description: mockDescription,
+        }),
+      }
+    );
+  });
+
+  it('should throw ApiError when authentication fails (401)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+    });
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow('認証が必要です');
+
+    try {
+      await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).statusCode).toBe(401);
+    }
+  });
+
+  it('should throw ApiError when no token is available', async () => {
+    vi.mocked(storageService.storageService.getAccessToken).mockReturnValue(null);
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow('認証が必要です');
+
+    try {
+      await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).statusCode).toBe(401);
+    }
+  });
+
+  it('should throw ApiError when candidate already exists (409)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 409,
+    });
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow('この位置の候補は既に存在します');
+
+    try {
+      await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).statusCode).toBe(409);
+      expect((error as ApiError).code).toBe('CONFLICT');
+    }
+  });
+
+  it('should throw ApiError with INVALID_MOVE error code (400)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        error: 'INVALID_MOVE',
+        message: 'この位置には石を置けません',
+      }),
+    });
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow('この位置には石を置けません');
+
+    try {
+      await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).statusCode).toBe(400);
+      expect((error as ApiError).code).toBe('INVALID_MOVE');
+    }
+  });
+
+  it('should throw ApiError with VOTING_CLOSED error code (400)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        error: 'VOTING_CLOSED',
+        message: '投票期間が終了しています',
+      }),
+    });
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow('投票期間が終了しています');
+
+    try {
+      await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).statusCode).toBe(400);
+      expect((error as ApiError).code).toBe('VOTING_CLOSED');
+    }
+  });
+
+  it('should throw ApiError with custom message for validation errors (400)', async () => {
+    const errorMessage = '説明文は200文字以内で入力してください';
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        error: 'VALIDATION_ERROR',
+        message: errorMessage,
+      }),
+    });
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(errorMessage);
+
+    try {
+      await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).statusCode).toBe(400);
+      expect((error as ApiError).code).toBe('VALIDATION_ERROR');
+    }
+  });
+
+  it('should throw generic ApiError when 400 response cannot be parsed', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => {
+        throw new Error('Parse error');
+      },
+    });
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow('候補の投稿に失敗しました');
+
+    try {
+      await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).statusCode).toBe(400);
+    }
+  });
+
+  it('should throw ApiError for other server errors', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+    });
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow('候補の投稿に失敗しました');
+
+    try {
+      await createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription);
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).statusCode).toBe(500);
+    }
+  });
+
+  it('should handle network errors', async () => {
+    mockFetch.mockRejectedValue(new Error('Network error'));
+
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow(ApiError);
+    await expect(
+      createCandidate(mockGameId, mockTurnNumber, mockPosition, mockDescription)
+    ).rejects.toThrow('Network error');
   });
 });
