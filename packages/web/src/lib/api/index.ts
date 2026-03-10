@@ -13,3 +13,5 @@ export {
   vote,
   ApiError,
 } from './client';
+
+export { createVote, changeVote } from './votes';
