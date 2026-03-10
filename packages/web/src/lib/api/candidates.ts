@@ -39,6 +39,23 @@ export interface VoteStatus {
 }
 
 /**
+ * Create candidate response interface
+ * Response structure from POST /api/games/:gameId/turns/:turnNumber/candidates
+ */
+export interface CreateCandidateResponse {
+  candidateId: string;
+  gameId: string;
+  turnNumber: number;
+  position: string;
+  description: string;
+  voteCount: number;
+  createdBy: string;
+  status: 'VOTING';
+  votingDeadline: string;
+  createdAt: string;
+}
+
+/**
  * Get the API base URL from environment variables
  */
 function getApiBaseUrl(): string {
