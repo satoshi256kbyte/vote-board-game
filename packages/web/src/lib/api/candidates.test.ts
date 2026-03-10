@@ -598,6 +598,9 @@ describe('candidates API client', () => {
 });
 
 describe('createCandidate', () => {
+  const mockGameId = '123e4567-e89b-12d3-a456-426614174000';
+  const mockTurnNumber = 5;
+  const mockToken = 'mock-jwt-token';
   const mockPosition = '2,3';
   const mockDescription = 'この手で中央を制圧できます';
   const mockCreateCandidateResponse: CreateCandidateResponse = {
@@ -613,8 +616,23 @@ describe('createCandidate', () => {
     createdAt: '2024-01-01T12:00:00Z',
   };
 
+  // Mock fetch globally
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
+    // Reset all mocks before each test
+    vi.clearAllMocks();
+    mockFetch.mockClear();
+    global.fetch = mockFetch;
+
+    // Set default environment variable
+    process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
+
     vi.mocked(storageService.storageService.getAccessToken).mockReturnValue(mockToken);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should create candidate successfully', async () => {
@@ -700,7 +718,7 @@ describe('createCandidate', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
       expect((error as ApiError).statusCode).toBe(409);
-      expect((error as ApiError).code).toBe('CONFLICT');
+      expect((error as ApiError).errorCode).toBe('CONFLICT');
     }
   });
 
@@ -726,7 +744,7 @@ describe('createCandidate', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
       expect((error as ApiError).statusCode).toBe(400);
-      expect((error as ApiError).code).toBe('INVALID_MOVE');
+      expect((error as ApiError).errorCode).toBe('INVALID_MOVE');
     }
   });
 
@@ -752,7 +770,7 @@ describe('createCandidate', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
       expect((error as ApiError).statusCode).toBe(400);
-      expect((error as ApiError).code).toBe('VOTING_CLOSED');
+      expect((error as ApiError).errorCode).toBe('VOTING_CLOSED');
     }
   });
 
@@ -779,7 +797,7 @@ describe('createCandidate', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
       expect((error as ApiError).statusCode).toBe(400);
-      expect((error as ApiError).code).toBe('VALIDATION_ERROR');
+      expect((error as ApiError).errorCode).toBe('VALIDATION_ERROR');
     }
   });
 

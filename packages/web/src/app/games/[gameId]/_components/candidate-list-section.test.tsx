@@ -10,6 +10,29 @@ import { CandidateListSection } from './candidate-list-section';
 import * as candidatesApi from '@/lib/api/candidates';
 import type { Candidate, VoteStatus } from '@/lib/api/candidates';
 
+// Mock Next.js navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  useSearchParams: () => ({
+    get: vi.fn(),
+    getAll: vi.fn(),
+    has: vi.fn(),
+    keys: vi.fn(),
+    values: vi.fn(),
+    entries: vi.fn(),
+    forEach: vi.fn(),
+    toString: vi.fn(),
+  }),
+  usePathname: () => '/games/test-game-id',
+}));
+
 // Mock the API module
 vi.mock('@/lib/api/candidates', () => ({
   getCandidates: vi.fn(),

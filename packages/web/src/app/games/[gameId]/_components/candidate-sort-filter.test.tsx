@@ -342,7 +342,7 @@ describe('CandidateSortFilter', () => {
 
         await waitFor(() => {
           const sortByVotes = screen.getByTestId('sort-by-votes');
-          expect(sortByVotes).toHaveAttribute('role', 'menuitem');
+          expect(sortByVotes).toHaveAttribute('role', 'menuitemradio');
         });
       });
     });

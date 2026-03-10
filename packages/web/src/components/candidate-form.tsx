@@ -151,9 +151,9 @@ export function CandidateForm({ gameId, turnNumber, currentBoardState }: Candida
           setError('認証が必要です。ログインしてください。');
         } else if (error.statusCode === 409) {
           setError('この位置の候補は既に存在します。別の位置を選択してください。');
-        } else if (error.statusCode === 400 && error.code === 'INVALID_MOVE') {
+        } else if (error.statusCode === 400 && error.errorCode === 'INVALID_MOVE') {
           setError('この位置には石を置けません。別の位置を選択してください。');
-        } else if (error.statusCode === 400 && error.code === 'VOTING_CLOSED') {
+        } else if (error.statusCode === 400 && error.errorCode === 'VOTING_CLOSED') {
           setError('投票期間が終了しています。');
         } else {
           setError('候補の投稿に失敗しました。もう一度お試しください。');
