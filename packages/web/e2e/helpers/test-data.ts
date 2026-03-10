@@ -83,10 +83,24 @@ export async function createTestGame(): Promise<TestGame> {
 
     console.log(`[CreateTestGame] Successfully created test game: ${gameId}`);
 
+    // Create test candidates for the game
+    const candidates: TestCandidate[] = [];
+    try {
+      // Create 3 test candidates
+      for (let i = 0; i < 3; i++) {
+        const candidate = await createTestCandidate(gameId, i);
+        candidates.push(candidate);
+      }
+      console.log(`[CreateTestGame] Successfully created ${candidates.length} test candidates`);
+    } catch (error) {
+      console.warn(`[CreateTestGame] Failed to create test candidates:`, error);
+      // Continue even if candidate creation fails
+    }
+
     return {
       gameId,
       status: 'active',
-      candidates: [],
+      candidates,
     };
   } catch (error) {
     console.error(`[CreateTestGame] Failed to create test game`, error);
@@ -104,9 +118,12 @@ export async function createTestGame(): Promise<TestGame> {
  * @param gameId - ID of the game to add candidate to
  * @returns Promise that resolves to TestCandidate object
  */
-export async function createTestCandidate(gameId: string): Promise<TestCandidate> {
+export async function createTestCandidate(
+  gameId: string,
+  index: number = 0
+): Promise<TestCandidate> {
   const timestamp = Date.now();
-  const candidateId = `test-candidate-${timestamp}`;
+  const candidateId = `test-candidate-${timestamp}-${index}`;
 
   try {
     const tableName = process.env.DYNAMODB_TABLE_NAME;
@@ -117,14 +134,20 @@ export async function createTestCandidate(gameId: string): Promise<TestCandidate
       // Return a mock candidate for testing without DynamoDB
       return {
         candidateId,
-        description: 'テスト候補: 中央付近に配置して優位を確保する戦略です。',
-        moveData: JSON.stringify({ row: 2, col: 3 }),
+        description: `テスト候補${index + 1}: 中央付近に配置して優位を確保する戦略です。`,
+        moveData: JSON.stringify({ row: 2 + index, col: 3 }),
       };
     }
 
-    // Create a test move (e.g., place at position [2, 3])
-    const moveData = JSON.stringify({ row: 2, col: 3 });
-    const description = 'テスト候補: 中央付近に配置して優位を確保する戦略です。';
+    // Create test moves with different positions
+    const positions = [
+      { row: 2, col: 3, desc: '中央付近に配置して優位を確保する戦略です。' },
+      { row: 2, col: 4, desc: '右側を攻めて相手の選択肢を制限します。' },
+      { row: 3, col: 2, desc: '左側から攻めて盤面をコントロールします。' },
+    ];
+    const position = positions[index % positions.length];
+    const moveData = JSON.stringify({ row: position.row, col: position.col });
+    const description = `テスト候補${index + 1}: ${position.desc}`;
 
     const candidate = {
       PK: `GAME#${gameId}`,
