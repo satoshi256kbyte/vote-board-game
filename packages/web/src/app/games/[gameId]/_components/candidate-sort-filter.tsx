@@ -138,7 +138,7 @@ export function CandidateSortFilter({
             variant="outline"
             className="min-h-[44px]"
             aria-label="ソート設定"
-            data-testid="sort-dropdown-trigger"
+            data-testid="candidate-sort-dropdown"
           >
             <ArrowUpDown className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>
@@ -178,7 +178,7 @@ export function CandidateSortFilter({
             variant="outline"
             className="min-h-[44px]"
             aria-label="フィルター設定"
-            data-testid="filter-dropdown-trigger"
+            data-testid="candidate-filter-dropdown"
           >
             <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>{getFilterLabel()}</span>

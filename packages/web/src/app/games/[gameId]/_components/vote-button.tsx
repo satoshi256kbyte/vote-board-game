@@ -113,8 +113,9 @@ export function VoteButton({
           onClick={handleClick}
           disabled={!isAuthenticated || isLoading}
           className="w-full min-h-[44px]"
+          variant={hasVotedOther ? 'outline' : 'default'}
           aria-label={hasVotedOther ? '投票を変更' : '投票する'}
-          data-testid="vote-button"
+          data-testid={hasVotedOther ? 'vote-change-button' : 'vote-button'}
         >
           {isLoading ? (
             <>
