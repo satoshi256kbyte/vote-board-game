@@ -301,8 +301,8 @@ test.describe('Vote Flow - Unauthenticated User', () => {
     const buttonParent = voteButton.locator('..');
     await buttonParent.hover();
 
-    // Verify tooltip is displayed
-    const tooltip = page.locator('[role="tooltip"]');
+    // Verify tooltip is displayed within the first candidate card
+    const tooltip = candidateCard.locator('[role="tooltip"]');
     await expect(tooltip).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
     await expect(tooltip).toContainText('ログインして投票');
   });
