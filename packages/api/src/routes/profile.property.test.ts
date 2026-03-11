@@ -153,8 +153,15 @@ describe('Profile API Property-Based Tests', () => {
           username: fc.option(fc.string({ minLength: 1, maxLength: 50 })),
           iconUrl: fc.option(fc.webUrl({ validSchemes: ['https'] })),
         }),
-        fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
+        fc
+          .integer({ min: new Date('2020-01-01').getTime(), max: new Date('2030-12-31').getTime() })
+          .map((timestamp) => new Date(timestamp)),
         async (updates, baseDate) => {
+          // 無効な日付をスキップ
+          if (isNaN(baseDate.getTime())) {
+            return;
+          }
+
           // 少なくとも1つのフィールドが必要
           if (!updates.username && !updates.iconUrl) {
             return;
