@@ -78,12 +78,12 @@ describe('cleanupTestGame', () => {
         {
           candidateId: 'candidate-1',
           description: 'Test candidate 1',
-          moveData: '{"row":2,"col":3}',
+          position: '2,3',
         },
         {
           candidateId: 'candidate-2',
           description: 'Test candidate 2',
-          moveData: '{"row":3,"col":4}',
+          position: '3,4',
         },
       ],
     };

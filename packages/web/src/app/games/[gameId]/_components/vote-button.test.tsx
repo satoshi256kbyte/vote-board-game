@@ -98,7 +98,7 @@ describe('VoteButton', () => {
       // Check for loading state
       await waitFor(
         () => {
-          expect(screen.getByText('処理中...')).toBeInTheDocument();
+          expect(screen.getByText('投票中...')).toBeInTheDocument();
         },
         { timeout: 3000 }
       );
@@ -500,7 +500,7 @@ describe('VoteButton', () => {
 
       await waitFor(
         () => {
-          expect(screen.getByText('処理中...')).toBeInTheDocument();
+          expect(screen.getByText('投票中...')).toBeInTheDocument();
         },
         { timeout: 3000 }
       );

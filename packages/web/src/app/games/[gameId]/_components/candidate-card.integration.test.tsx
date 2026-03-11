@@ -89,7 +89,7 @@ describe('CandidateCard Integration Tests', () => {
 
       // Wait for loading state
       await waitFor(() => {
-        expect(voteButton).toHaveTextContent('処理中...');
+        expect(voteButton).toHaveTextContent('投票中...');
       });
 
       // Wait for API call and success callback

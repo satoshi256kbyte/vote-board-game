@@ -3,6 +3,7 @@
  * Manages test games and candidates in DynamoDB
  */
 
+import { randomUUID } from 'crypto';
 import { PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { getDynamoDocClient, withCredentialRefresh } from './aws-client-factory';
 
@@ -15,7 +16,7 @@ export interface TestGame {
 export interface TestCandidate {
   candidateId: string;
   description: string;
-  moveData: string;
+  position: string;
 }
 
 /**
@@ -28,8 +29,8 @@ export interface TestCandidate {
  * @returns Promise that resolves to TestGame object
  */
 export async function createTestGame(): Promise<TestGame> {
-  const timestamp = Date.now();
-  const gameId = `test-game-${timestamp}`;
+  // Use UUID v4 so the API's gameId validation (z.string().uuid()) passes
+  const gameId = randomUUID();
 
   try {
     const tableName = process.env.DYNAMODB_TABLE_NAME;
@@ -45,29 +46,37 @@ export async function createTestGame(): Promise<TestGame> {
       };
     }
 
-    // withCredentialRefresh でラップし、ExpiredTokenException 時にリトライ
-    // Create initial board state (empty Othello board)
+    // Create initial board state (standard Othello starting position)
     const initialBoardState = Array(8)
       .fill(null)
       .map(() => Array(8).fill(0));
-    // Set initial pieces (standard Othello starting position)
+    // Set initial pieces
     initialBoardState[3][3] = 1; // White
     initialBoardState[3][4] = 2; // Black
     initialBoardState[4][3] = 2; // Black
     initialBoardState[4][4] = 1; // White
 
+    const now = new Date().toISOString();
+
+    // Game entity must match GameEntity type used by the API:
+    // PK/SK: GAME#<gameId>
+    // GSI1PK: GAME#STATUS#ACTIVE, GSI1SK: <createdAt>
+    // boardState stored as JSON.stringify({ board: number[][] })
+    // Test games are always ACTIVE with turn 0 since voting tests require an active game state
     const game = {
       PK: `GAME#${gameId}`,
       SK: `GAME#${gameId}`,
+      entityType: 'GAME',
+      GSI1PK: 'GAME#STATUS#ACTIVE',
+      GSI1SK: now,
       gameId,
-      status: 'active',
-      boardState: JSON.stringify(initialBoardState),
-      currentPlayer: 2, // Black starts
-      moveHistory: [],
-      aiCommentary: 'テストゲームが開始されました。黒の番です。',
-      votingDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      gameType: 'OTHELLO',
+      status: 'ACTIVE',
+      aiSide: 'BLACK',
+      currentTurn: 0,
+      boardState: JSON.stringify({ board: initialBoardState }),
+      createdAt: now,
+      updatedAt: now,
     };
 
     await withCredentialRefresh(async () => {
@@ -116,14 +125,14 @@ export async function createTestGame(): Promise<TestGame> {
  * - 7.5: Candidates should have descriptions (max 200 characters)
  *
  * @param gameId - ID of the game to add candidate to
+ * @param index - Index for generating distinct candidates
  * @returns Promise that resolves to TestCandidate object
  */
 export async function createTestCandidate(
   gameId: string,
   index: number = 0
 ): Promise<TestCandidate> {
-  const timestamp = Date.now();
-  const candidateId = `test-candidate-${timestamp}-${index}`;
+  const candidateId = randomUUID();
 
   try {
     const tableName = process.env.DYNAMODB_TABLE_NAME;
@@ -132,32 +141,44 @@ export async function createTestCandidate(
         '[CreateTestCandidate] DYNAMODB_TABLE_NAME environment variable is not set. Skipping test candidate creation.'
       );
       // Return a mock candidate for testing without DynamoDB
+      const positions = ['2,3', '2,4', '3,2'];
       return {
         candidateId,
         description: `テスト候補${index + 1}: 中央付近に配置して優位を確保する戦略です。`,
-        moveData: JSON.stringify({ row: 2 + index, col: 3 }),
+        position: positions[index % positions.length],
       };
     }
 
-    // Create test moves with different positions
-    const positions = [
-      { row: 2, col: 3, desc: '中央付近に配置して優位を確保する戦略です。' },
-      { row: 2, col: 4, desc: '右側を攻めて相手の選択肢を制限します。' },
-      { row: 3, col: 2, desc: '左側から攻めて盤面をコントロールします。' },
+    // Positions in "row,col" format (valid moves from initial Othello board)
+    const positionData = [
+      { pos: '2,3', desc: '中央付近に配置して優位を確保する戦略です。' },
+      { pos: '2,4', desc: '右側を攻めて相手の選択肢を制限します。' },
+      { pos: '3,2', desc: '左側から攻めて盤面をコントロールします。' },
     ];
-    const position = positions[index % positions.length];
-    const moveData = JSON.stringify({ row: position.row, col: position.col });
-    const description = `テスト候補${index + 1}: ${position.desc}`;
+    const { pos: position, desc } = positionData[index % positionData.length];
+    const description = `テスト候補${index + 1}: ${desc}`;
 
+    const now = new Date().toISOString();
+    const votingDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    // Candidate PK must be GAME#<gameId>#TURN#<turnNumber> to match
+    // CandidateRepository.listByTurn which queries PK = 'GAME#<gameId>#TURN#<turnNumber>'
+    // Turn number is always 0 since test games start at turn 0 (currentTurn: 0)
     const candidate = {
-      PK: `GAME#${gameId}`,
+      PK: `GAME#${gameId}#TURN#0`,
       SK: `CANDIDATE#${candidateId}`,
+      entityType: 'CANDIDATE',
       candidateId,
       gameId,
+      turnNumber: 0,
+      position,
       description,
-      moveData,
       voteCount: 0,
-      createdAt: new Date().toISOString(),
+      createdBy: 'AI',
+      status: 'VOTING',
+      votingDeadline,
+      createdAt: now,
+      updatedAt: now,
     };
 
     await withCredentialRefresh(async () => {
@@ -176,7 +197,7 @@ export async function createTestCandidate(
     return {
       candidateId,
       description,
-      moveData,
+      position,
     };
   } catch (error) {
     console.error(`[CreateTestCandidate] Failed to create test candidate`, error);
@@ -223,7 +244,7 @@ export async function cleanupTestGame(game: TestGame): Promise<void> {
         const deleteCandidateCommand = new DeleteCommand({
           TableName: tableName,
           Key: {
-            PK: `GAME#${game.gameId}`,
+            PK: `GAME#${game.gameId}#TURN#0`,
             SK: `CANDIDATE#${candidate.candidateId}`,
           },
         });

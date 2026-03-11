@@ -50,6 +50,31 @@ describe('candidates API client', () => {
   });
 
   describe('getCandidates', () => {
+    // Raw API response format (what the server actually returns)
+    const mockApiCandidates = [
+      {
+        candidateId: 'candidate-1',
+        position: 'D3',
+        description: 'Good move',
+        voteCount: 10,
+        createdBy: 'USER#user-1',
+        status: 'VOTING',
+        votingDeadline: '2024-01-01T00:00:00Z',
+        createdAt: '2023-12-31T00:00:00Z',
+      },
+      {
+        candidateId: 'candidate-2',
+        position: 'E4',
+        description: 'AI suggestion',
+        voteCount: 5,
+        createdBy: 'AI',
+        status: 'VOTING',
+        votingDeadline: '2024-01-01T00:00:00Z',
+        createdAt: '2023-12-31T00:00:00Z',
+      },
+    ];
+
+    // Expected mapped frontend Candidate[] result
     const mockCandidates: Candidate[] = [
       {
         id: 'candidate-1',
@@ -57,10 +82,10 @@ describe('candidates API client', () => {
         turnNumber: mockTurnNumber,
         position: 'D3',
         description: 'Good move',
-        boardState: [[]],
+        boardState: [],
         voteCount: 10,
-        postedBy: 'user-1',
-        postedByUsername: 'Alice',
+        postedBy: 'USER#user-1',
+        postedByUsername: 'user-1',
         status: 'active',
         deadline: '2024-01-01T00:00:00Z',
         createdAt: '2023-12-31T00:00:00Z',
@@ -72,9 +97,9 @@ describe('candidates API client', () => {
         turnNumber: mockTurnNumber,
         position: 'E4',
         description: 'AI suggestion',
-        boardState: [[]],
+        boardState: [],
         voteCount: 5,
-        postedBy: 'ai',
+        postedBy: 'AI',
         postedByUsername: 'AI',
         status: 'active',
         deadline: '2024-01-01T00:00:00Z',
@@ -86,7 +111,7 @@ describe('candidates API client', () => {
     it('should fetch candidates successfully', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ candidates: mockCandidates }),
+        json: async () => ({ candidates: mockApiCandidates }),
       });
 
       const result = await getCandidates(mockGameId, mockTurnNumber);
@@ -236,6 +261,18 @@ describe('candidates API client', () => {
       expect(result).toBeNull();
     });
 
+    it('should return null when user has not voted yet (API returns Vote not found)', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({ error: 'NOT_FOUND', message: 'Vote not found' }),
+      });
+
+      const result = await getVoteStatus(mockGameId, mockTurnNumber);
+
+      expect(result).toBeNull();
+    });
+
     it('should return null when 404 response cannot be parsed', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
@@ -329,18 +366,19 @@ describe('candidates API client', () => {
         createVote(mockGameId, mockTurnNumber, mockCandidateId)
       ).resolves.toBeUndefined();
 
-      expect(mockFetch).toHaveBeenCalledWith('https://api.example.com/api/votes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${mockToken}`,
-        },
-        body: JSON.stringify({
-          gameId: mockGameId,
-          turnNumber: mockTurnNumber,
-          candidateId: mockCandidateId,
-        }),
-      });
+      expect(mockFetch).toHaveBeenCalledWith(
+        `https://api.example.com/api/games/${mockGameId}/turns/${mockTurnNumber}/votes`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${mockToken}`,
+          },
+          body: JSON.stringify({
+            candidateId: mockCandidateId,
+          }),
+        }
+      );
     });
 
     it('should throw ApiError when authentication fails (401)', async () => {
@@ -422,6 +460,29 @@ describe('candidates API client', () => {
       );
     });
 
+    it('should throw ApiError with message from body for conflict errors (409)', async () => {
+      const errorMessage = '既に投票済みです';
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: async () => ({ error: 'ALREADY_VOTED', message: errorMessage }),
+      });
+
+      await expect(createVote(mockGameId, mockTurnNumber, mockCandidateId)).rejects.toThrow(
+        ApiError
+      );
+      await expect(createVote(mockGameId, mockTurnNumber, mockCandidateId)).rejects.toThrow(
+        errorMessage
+      );
+
+      try {
+        await createVote(mockGameId, mockTurnNumber, mockCandidateId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).statusCode).toBe(409);
+      }
+    });
+
     it('should throw ApiError for other server errors', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
@@ -470,18 +531,19 @@ describe('candidates API client', () => {
         changeVote(mockGameId, mockTurnNumber, mockCandidateId)
       ).resolves.toBeUndefined();
 
-      expect(mockFetch).toHaveBeenCalledWith('https://api.example.com/api/votes', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${mockToken}`,
-        },
-        body: JSON.stringify({
-          gameId: mockGameId,
-          turnNumber: mockTurnNumber,
-          candidateId: mockCandidateId,
-        }),
-      });
+      expect(mockFetch).toHaveBeenCalledWith(
+        `https://api.example.com/api/games/${mockGameId}/turns/${mockTurnNumber}/votes/me`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${mockToken}`,
+          },
+          body: JSON.stringify({
+            candidateId: mockCandidateId,
+          }),
+        }
+      );
     });
 
     it('should throw ApiError when authentication fails (401)', async () => {
