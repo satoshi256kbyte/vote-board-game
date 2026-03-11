@@ -8,5 +8,6 @@
   "files.associations": {
     "*.md": "markdown"
   },
-  "cSpell.words": ["Kiro", "VERCEL"]
+  "cSpell.words": ["Kiro", "VERCEL"],
+  "typescript.autoClosingTags": false
 }
