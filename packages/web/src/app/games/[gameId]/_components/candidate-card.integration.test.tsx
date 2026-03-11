@@ -133,7 +133,7 @@ describe('CandidateCard Integration Tests', () => {
       render(<CandidateCard {...defaultProps} currentVotedCandidateId="other-candidate-id" />);
 
       // Vote button should show "投票を変更"
-      const voteButton = screen.getByTestId('vote-button');
+      const voteButton = screen.getByTestId('vote-change-button');
       expect(voteButton).toHaveTextContent('投票を変更');
 
       // Click vote change button
@@ -161,7 +161,7 @@ describe('CandidateCard Integration Tests', () => {
       );
 
       // Click vote change button
-      const voteButton = screen.getByTestId('vote-button');
+      const voteButton = screen.getByTestId('vote-change-button');
       fireEvent.click(voteButton);
 
       // Wait for dialog
@@ -195,7 +195,7 @@ describe('CandidateCard Integration Tests', () => {
       );
 
       // Click vote change button
-      const voteButton = screen.getByTestId('vote-button');
+      const voteButton = screen.getByTestId('vote-change-button');
       fireEvent.click(voteButton);
 
       // Wait for dialog
@@ -262,7 +262,7 @@ describe('CandidateCard Integration Tests', () => {
       );
 
       // Click vote change button
-      const voteButton = screen.getByTestId('vote-button');
+      const voteButton = screen.getByTestId('vote-change-button');
       fireEvent.click(voteButton);
 
       // Wait for dialog

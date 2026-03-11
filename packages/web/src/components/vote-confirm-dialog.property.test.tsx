@@ -48,8 +48,13 @@ describe('VoteConfirmDialog - Property Tests', () => {
           expect(screen.getByText('投票を変更しますか?')).toBeInTheDocument();
 
           // Dialog should always show current and new positions
-          expect(screen.getByText(currentPosition)).toBeInTheDocument();
-          expect(screen.getByText(newPosition)).toBeInTheDocument();
+          // Use getAllByText when positions might be the same
+          const positions = screen.getAllByText(currentPosition);
+          expect(positions.length).toBeGreaterThanOrEqual(1);
+
+          if (currentPosition !== newPosition) {
+            expect(screen.getByText(newPosition)).toBeInTheDocument();
+          }
         }
       ),
       { numRuns: 10, endOnFailure: true }

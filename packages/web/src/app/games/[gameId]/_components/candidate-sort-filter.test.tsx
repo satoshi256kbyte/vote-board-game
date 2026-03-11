@@ -51,8 +51,8 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      expect(screen.getByTestId('sort-dropdown-trigger')).toBeInTheDocument();
-      expect(screen.getByTestId('filter-dropdown-trigger')).toBeInTheDocument();
+      expect(screen.getByTestId('candidate-sort-dropdown')).toBeInTheDocument();
+      expect(screen.getByTestId('candidate-filter-dropdown')).toBeInTheDocument();
     });
 
     it('should display correct sort label for voteCount desc', () => {
@@ -120,11 +120,11 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      expect(screen.getByTestId('sort-dropdown-trigger')).toHaveAttribute(
+      expect(screen.getByTestId('candidate-sort-dropdown')).toHaveAttribute(
         'aria-label',
         'ソート設定'
       );
-      expect(screen.getByTestId('filter-dropdown-trigger')).toHaveAttribute(
+      expect(screen.getByTestId('candidate-filter-dropdown')).toHaveAttribute(
         'aria-label',
         'フィルター設定'
       );
@@ -141,8 +141,8 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const sortButton = screen.getByTestId('sort-dropdown-trigger');
-      const filterButton = screen.getByTestId('filter-dropdown-trigger');
+      const sortButton = screen.getByTestId('candidate-sort-dropdown');
+      const filterButton = screen.getByTestId('candidate-filter-dropdown');
 
       expect(sortButton.className).toContain('min-h-[44px]');
       expect(filterButton.className).toContain('min-h-[44px]');
@@ -161,7 +161,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         sortButton.focus();
         await user.keyboard('{Enter}');
 
@@ -182,7 +182,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         sortButton.focus();
         await user.keyboard(' ');
 
@@ -203,7 +203,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -229,7 +229,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -252,8 +252,8 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
-        const filterButton = screen.getByTestId('filter-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
+        const filterButton = screen.getByTestId('candidate-filter-dropdown');
 
         sortButton.focus();
         expect(document.activeElement).toBe(sortButton);
@@ -276,7 +276,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         expect(sortButton).toHaveAttribute('aria-expanded');
 
         await user.click(sortButton);
@@ -297,8 +297,8 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
-        const filterButton = screen.getByTestId('filter-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
+        const filterButton = screen.getByTestId('candidate-filter-dropdown');
 
         expect(sortButton).toHaveAttribute('aria-haspopup');
         expect(filterButton).toHaveAttribute('aria-haspopup');
@@ -316,7 +316,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -337,7 +337,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -359,8 +359,8 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
-        const filterButton = screen.getByTestId('filter-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
+        const filterButton = screen.getByTestId('candidate-filter-dropdown');
 
         // Buttons should have appropriate styling (shadcn/ui Button component handles contrast)
         expect(sortButton.className).toBeTruthy();
@@ -379,7 +379,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -401,7 +401,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -424,8 +424,8 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
-        const filterButton = screen.getByTestId('filter-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
+        const filterButton = screen.getByTestId('candidate-filter-dropdown');
 
         // Buttons should have focus ring classes
         expect(sortButton.className).toMatch(/focus:ring|focus-visible:ring/);
@@ -444,7 +444,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -470,7 +470,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -495,7 +495,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         expect(sortButton).toHaveTextContent('投票数 (降順)');
       });
 
@@ -511,7 +511,7 @@ describe('CandidateSortFilter', () => {
           />
         );
 
-        const sortButton = screen.getByTestId('sort-dropdown-trigger');
+        const sortButton = screen.getByTestId('candidate-sort-dropdown');
         await user.click(sortButton);
 
         await waitFor(() => {
@@ -554,7 +554,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const sortButton = screen.getByTestId('sort-dropdown-trigger');
+      const sortButton = screen.getByTestId('candidate-sort-dropdown');
       await user.click(sortButton);
 
       await waitFor(() => {
@@ -578,7 +578,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const sortButton = screen.getByTestId('sort-dropdown-trigger');
+      const sortButton = screen.getByTestId('candidate-sort-dropdown');
       await user.click(sortButton);
 
       const createdAtOption = await screen.findByTestId('sort-by-created');
@@ -599,7 +599,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const sortButton = screen.getByTestId('sort-dropdown-trigger');
+      const sortButton = screen.getByTestId('candidate-sort-dropdown');
       await user.click(sortButton);
 
       const ascOption = await screen.findByTestId('sort-order-asc');
@@ -620,7 +620,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const sortButton = screen.getByTestId('sort-dropdown-trigger');
+      const sortButton = screen.getByTestId('candidate-sort-dropdown');
       await user.click(sortButton);
 
       const createdAtOption = await screen.findByTestId('sort-by-created');
@@ -646,7 +646,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const sortButton = screen.getByTestId('sort-dropdown-trigger');
+      const sortButton = screen.getByTestId('candidate-sort-dropdown');
       await user.click(sortButton);
 
       const createdAtOption = await screen.findByTestId('sort-by-created');
@@ -672,7 +672,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const filterButton = screen.getByTestId('filter-dropdown-trigger');
+      const filterButton = screen.getByTestId('candidate-filter-dropdown');
       await user.click(filterButton);
 
       await waitFor(() => {
@@ -696,7 +696,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const filterButton = screen.getByTestId('filter-dropdown-trigger');
+      const filterButton = screen.getByTestId('candidate-filter-dropdown');
       await user.click(filterButton);
 
       const aiOption = await screen.findByTestId('filter-ai');
@@ -717,7 +717,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const filterButton = screen.getByTestId('filter-dropdown-trigger');
+      const filterButton = screen.getByTestId('candidate-filter-dropdown');
       await user.click(filterButton);
 
       const aiOption = await screen.findByTestId('filter-ai');
@@ -743,7 +743,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const filterButton = screen.getByTestId('filter-dropdown-trigger');
+      const filterButton = screen.getByTestId('candidate-filter-dropdown');
       await user.click(filterButton);
 
       const aiOption = await screen.findByTestId('filter-ai');
@@ -769,7 +769,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const sortButton = screen.getByTestId('sort-dropdown-trigger');
+      const sortButton = screen.getByTestId('candidate-sort-dropdown');
       await user.click(sortButton);
 
       const createdAtOption = await screen.findByTestId('sort-by-created');
@@ -795,7 +795,7 @@ describe('CandidateSortFilter', () => {
         />
       );
 
-      const sortButton = screen.getByTestId('sort-dropdown-trigger');
+      const sortButton = screen.getByTestId('candidate-sort-dropdown');
       await user.click(sortButton);
 
       const createdAtOption = await screen.findByTestId('sort-by-created');
