@@ -46,6 +46,7 @@ export function VoteButton({
 }: VoteButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Determine if user has voted for this candidate
   const isVotedForThis = currentVotedCandidateId === candidateId;
@@ -77,6 +78,7 @@ export function VoteButton({
   const handleVote = async () => {
     setIsLoading(true);
     setShowConfirmDialog(false);
+    setError(null);
 
     try {
       // Import API functions dynamically to avoid circular dependencies
@@ -90,9 +92,13 @@ export function VoteButton({
 
       // Notify parent component of successful vote
       onVoteSuccess();
-    } catch (error) {
-      console.error('[VoteButton] Vote failed:', error);
-      // Error is logged, parent component can handle error display through API error state
+    } catch (err) {
+      console.error('[VoteButton] Vote failed:', err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(hasVotedOther ? '投票の変更に失敗しました' : '投票に失敗しました');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -120,7 +126,7 @@ export function VoteButton({
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              <span>処理中...</span>
+              <span>{hasVotedOther ? '変更中...' : '投票中...'}</span>
             </>
           ) : hasVotedOther ? (
             '投票を変更'
@@ -140,6 +146,13 @@ export function VoteButton({
           </div>
         )}
       </div>
+
+      {/* Error message */}
+      {error && (
+        <p className="text-sm text-red-600 mt-1" role="alert" data-testid="error-message">
+          {error}
+        </p>
+      )}
 
       {/* Confirmation Dialog for Vote Change */}
       {showConfirmDialog && (

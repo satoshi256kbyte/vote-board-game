@@ -27,6 +27,21 @@ export interface Candidate {
 }
 
 /**
+ * Raw candidate response from the API
+ * (GET /api/games/:gameId/turns/:turnNumber/candidates)
+ */
+interface CandidateApiResponse {
+  candidateId: string;
+  position: string;
+  description: string;
+  voteCount: number;
+  createdBy: string;
+  status: string;
+  votingDeadline: string;
+  createdAt: string;
+}
+
+/**
  * Vote status interface matching the design specification
  */
 export interface VoteStatus {
@@ -53,6 +68,34 @@ export interface CreateCandidateResponse {
   status: 'VOTING';
   votingDeadline: string;
   createdAt: string;
+}
+
+/**
+ * Map a raw API candidate response to the frontend Candidate type
+ */
+function mapCandidate(
+  c: CandidateApiResponse,
+  gameId: string,
+  turnNumber: number
+): Candidate {
+  return {
+    id: c.candidateId,
+    gameId,
+    turnNumber,
+    position: c.position,
+    description: c.description,
+    // The API does not return boardState; components must handle an empty array gracefully
+    boardState: [],
+    voteCount: c.voteCount,
+    postedBy: c.createdBy,
+    postedByUsername: c.createdBy.startsWith('USER#')
+      ? c.createdBy.replace('USER#', '')
+      : 'AI',
+    status: c.status === 'VOTING' ? 'active' : 'closed',
+    deadline: c.votingDeadline,
+    createdAt: c.createdAt,
+    source: c.createdBy === 'AI' ? 'ai' : 'user',
+  };
 }
 
 /**
@@ -151,8 +194,8 @@ export async function getCandidates(gameId: string, turnNumber: number): Promise
       throw new ApiError('候補の取得に失敗しました', response.status);
     }
 
-    const data = await handleResponse<{ candidates: Candidate[] }>(response);
-    return data.candidates;
+    const data = await handleResponse<{ candidates: CandidateApiResponse[] }>(response);
+    return data.candidates.map((c) => mapCandidate(c, gameId, turnNumber));
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -228,12 +271,17 @@ export async function getVoteStatus(
         throw new ApiError('認証が必要です', 401);
       }
       if (response.status === 404) {
-        // 404 can mean either game not found or user hasn't voted yet
-        // Check the error message to distinguish
+        // 404 can mean either game not found or user hasn't voted yet.
+        // The API returns { error: 'NOT_FOUND', message: 'Vote not found' } for no vote.
+        // We also handle the legacy Japanese message for backward compatibility.
         let errorData: { error?: string; message?: string };
         try {
           errorData = await response.json();
-          if (errorData.message?.includes('投票が見つかりません')) {
+          if (
+            errorData.message?.includes('投票が見つかりません') ||
+            errorData.message?.includes('Vote not found') ||
+            errorData.error === 'NOT_FOUND'
+          ) {
             // User hasn't voted yet - return null
             return null;
           }
@@ -382,7 +430,7 @@ export async function createVote(
   candidateId: string
 ): Promise<void> {
   const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl}/api/votes`;
+  const url = `${baseUrl}/api/games/${gameId}/turns/${turnNumber}/votes`;
 
   // Get authentication token
   const token = getAuthToken();
@@ -398,8 +446,6 @@ export async function createVote(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        gameId,
-        turnNumber,
         candidateId,
       }),
     });
@@ -418,6 +464,18 @@ export async function createVote(
             throw parseError;
           }
           throw new ApiError('投票に失敗しました', 400);
+        }
+      }
+      if (response.status === 409) {
+        let errorData: { error?: string; message?: string };
+        try {
+          errorData = await response.json();
+          throw new ApiError(errorData.message || '投票に失敗しました', 409);
+        } catch (parseError) {
+          if (parseError instanceof ApiError) {
+            throw parseError;
+          }
+          throw new ApiError('投票に失敗しました', 409);
         }
       }
       throw new ApiError('投票に失敗しました', response.status);
@@ -463,7 +521,7 @@ export async function changeVote(
   candidateId: string
 ): Promise<void> {
   const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl}/api/votes`;
+  const url = `${baseUrl}/api/games/${gameId}/turns/${turnNumber}/votes/me`;
 
   // Get authentication token
   const token = getAuthToken();
@@ -479,8 +537,6 @@ export async function changeVote(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        gameId,
-        turnNumber,
         candidateId,
       }),
     });

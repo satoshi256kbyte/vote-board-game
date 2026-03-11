@@ -15,7 +15,7 @@ import type { BoardState } from '@/types/game';
 
 interface BoardPreviewProps {
   /** 盤面の状態（8x8配列: 0=空, 1=黒, 2=白） */
-  boardState: string[][];
+  boardState?: string[][];
   /** ハイライトする手の位置（例: "D3"） */
   highlightPosition?: string;
   /** セルのサイズ（px）。デフォルト: モバイル30px、デスクトップ40px */
@@ -62,7 +62,12 @@ function parsePosition(position: string): { row: number; col: number } | undefin
  * @param boardState - 文字列配列の盤面（"0", "1", "2"）
  * @returns 数値配列の盤面（0, 1, 2）
  */
-function convertBoardState(boardState: string[][]): number[][] {
+function convertBoardState(boardState: string[][] | undefined | null): number[][] {
+  if (!boardState || boardState.length === 0) {
+    return Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(0));
+  }
   return boardState.map((row) => row.map((cell) => parseInt(cell, 10)));
 }
 
