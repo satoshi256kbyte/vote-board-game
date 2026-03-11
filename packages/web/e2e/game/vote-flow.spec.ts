@@ -296,9 +296,10 @@ test.describe('Vote Flow - Unauthenticated User', () => {
     const candidateCard = page.getByTestId('candidate-card').first();
     await expect(candidateCard).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
 
-    // Hover over disabled vote button
+    // Hover over the parent container (not the disabled button itself)
     const voteButton = candidateCard.getByTestId('vote-button');
-    await voteButton.hover();
+    const buttonParent = voteButton.locator('..');
+    await buttonParent.hover();
 
     // Verify tooltip is displayed
     const tooltip = page.locator('[role="tooltip"]');

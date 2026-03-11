@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -111,10 +111,28 @@ export function VoteButton({
     setShowConfirmDialog(false);
   };
 
+  /**
+   * Handle ESC key press to close dialog
+   */
+  useEffect(() => {
+    if (!showConfirmDialog) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowConfirmDialog(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showConfirmDialog]);
+
   return (
     <>
       {/* Vote Button */}
-      <div className="relative">
+      <div className="relative group">
         <Button
           onClick={handleClick}
           disabled={!isAuthenticated || isLoading}
@@ -138,11 +156,12 @@ export function VoteButton({
         {/* Tooltip for unauthenticated users */}
         {!isAuthenticated && (
           <div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10"
             role="tooltip"
             aria-label="ログインして投票"
           >
-            <span className="sr-only">ログインして投票</span>
+            ログインして投票
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900" />
           </div>
         )}
       </div>

@@ -261,6 +261,9 @@ test.describe('Move Candidates - Vote Status Indicator', () => {
     // Wait for vote to complete
     await authenticatedPage.waitForResponse((response) => response.url().includes('/votes'));
 
+    // Wait for UI to update (give time for re-render)
+    await authenticatedPage.waitForTimeout(1000);
+
     // Verify vote count increased
     const updatedVoteCount = await voteCountElement.textContent();
     expect(Number(updatedVoteCount)).toBeGreaterThan(Number(initialVoteCount));
