@@ -73,11 +73,7 @@ export interface CreateCandidateResponse {
 /**
  * Map a raw API candidate response to the frontend Candidate type
  */
-function mapCandidate(
-  c: CandidateApiResponse,
-  gameId: string,
-  turnNumber: number
-): Candidate {
+function mapCandidate(c: CandidateApiResponse, gameId: string, turnNumber: number): Candidate {
   return {
     id: c.candidateId,
     gameId,
@@ -88,9 +84,7 @@ function mapCandidate(
     boardState: [],
     voteCount: c.voteCount,
     postedBy: c.createdBy,
-    postedByUsername: c.createdBy.startsWith('USER#')
-      ? c.createdBy.replace('USER#', '')
-      : 'AI',
+    postedByUsername: c.createdBy.startsWith('USER#') ? c.createdBy.replace('USER#', '') : 'AI',
     status: c.status === 'VOTING' ? 'active' : 'closed',
     deadline: c.votingDeadline,
     createdAt: c.createdAt,
@@ -104,7 +98,7 @@ function mapCandidate(
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL;
 
-  if (!url) {
+  if (!url || url.trim() === '') {
     // Development fallback
     if (process.env.NODE_ENV === 'development') {
       return 'http://localhost:3001';

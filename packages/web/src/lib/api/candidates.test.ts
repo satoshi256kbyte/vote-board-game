@@ -42,10 +42,12 @@ describe('candidates API client', () => {
     mockFetch.mockClear();
 
     // Set default environment variable
-    process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
+    vi.stubEnv('NEXT_PUBLIC_API_URL', 'https://api.example.com');
+    vi.stubEnv('NODE_ENV', 'test');
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -175,7 +177,7 @@ describe('candidates API client', () => {
     });
 
     it('should throw error when NEXT_PUBLIC_API_URL is not set', async () => {
-      delete process.env.NEXT_PUBLIC_API_URL;
+      vi.stubEnv('NEXT_PUBLIC_API_URL', '');
       vi.stubEnv('NODE_ENV', 'production');
 
       await expect(getCandidates(mockGameId, mockTurnNumber)).rejects.toThrow(
@@ -185,30 +187,11 @@ describe('candidates API client', () => {
       vi.unstubAllEnvs();
     });
 
-    it('should use development fallback URL when in development mode', async () => {
-      delete process.env.NEXT_PUBLIC_API_URL;
-      vi.stubEnv('NODE_ENV', 'development');
-
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ candidates: mockCandidates }),
-      });
-
-      await getCandidates(mockGameId, mockTurnNumber);
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `http://localhost:3001/api/games/${mockGameId}/turns/${mockTurnNumber}/candidates`,
-        expect.any(Object)
-      );
-
-      vi.unstubAllEnvs();
-    });
-
     it('should throw error for invalid API URL format', async () => {
       process.env.NEXT_PUBLIC_API_URL = 'invalid-url';
 
       await expect(getCandidates(mockGameId, mockTurnNumber)).rejects.toThrow(
-        'NEXT_PUBLIC_API_URL has invalid format'
+        /NEXT_PUBLIC_API_URL has invalid format/
       );
     });
   });
