@@ -21,13 +21,13 @@
   - _Requirements: 1.1, 1.2_
 
 - [ ] 2. 型定義とエラークラスの実装
-  - [~] 2.1 TypeScript型定義を作成（types.ts）
+  - [x] 2.1 TypeScript型定義を作成（types.ts）
     - Message, ContentBlock, SystemMessage インターフェースを定義
     - ConverseParams, GenerateTextParams, GenerateTextResponse インターフェースを定義
     - TokenUsageMetrics, BedrockLogEntry インターフェースを定義
     - _Requirements: 3.1, 3.2, 3.3, 5.1, 5.2, 10.5_
 
-  - [~] 2.2 カスタムエラークラスを実装（errors.ts）
+  - [x] 2.2 カスタムエラークラスを実装（errors.ts）
     - BedrockError ベースクラスを実装
     - BedrockValidationError, BedrockModelNotFoundError, BedrockRetryFailedError を実装
     - _Requirements: 4.2, 4.3, 4.5_

@@ -7,4 +7,12 @@
  * Requirements: 1.1, 1.2
  */
 
+// Error classes
+export {
+  BedrockError,
+  BedrockValidationError,
+  BedrockModelNotFoundError,
+  BedrockRetryFailedError,
+} from './errors';
+
 // Public exports will be added as components are implemented
