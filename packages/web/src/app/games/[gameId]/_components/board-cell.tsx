@@ -10,6 +10,7 @@ interface BoardCellProps {
   isLegalMove: boolean;
   isSelected: boolean;
   isHovered: boolean;
+  isFocused: boolean;
   onClick: (row: number, col: number) => void;
   onMouseEnter: (row: number, col: number) => void;
   onMouseLeave: () => void;
@@ -30,6 +31,7 @@ export const BoardCell = memo(function BoardCell({
   isLegalMove,
   isSelected,
   isHovered,
+  isFocused,
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -95,6 +97,14 @@ export const BoardCell = memo(function BoardCell({
       {isSelected && (
         <div
           className="absolute inset-0 border-4 border-blue-500 pointer-events-none animate-fadeIn"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* キーボードフォーカスインジケーター */}
+      {isFocused && !isSelected && (
+        <div
+          className="absolute inset-0 ring-2 ring-blue-500 ring-inset pointer-events-none"
           aria-hidden="true"
         />
       )}

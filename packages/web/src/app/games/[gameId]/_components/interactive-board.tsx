@@ -38,8 +38,12 @@ export const InteractiveBoard = memo(function InteractiveBoard({
   const [hoveredCell, setHoveredCell] = useState<Position | null>(null);
   // エラーメッセージの状態
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // キーボードフォーカスされたセルの状態
+  const [focusedCell, setFocusedCell] = useState<Position | null>(null);
   // タイマーIDの参照
   const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // 盤面コンテナの参照
+  const boardRef = useRef<HTMLDivElement | null>(null);
 
   // エラータイムアウトのクリーンアップ
   useEffect(() => {
@@ -102,6 +106,70 @@ export const InteractiveBoard = memo(function InteractiveBoard({
     setHoveredCell(null);
   }, []);
 
+  // キーボードハンドラー
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disabled) return;
+
+      // 現在のフォーカス位置を取得（なければ0,0から開始）
+      const currentFocus = focusedCell ?? { row: 0, col: 0 };
+
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault();
+          if (currentFocus.row > 0) {
+            setFocusedCell({ row: currentFocus.row - 1, col: currentFocus.col });
+          }
+          break;
+
+        case 'ArrowDown':
+          event.preventDefault();
+          if (currentFocus.row < 7) {
+            setFocusedCell({ row: currentFocus.row + 1, col: currentFocus.col });
+          }
+          break;
+
+        case 'ArrowLeft':
+          event.preventDefault();
+          if (currentFocus.col > 0) {
+            setFocusedCell({ row: currentFocus.row, col: currentFocus.col - 1 });
+          }
+          break;
+
+        case 'ArrowRight':
+          event.preventDefault();
+          if (currentFocus.col < 7) {
+            setFocusedCell({ row: currentFocus.row, col: currentFocus.col + 1 });
+          }
+          break;
+
+        case 'Enter':
+        case ' ':
+          event.preventDefault();
+          if (focusedCell) {
+            handleCellClick(focusedCell.row, focusedCell.col);
+          }
+          break;
+
+        default:
+          break;
+      }
+    },
+    [disabled, focusedCell, handleCellClick]
+  );
+
+  // 盤面がフォーカスされたときに最初のセルにフォーカスを設定
+  const handleFocus = useCallback(() => {
+    if (!focusedCell && !disabled) {
+      setFocusedCell({ row: 0, col: 0 });
+    }
+  }, [focusedCell, disabled]);
+
+  // 盤面からフォーカスが外れたときにフォーカス状態をクリア
+  const handleBlur = useCallback(() => {
+    setFocusedCell(null);
+  }, []);
+
   return (
     <div className="inline-block">
       {/* Error message */}
@@ -115,9 +183,14 @@ export const InteractiveBoard = memo(function InteractiveBoard({
       )}
 
       <div
+        ref={boardRef}
         role="grid"
         aria-label="オセロの盤面"
-        className="grid grid-cols-8 gap-0 border-2 border-black"
+        tabIndex={disabled ? -1 : 0}
+        onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        className="grid grid-cols-8 gap-0 border-2 border-black focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         {boardState.map((row, rowIndex) =>
           row.map((cell, colIndex) => {
@@ -125,6 +198,7 @@ export const InteractiveBoard = memo(function InteractiveBoard({
             const isSelected =
               selectedPosition?.row === rowIndex && selectedPosition?.col === colIndex;
             const isHovered = hoveredCell?.row === rowIndex && hoveredCell?.col === colIndex;
+            const isFocused = focusedCell?.row === rowIndex && focusedCell?.col === colIndex;
 
             return (
               <BoardCell
@@ -135,6 +209,7 @@ export const InteractiveBoard = memo(function InteractiveBoard({
                 isLegalMove={isLegal}
                 isSelected={isSelected}
                 isHovered={isHovered}
+                isFocused={isFocused}
                 onClick={handleCellClick}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}

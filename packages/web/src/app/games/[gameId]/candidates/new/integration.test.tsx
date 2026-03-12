@@ -278,13 +278,13 @@ describe('Candidate Submission Integration', () => {
       fireEvent.click(d3Cell);
       expect(screen.getByText(/D3に黒石を置いた場合/)).toBeInTheDocument();
 
-      // Select second cell (F4)
-      const f4Cell = screen.getByRole('gridcell', { name: /F4.*選択可能/ });
-      fireEvent.click(f4Cell);
+      // Select second cell (C4) - another legal move
+      const c4Cell = screen.getByRole('gridcell', { name: /C4.*選択可能/ });
+      fireEvent.click(c4Cell);
 
       // Verify preview is updated
       expect(screen.queryByText(/D3に黒石を置いた場合/)).not.toBeInTheDocument();
-      expect(screen.getByText(/F4に黒石を置いた場合/)).toBeInTheDocument();
+      expect(screen.getByText(/C4に黒石を置いた場合/)).toBeInTheDocument();
     });
 
     it('should hide preview when selection is cleared', () => {

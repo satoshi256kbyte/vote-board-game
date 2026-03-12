@@ -10,6 +10,7 @@ describe('BoardCell', () => {
     isLegalMove: false,
     isSelected: false,
     isHovered: false,
+    isFocused: false,
     onClick: vi.fn(),
     onMouseEnter: vi.fn(),
     onMouseLeave: vi.fn(),
@@ -166,6 +167,33 @@ describe('BoardCell', () => {
       const { container } = render(<BoardCell {...defaultProps} isLegalMove={true} />);
       const cell = container.querySelector('[role="gridcell"]');
       expect(cell).toHaveAttribute('aria-label', expect.stringContaining('選択可能'));
+    });
+  });
+
+  describe('キーボードフォーカスインジケーター', () => {
+    it('フォーカスされたセルにフォーカスインジケーターを表示する', () => {
+      const { container } = render(<BoardCell {...defaultProps} isFocused={true} />);
+      const focusIndicator = container.querySelector('.ring-2.ring-blue-500');
+      expect(focusIndicator).toBeInTheDocument();
+    });
+
+    it('フォーカスされていないセルにはフォーカスインジケーターを表示しない', () => {
+      const { container } = render(<BoardCell {...defaultProps} isFocused={false} />);
+      const focusIndicator = container.querySelector('.ring-2.ring-blue-500');
+      expect(focusIndicator).not.toBeInTheDocument();
+    });
+
+    it('選択されたセルにはフォーカスインジケーターを表示しない（選択ハイライトが優先）', () => {
+      const { container } = render(
+        <BoardCell {...defaultProps} isFocused={true} isSelected={true} />
+      );
+      // 選択ハイライトは表示される
+      const selectionHighlight = container.querySelector('.border-blue-500');
+      expect(selectionHighlight).toBeInTheDocument();
+
+      // フォーカスインジケーターは表示されない（選択が優先）
+      const focusIndicator = container.querySelector('.ring-2.ring-blue-500');
+      expect(focusIndicator).not.toBeInTheDocument();
     });
   });
 });

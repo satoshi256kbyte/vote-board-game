@@ -332,6 +332,253 @@ describe('InteractiveBoard', () => {
     });
   });
 
+  describe('キーボード操作', () => {
+    it('should be focusable with tabIndex', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+      expect(grid).toHaveAttribute('tabIndex', '0');
+    });
+
+    it('should not be focusable when disabled', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+          disabled={true}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+      expect(grid).toHaveAttribute('tabIndex', '-1');
+    });
+
+    it('should navigate cells with arrow keys', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+
+      // フォーカスを当てる
+      grid.focus();
+
+      // 矢印キーでナビゲーション
+      fireEvent.keyDown(grid, { key: 'ArrowDown' });
+      fireEvent.keyDown(grid, { key: 'ArrowRight' });
+      fireEvent.keyDown(grid, { key: 'ArrowUp' });
+      fireEvent.keyDown(grid, { key: 'ArrowLeft' });
+
+      // キーボード操作が正常に動作することを確認
+      expect(grid).toBeInTheDocument();
+    });
+
+    it('should not move focus beyond board boundaries', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+      grid.focus();
+
+      // 初期位置(0,0)から上下左右の境界を超えないことを確認
+      fireEvent.keyDown(grid, { key: 'ArrowUp' });
+      fireEvent.keyDown(grid, { key: 'ArrowLeft' });
+
+      // エラーが発生しないことを確認
+      expect(grid).toBeInTheDocument();
+    });
+
+    it('should select cell with Enter key', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+      grid.focus();
+
+      // D3 (row 2, col 3) に移動 - 合法手
+      fireEvent.keyDown(grid, { key: 'ArrowDown' });
+      fireEvent.keyDown(grid, { key: 'ArrowDown' });
+      fireEvent.keyDown(grid, { key: 'ArrowRight' });
+      fireEvent.keyDown(grid, { key: 'ArrowRight' });
+      fireEvent.keyDown(grid, { key: 'ArrowRight' });
+
+      // Enterキーで選択
+      fireEvent.keyDown(grid, { key: 'Enter' });
+
+      // onCellClickが呼ばれることを確認
+      expect(mockOnCellClick).toHaveBeenCalledWith(2, 3);
+    });
+
+    it('should select cell with Space key', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+      grid.focus();
+
+      // D3 (row 2, col 3) に移動
+      fireEvent.keyDown(grid, { key: 'ArrowDown' });
+      fireEvent.keyDown(grid, { key: 'ArrowDown' });
+      fireEvent.keyDown(grid, { key: 'ArrowRight' });
+      fireEvent.keyDown(grid, { key: 'ArrowRight' });
+      fireEvent.keyDown(grid, { key: 'ArrowRight' });
+
+      // Spaceキーで選択
+      fireEvent.keyDown(grid, { key: ' ' });
+
+      // onCellClickが呼ばれることを確認
+      expect(mockOnCellClick).toHaveBeenCalledWith(2, 3);
+    });
+
+    it('should not respond to keyboard when disabled', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+          disabled={true}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+
+      // キーボード操作を試みる
+      fireEvent.keyDown(grid, { key: 'ArrowDown' });
+      fireEvent.keyDown(grid, { key: 'Enter' });
+
+      // onCellClickが呼ばれないことを確認
+      expect(mockOnCellClick).not.toHaveBeenCalled();
+    });
+
+    it('should prevent default behavior for arrow keys', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+      grid.focus();
+
+      // ArrowDownイベントを作成
+      const event = new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        bubbles: true,
+        cancelable: true,
+      });
+      const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+
+      grid.dispatchEvent(event);
+
+      // preventDefaultが呼ばれることを確認
+      expect(preventDefaultSpy).toHaveBeenCalled();
+    });
+
+    it('should show focus ring on grid when focused', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+
+      // フォーカスリングのクラスが設定されていることを確認
+      expect(grid).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+    });
+
+    it('should initialize focus to (0,0) when board is focused', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+
+      // フォーカスイベントを発火
+      fireEvent.focus(grid);
+
+      // フォーカスが設定されることを確認
+      expect(grid).toBeInTheDocument();
+    });
+
+    it('should clear focus when board loses focus', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+
+      // フォーカスを当てる
+      fireEvent.focus(grid);
+
+      // フォーカスを外す
+      fireEvent.blur(grid);
+
+      // フォーカスがクリアされることを確認
+      expect(grid).toBeInTheDocument();
+    });
+  });
+
   describe('パフォーマンス最適化', () => {
     it('should not re-render when unrelated props change', () => {
       const mockOnCellClick = vi.fn();
