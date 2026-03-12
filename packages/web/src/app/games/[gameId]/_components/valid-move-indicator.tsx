@@ -1,9 +1,20 @@
+import { memo } from 'react';
+
 interface ValidMoveIndicatorProps {
   isHovered: boolean;
   cellSize: number;
 }
 
-export function ValidMoveIndicator({ isHovered, cellSize }: ValidMoveIndicatorProps) {
+/**
+ * 合法手を示すインジケーターコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでメモ化し、propsが変更されない限り再レンダリングを防止
+ */
+export const ValidMoveIndicator = memo(function ValidMoveIndicator({
+  isHovered,
+  cellSize,
+}: ValidMoveIndicatorProps) {
   // 円のサイズはセルサイズの40%
   const circleSize = cellSize * 0.4;
 
@@ -27,4 +38,4 @@ export function ValidMoveIndicator({ isHovered, cellSize }: ValidMoveIndicatorPr
       />
     </div>
   );
-}
+});

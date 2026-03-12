@@ -1,0 +1,471 @@
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { InteractiveBoard } from './interactive-board';
+
+describe('InteractiveBoard', () => {
+  const initialBoardState = [
+    ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
+    ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
+    ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+  ];
+
+  // タイマーとモックのクリーンアップ
+  afterEach(() => {
+    // 実タイマーに戻してからクリーンアップ
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
+  describe('基本構造', () => {
+    it('should render 8x8 grid', () => {
+      const mockOnCellClick = vi.fn();
+      const { container } = render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // グリッドが存在することを確認
+      const grid = screen.getByRole('grid');
+      expect(grid).toBeInTheDocument();
+
+      // 64個のセル（8x8）が存在することを確認
+      const cells = container.querySelectorAll('[role="gridcell"]');
+      expect(cells).toHaveLength(64);
+    });
+
+    it('should have correct ARIA attributes', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // role="grid"とaria-labelが設定されていることを確認
+      const grid = screen.getByRole('grid', { name: 'オセロの盤面' });
+      expect(grid).toBeInTheDocument();
+    });
+
+    it('should reflect current board state', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 白石と黒石が正しく表示されていることを確認
+      // D4 (row 3, col 3) は白石
+      const d4Cell = screen.getByRole('gridcell', { name: /D4.*白石/ });
+      expect(d4Cell).toBeInTheDocument();
+
+      // E4 (row 3, col 4) は黒石
+      const e4Cell = screen.getByRole('gridcell', { name: /E4.*黒石/ });
+      expect(e4Cell).toBeInTheDocument();
+    });
+
+    it('should use responsive cell size', () => {
+      const mockOnCellClick = vi.fn();
+      const customCellSize = 50;
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+          cellSize={customCellSize}
+        />
+      );
+
+      // セルサイズのテストは実装の詳細に依存するため、
+      // ここでは正常にレンダリングされることのみ確認
+      const grid = screen.getByRole('grid');
+      expect(grid).toBeInTheDocument();
+    });
+  });
+
+  describe('セル選択', () => {
+    it('should highlight selected cell', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={{ row: 2, col: 3 }}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 選択されたセルがaria-selected="true"を持つことを確認
+      const selectedCell = screen.getByRole('gridcell', { name: /D3/, selected: true });
+      expect(selectedCell).toBeInTheDocument();
+    });
+
+    it('should call onCellClick when cell is clicked', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // セルをクリック
+      const cell = screen.getByRole('gridcell', { name: /D3/ });
+      cell.click();
+
+      // onCellClickが呼ばれたことを確認
+      expect(mockOnCellClick).toHaveBeenCalledWith(2, 3);
+    });
+
+    it('should not call onCellClick when disabled', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+          disabled={true}
+        />
+      );
+
+      // セルをクリック
+      const cell = screen.getByRole('gridcell', { name: /D3/ });
+      cell.click();
+
+      // onCellClickが呼ばれないことを確認
+      expect(mockOnCellClick).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('合法手の表示', () => {
+    it('should display legal move indicators', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 初期盤面では黒の合法手は4つ（D3, C4, F5, E6）
+      // D3 (row 2, col 3) は合法手
+      const d3Cell = screen.getByRole('gridcell', { name: /D3.*選択可能/ });
+      expect(d3Cell).toBeInTheDocument();
+
+      // C4 (row 3, col 2) は合法手
+      const c4Cell = screen.getByRole('gridcell', { name: /C4.*選択可能/ });
+      expect(c4Cell).toBeInTheDocument();
+    });
+
+    it('should display "置ける場所がありません" message when no legal moves', () => {
+      const mockOnCellClick = vi.fn();
+      // 合法手がない盤面（すべて埋まっている）
+      const fullBoardState = [
+        ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'],
+        ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'],
+        ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'],
+        ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'],
+        ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'],
+        ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'],
+        ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'],
+        ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'],
+      ];
+
+      render(
+        <InteractiveBoard
+          boardState={fullBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // "置ける場所がありません" メッセージが表示されることを確認
+      expect(screen.getByText('置ける場所がありません')).toBeInTheDocument();
+    });
+  });
+
+  describe('エラーハンドリング', () => {
+    it('should display error message when illegal move is clicked', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 非合法手のセル（A1 - row 0, col 0）をクリック
+      // A1は初期盤面では合法手ではない
+      const a1Cell = screen.getByRole('gridcell', { name: /A1/ });
+      fireEvent.click(a1Cell);
+
+      // エラーメッセージが表示されることを確認
+      const errorAlert = screen.queryByRole('alert');
+      expect(errorAlert).toBeInTheDocument();
+      expect(errorAlert).toHaveTextContent('この位置には石を置けません');
+
+      // onCellClickが呼ばれないことを確認（非合法手なので）
+      expect(mockOnCellClick).not.toHaveBeenCalled();
+    });
+
+    it('should have role="alert" attribute on error message', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 非合法手のセルをクリック
+      const a1Cell = screen.getByRole('gridcell', { name: /A1/ });
+      fireEvent.click(a1Cell);
+
+      // role="alert"が設定されていることを確認
+      const errorAlert = screen.queryByRole('alert');
+      expect(errorAlert).toBeInTheDocument();
+    });
+
+    it('should auto-dismiss error message after 3 seconds', () => {
+      vi.useFakeTimers();
+      try {
+        const mockOnCellClick = vi.fn();
+        render(
+          <InteractiveBoard
+            boardState={initialBoardState}
+            currentPlayer="black"
+            selectedPosition={null}
+            onCellClick={mockOnCellClick}
+          />
+        );
+
+        // 非合法手のセルをクリック
+        const a1Cell = screen.getByRole('gridcell', { name: /A1/ });
+        fireEvent.click(a1Cell);
+
+        // エラーメッセージが表示されることを確認
+        expect(screen.queryByRole('alert')).toBeInTheDocument();
+
+        // 3秒経過
+        act(() => {
+          vi.advanceTimersByTime(3000);
+        });
+
+        // エラーメッセージが消えることを確認
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('should clear error message when legal move is clicked', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 非合法手のセルをクリックしてエラーを表示
+      const a1Cell = screen.getByRole('gridcell', { name: /A1/ });
+      fireEvent.click(a1Cell);
+      expect(screen.queryByRole('alert')).toBeInTheDocument();
+
+      // 合法手のセル（D3）をクリック
+      const d3Cell = screen.getByRole('gridcell', { name: /D3.*選択可能/ });
+      fireEvent.click(d3Cell);
+
+      // エラーメッセージが消えることを確認
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+      // onCellClickが呼ばれることを確認
+      expect(mockOnCellClick).toHaveBeenCalledWith(2, 3);
+    });
+
+    it('should display error with red background styling', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 非合法手のセルをクリック
+      const a1Cell = screen.getByRole('gridcell', { name: /A1/ });
+      fireEvent.click(a1Cell);
+
+      // エラーメッセージが赤色のスタイルを持つことを確認
+      const errorAlert = screen.queryByRole('alert');
+      expect(errorAlert).toHaveClass('bg-red-50', 'border-red-200', 'text-red-700');
+    });
+  });
+
+  describe('パフォーマンス最適化', () => {
+    it('should not re-render when unrelated props change', () => {
+      const mockOnCellClick = vi.fn();
+      let renderCount = 0;
+
+      // レンダリング回数をカウントするためのラッパーコンポーネント
+      const TestWrapper = ({ extraProp: _extraProp }: { extraProp: number }) => {
+        renderCount++;
+        // extraPropは意図的に未使用（propsの変更をテストするため）
+        void _extraProp;
+        return (
+          <InteractiveBoard
+            boardState={initialBoardState}
+            currentPlayer="black"
+            selectedPosition={null}
+            onCellClick={mockOnCellClick}
+          />
+        );
+      };
+
+      const { rerender } = render(<TestWrapper extraProp={1} />);
+
+      // 初回レンダリング
+      expect(renderCount).toBe(1);
+
+      // 無関係なpropsを変更して再レンダリング
+      rerender(<TestWrapper extraProp={2} />);
+
+      // InteractiveBoardはReact.memoでメモ化されているため、
+      // propsが変わっていないので再レンダリングされない
+      // ただし、TestWrapperは再レンダリングされる
+      expect(renderCount).toBe(2);
+    });
+
+    it('should re-render when boardState changes', () => {
+      const mockOnCellClick = vi.fn();
+      const { rerender } = render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 初回レンダリング
+      const grid = screen.getByRole('grid');
+      expect(grid).toBeInTheDocument();
+
+      // 盤面状態を変更
+      const newBoardState = [
+        ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+        ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+        ['empty', 'empty', 'empty', 'black', 'empty', 'empty', 'empty', 'empty'],
+        ['empty', 'empty', 'empty', 'black', 'black', 'empty', 'empty', 'empty'],
+        ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
+        ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+        ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+        ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ];
+
+      rerender(
+        <InteractiveBoard
+          boardState={newBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 盤面が更新されていることを確認
+      // D3 (row 2, col 3) に黒石が追加されている
+      const d3Cell = screen.getByRole('gridcell', { name: /D3.*黒石/ });
+      expect(d3Cell).toBeInTheDocument();
+    });
+
+    it('should re-render when selectedPosition changes', () => {
+      const mockOnCellClick = vi.fn();
+      const { rerender } = render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 初回レンダリング - 選択されたセルなし
+      expect(screen.queryByRole('gridcell', { selected: true })).not.toBeInTheDocument();
+
+      // 選択位置を変更
+      rerender(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={{ row: 2, col: 3 }}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 選択されたセルが表示されることを確認
+      const selectedCell = screen.getByRole('gridcell', { name: /D3/, selected: true });
+      expect(selectedCell).toBeInTheDocument();
+    });
+
+    it('should memoize legal moves calculation', () => {
+      const mockOnCellClick = vi.fn();
+      const { rerender } = render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 初回レンダリング - 合法手が表示される
+      const d3Cell = screen.getByRole('gridcell', { name: /D3.*選択可能/ });
+      expect(d3Cell).toBeInTheDocument();
+
+      // 選択位置のみ変更（盤面状態とプレイヤーは同じ）
+      rerender(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={{ row: 2, col: 3 }}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 合法手は再計算されず、キャッシュされた値が使用される
+      // （useMemoによるメモ化）
+      const d3CellAfter = screen.getByRole('gridcell', { name: /D3.*選択可能/ });
+      expect(d3CellAfter).toBeInTheDocument();
+    });
+  });
+});

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { ValidMoveIndicator } from './valid-move-indicator';
 
 interface BoardCellProps {
@@ -16,7 +17,13 @@ interface BoardCellProps {
   disabled: boolean;
 }
 
-export function BoardCell({
+/**
+ * 盤面の個別セルコンポーネント
+ *
+ * パフォーマンス最適化:
+ * - React.memoでメモ化し、propsが変更されない限り再レンダリングを防止
+ */
+export const BoardCell = memo(function BoardCell({
   row,
   col,
   state,
@@ -114,4 +121,4 @@ export function BoardCell({
       )}
     </div>
   );
-}
+});
