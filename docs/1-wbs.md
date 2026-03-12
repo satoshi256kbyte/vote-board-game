@@ -182,6 +182,7 @@ inclusion: manual
 | 6.2.4.2 InteractiveBoardの基本構造               | 完了       | 26-board-move-selection-ui    |
 | 6.2.4.3 InteractiveBoardのユニットテスト         | 完了       | 26-board-move-selection-ui    |
 | 6.2.4.4 InteractiveBoardのプロパティベーステスト | 完了       | 26-board-move-selection-ui    |
+| 6.2.4.5 基本機能チェックポイント                 | 完了       | 26-board-move-selection-ui    |
 
 ### 🚀 デプロイ: 投票機能を開発環境にデプロイ
 
