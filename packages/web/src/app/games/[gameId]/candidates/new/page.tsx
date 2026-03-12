@@ -65,8 +65,8 @@ export default async function CandidateSubmissionPage({ params, searchParams }: 
   // Determine current turn number
   const currentTurnNumber = turnNumber ?? game.currentTurn;
 
-  // Parse board state
-  const currentBoardState: BoardState = JSON.parse(game.boardState);
+  // Board state is returned as a parsed object from the API
+  const currentBoardState: BoardState = game.boardState as BoardState;
 
   // Determine current player (opposite of AI side)
   const currentPlayer: 'black' | 'white' = game.aiSide === 'BLACK' ? 'white' : 'black';
