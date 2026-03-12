@@ -32,41 +32,41 @@
     - BedrockValidationError, BedrockModelNotFoundError, BedrockRetryFailedError を実装
     - _Requirements: 4.2, 4.3, 4.5_
 
-  - [~] 2.3 エラークラスのユニットテストを作成（errors.test.ts）
+  - [x] 2.3 エラークラスのユニットテストを作成（errors.test.ts）
     - 各エラークラスのインスタンス化とプロパティをテスト
     - _Requirements: 9.4_
 
-- [ ] 3. 設定管理の実装
-  - [~] 3.1 BedrockConfig インターフェースと loadBedrockConfig 関数を実装（config.ts）
+- [x] 3. 設定管理の実装
+  - [x] 3.1 BedrockConfig インターフェースと loadBedrockConfig 関数を実装（config.ts）
     - 環境変数から設定を読み込む
     - デフォルト値を設定（modelId: amazon.nova-pro-v1:0, region: ap-northeast-1, maxTokens: 2048, temperature: 0.7, topP: 0.9）
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-  - [~] 3.2 設定管理のユニットテストを作成（config.test.ts）
+  - [x] 3.2 設定管理のユニットテストを作成（config.test.ts）
     - 環境変数が設定されている場合のテスト
     - 環境変数が未設定の場合のデフォルト値テスト
     - _Requirements: 9.7_
 
-  - [~] 3.3 設定管理のプロパティベーステストを作成（config.property.test.ts）
+  - [x] 3.3 設定管理のプロパティベーステストを作成（config.property.test.ts）
     - **Property 2: Configuration Loading with Defaults**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6**
     - _Requirements: 9.7_
 
-- [~] 4. Checkpoint - 基本構造の確認
+- [x] 4. Checkpoint - 基本構造の確認
   - すべてのテストが通ることを確認し、質問があればユーザーに確認する
 
-- [ ] 5. TokenCounter の実装
-  - [~] 5.1 TokenCounter クラスを実装（token-counter.ts）
+- [x] 5. TokenCounter の実装
+  - [x] 5.1 TokenCounter クラスを実装（token-counter.ts）
     - recordUsage メソッドを実装（CloudWatch Logs に構造化ログを出力）
     - トークン使用量の計算（inputTokens + outputTokens）
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 10.5_
 
-  - [~] 5.2 TokenCounter のユニットテストを作成（token-counter.test.ts）
+  - [x] 5.2 TokenCounter のユニットテストを作成（token-counter.test.ts）
     - recordUsage メソッドのログ出力をテスト
     - ログエントリの構造をテスト（modelId, requestId, timestamp, inputTokens, outputTokens, totalTokens）
     - _Requirements: 9.6_
 
-  - [~] 5.3 TokenCounter のプロパティベーステストを作成（token-counter.property.test.ts）
+  - [x] 5.3 TokenCounter のプロパティベーステストを作成（token-counter.property.test.ts）
     - **Property 12: Token Usage Calculation**
     - **Validates: Requirements 5.1, 5.2, 5.5**
     - **Property 13: Token Usage Logging**
@@ -74,20 +74,20 @@
     - _Requirements: 9.6_
 
 - [ ] 6. RetryHandler の実装
-  - [~] 6.1 RetryHandler クラスを実装（retry-handler.ts）
+  - [x] 6.1 RetryHandler クラスを実装（retry-handler.ts）
     - execute メソッドを実装（リトライロジック付きで関数を実行）
     - isRetryableError メソッドを実装（ThrottlingException, TimeoutError, ServiceUnavailableException を判定）
     - calculateDelay メソッドを実装（エクスポネンシャルバックオフ + ジッター）
     - _Requirements: 4.1, 4.4, 4.5, 10.4_
 
-  - [~] 6.2 RetryHandler のユニットテストを作成（retry-handler.test.ts）
+  - [x] 6.2 RetryHandler のユニットテストを作成（retry-handler.test.ts）
     - リトライ可能なエラーのテスト（ThrottlingException, TimeoutError）
     - リトライ不可能なエラーのテスト（ValidationError）
     - リトライ回数の上限テスト
     - エクスポネンシャルバックオフの計算テスト
     - _Requirements: 9.3, 9.5_
 
-  - [~] 6.3 RetryHandler のプロパティベーステストを作成（retry-handler.property.test.ts）
+  - [x] 6.3 RetryHandler のプロパティベーステストを作成（retry-handler.property.test.ts）
     - **Property 7: Throttling Error Retry**
     - **Validates: Requirements 4.1**
     - **Property 8: Timeout Error Retry**
@@ -100,7 +100,7 @@
     - **Validates: Requirements 10.4, 10.5**
     - _Requirements: 9.3, 9.5_
 
-- [~] 7. Checkpoint - ユーティリティ層の確認
+- [-] 7. Checkpoint - ユーティリティ層の確認
   - すべてのテストが通ることを確認し、質問があればユーザーに確認する
 
 - [ ] 8. BedrockClient の実装
@@ -164,7 +164,7 @@
     - **Validates: Requirements 10.6**
     - _Requirements: 9.2, 9.3, 9.4, 9.6_
 
-- [~] 10. Checkpoint - コアサービス層の確認
+- [ ] 10. Checkpoint - コアサービス層の確認
   - すべてのテストが通ることを確認し、質問があればユーザーに確認する
 
 - [ ] 11. パブリックAPIのエクスポート
@@ -222,7 +222,7 @@
     - トークンカウントとロギングの統合テスト
     - _Requirements: 9.8_
 
-- [~] 15. Final Checkpoint - すべてのテストとビルドの確認
+- [ ] 15. Final Checkpoint - すべてのテストとビルドの確認
   - すべてのユニットテストが通ることを確認
   - すべてのプロパティベーステストが通ることを確認
   - CDK テストが通ることを確認

@@ -9,10 +9,47 @@
 
 // Error classes
 export {
-  BedrockError,
-  BedrockValidationError,
-  BedrockModelNotFoundError,
-  BedrockRetryFailedError,
+    BedrockError,
+    BedrockValidationError,
+    BedrockModelNotFoundError,
+    BedrockRetryFailedError,
 } from './errors';
 
-// Public exports will be added as components are implemented
+// Configuration
+export type { BedrockConfig } from './config';
+export { loadBedrockConfig } from './config';
+
+// Token counter
+export { TokenCounter } from './token-counter';
+export type { TokenUsage } from './token-counter';
+
+// Bedrock client
+export { BedrockClient } from './bedrock-client';
+
+// Retry handler
+export { RetryHandler } from './retry-handler';
+
+// Bedrock service
+export { BedrockService } from './bedrock-service';
+export type { GenerateTextStreamResponse } from './bedrock-service';
+
+// Types
+export type {
+    Message,
+    ContentBlock,
+    SystemMessage,
+    TokenUsageMetrics,
+    BedrockLogEntry,
+    ConverseParams,
+    GenerateTextParams,
+    GenerateTextResponse,
+} from './types';
+Message,
+    ContentBlock,
+    SystemMessage,
+    TokenUsageMetrics,
+    BedrockLogEntry,
+    ConverseParams,
+    GenerateTextParams,
+    GenerateTextResponse,
+} from './types';
