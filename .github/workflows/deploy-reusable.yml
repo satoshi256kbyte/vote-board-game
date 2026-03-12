@@ -75,20 +75,28 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download API artifact
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: ci.yml
-          run_id: ${{ inputs.ci-run-id }}
-          name: api-dist
-          path: packages/api/dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Downloading api-dist artifact from run ${{ inputs.ci-run-id }}"
+          gh run download ${{ inputs.ci-run-id }} \
+            --repo ${{ github.repository }} \
+            --name api-dist \
+            --dir packages/api/dist
+          echo "API artifact downloaded successfully"
+          ls -la packages/api/dist
 
       - name: Download Infra artifact
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: ci.yml
-          run_id: ${{ inputs.ci-run-id }}
-          name: infra-dist
-          path: packages/infra/dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Downloading infra-dist artifact from run ${{ inputs.ci-run-id }}"
+          gh run download ${{ inputs.ci-run-id }} \
+            --repo ${{ github.repository }} \
+            --name infra-dist \
+            --dir packages/infra/dist
+          echo "Infra artifact downloaded successfully"
+          ls -la packages/infra/dist
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
