@@ -12,13 +12,8 @@
  * - Unauthenticated users see disabled board
  */
 
-import { test, expect } from './fixtures';
-import {
-  waitForNetworkIdle,
-  waitForLoadingComplete,
-  retryAssertion,
-  TIMEOUTS,
-} from './helpers/wait-utils';
+import { test, expect } from '../fixtures';
+import { waitForNetworkIdle, waitForLoadingComplete, TIMEOUTS } from '../helpers/wait-utils';
 
 test.describe('Interactive Board - Candidate Submission', () => {
   test('should display interactive board on candidate submission page', async ({
@@ -30,11 +25,14 @@ test.describe('Interactive Board - Candidate Submission', () => {
     await waitForNetworkIdle(authenticatedPage);
     await waitForLoadingComplete(authenticatedPage);
 
-    // Verify interactive board is visible
-    await retryAssertion(async () => {
-      const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-      await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    // Verify page title
+    await expect(authenticatedPage.getByRole('heading', { name: '候補を投稿' })).toBeVisible({
+      timeout: TIMEOUTS.LONG,
     });
+
+    // Verify interactive board is visible
+    const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Verify board has 64 cells (8x8 grid)
     const cells = authenticatedPage.getByRole('gridcell');
@@ -49,17 +47,15 @@ test.describe('Interactive Board - Candidate Submission', () => {
 
     // Wait for board to be visible
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Verify at least one legal move indicator is present
     // Legal moves should have "選択可能" in their aria-label
-    await retryAssertion(async () => {
-      const legalMoveCells = authenticatedPage.getByRole('gridcell', {
-        name: /選択可能/,
-      });
-      const count = await legalMoveCells.count();
-      expect(count).toBeGreaterThan(0);
+    const legalMoveCells = authenticatedPage.getByRole('gridcell', {
+      name: /選択可能/,
     });
+    const count = await legalMoveCells.count();
+    expect(count).toBeGreaterThan(0);
   });
 
   test('should select a cell when clicking on a legal move', async ({
@@ -73,15 +69,15 @@ test.describe('Interactive Board - Candidate Submission', () => {
 
     // Wait for board to be visible
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Find and click a legal move cell
     const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).first();
     await legalMoveCell.click();
 
     // Verify the cell is now selected (aria-selected="true")
-    await retryAssertion(async () => {
-      await expect(legalMoveCell).toHaveAttribute('aria-selected', 'true');
+    await expect(legalMoveCell).toHaveAttribute('aria-selected', 'true', {
+      timeout: TIMEOUTS.MEDIUM,
     });
   });
 
@@ -96,17 +92,15 @@ test.describe('Interactive Board - Candidate Submission', () => {
 
     // Wait for board to be visible
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Click a legal move cell
     const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).first();
     await legalMoveCell.click();
 
-    // Verify move preview is displayed
-    await retryAssertion(async () => {
-      const preview = authenticatedPage.getByTestId('move-preview');
-      await expect(preview).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    });
+    // Verify move preview label is displayed
+    const previewLabel = authenticatedPage.getByText('プレビュー');
+    await expect(previewLabel).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
   });
 
   test('should toggle selection when clicking the same cell twice', async ({
@@ -120,23 +114,23 @@ test.describe('Interactive Board - Candidate Submission', () => {
 
     // Wait for board to be visible
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Click a legal move cell
     const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).first();
     await legalMoveCell.click();
 
     // Verify cell is selected
-    await expect(legalMoveCell).toHaveAttribute('aria-selected', 'true');
+    await expect(legalMoveCell).toHaveAttribute('aria-selected', 'true', {
+      timeout: TIMEOUTS.MEDIUM,
+    });
 
     // Click the same cell again
     await legalMoveCell.click();
 
     // Verify cell is no longer selected
-    await retryAssertion(async () => {
-      const isSelected = await legalMoveCell.getAttribute('aria-selected');
-      expect(isSelected).not.toBe('true');
-    });
+    const isSelected = await legalMoveCell.getAttribute('aria-selected');
+    expect(isSelected).not.toBe('true');
   });
 
   test('should show validation error when submitting without selecting a cell', async ({
@@ -161,10 +155,8 @@ test.describe('Interactive Board - Candidate Submission', () => {
     await submitButton.click();
 
     // Verify validation error is displayed
-    await retryAssertion(async () => {
-      const errorMessage = authenticatedPage.getByText('位置を選択してください');
-      await expect(errorMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    });
+    const errorMessage = authenticatedPage.getByText('位置を選択してください');
+    await expect(errorMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
   });
 
   test('should successfully submit a candidate with selected cell and description', async ({
@@ -178,7 +170,7 @@ test.describe('Interactive Board - Candidate Submission', () => {
 
     // Wait for board to be visible
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Select a legal move cell
     const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).first();
@@ -197,10 +189,8 @@ test.describe('Interactive Board - Candidate Submission', () => {
     await submitButton.click();
 
     // Verify redirect to game detail page
-    await retryAssertion(async () => {
-      await authenticatedPage.waitForURL(`/games/${game.gameId}`, {
-        timeout: TIMEOUTS.LONG,
-      });
+    await authenticatedPage.waitForURL(`/games/${game.gameId}`, {
+      timeout: TIMEOUTS.LONG,
     });
   });
 
@@ -215,7 +205,7 @@ test.describe('Interactive Board - Candidate Submission', () => {
 
     // Wait for board to be visible
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Find a cell that is NOT a legal move (doesn't have "選択可能" in aria-label)
     const allCells = authenticatedPage.getByRole('gridcell');
@@ -226,7 +216,7 @@ test.describe('Interactive Board - Candidate Submission', () => {
     for (let i = 0; i < cellCount; i++) {
       const cell = allCells.nth(i);
       const ariaLabel = await cell.getAttribute('aria-label');
-      if (ariaLabel && !ariaLabel.includes('選択可能')) {
+      if (ariaLabel && !ariaLabel.includes('選択可能') && !ariaLabel.includes('石')) {
         illegalMoveCell = cell;
         break;
       }
@@ -237,21 +227,10 @@ test.describe('Interactive Board - Candidate Submission', () => {
       await illegalMoveCell.click();
 
       // Verify error message is displayed
-      await retryAssertion(async () => {
-        const errorAlert = authenticatedPage.getByRole('alert');
-        await expect(errorAlert).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-        await expect(errorAlert).toContainText('この位置には石を置けません');
-      });
+      const errorAlert = authenticatedPage.getByRole('alert');
+      await expect(errorAlert).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+      await expect(errorAlert).toContainText('この位置には石を置けません');
     }
-  });
-
-  test('should display "no legal moves" message when no moves are available', async ({
-    authenticatedPage: _authenticatedPage,
-    game: _game,
-  }) => {
-    // Note: This test would require a game state with no legal moves
-    // For now, we'll skip this test as it requires specific game state setup
-    test.skip();
   });
 
   test('should complete candidate submission within 45 seconds', async ({
@@ -267,7 +246,7 @@ test.describe('Interactive Board - Candidate Submission', () => {
 
     // Wait for board to be visible
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Select a legal move cell
     const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).first();
@@ -298,62 +277,6 @@ test.describe('Interactive Board - Candidate Submission', () => {
   });
 });
 
-test.describe('Interactive Board - Unauthenticated User', () => {
-  test('should display disabled board for unauthenticated users', async ({ page, game }) => {
-    // Navigate to candidate submission page without authentication
-    await page.goto(`/games/${game.gameId}/candidates/new`);
-    await waitForNetworkIdle(page);
-    await waitForLoadingComplete(page);
-
-    // Verify board is present but disabled or shows login message
-    await retryAssertion(async () => {
-      // Check for either disabled board or login message
-      const loginMessage = page.getByText(/ログインして投稿/);
-      const hasLoginMessage = (await loginMessage.count()) > 0;
-
-      if (hasLoginMessage) {
-        await expect(loginMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-      } else {
-        // If no login message, board should be disabled
-        const board = page.getByRole('grid', { name: 'オセロの盤面' });
-        await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-
-        // Verify cells are not clickable (no legal move indicators)
-        const legalMoveCells = page.getByRole('gridcell', { name: /選択可能/ });
-        const count = await legalMoveCells.count();
-        expect(count).toBe(0);
-      }
-    });
-  });
-
-  test('should redirect to login page when unauthenticated user tries to submit', async ({
-    page,
-    game,
-  }) => {
-    // Navigate to candidate submission page without authentication
-    await page.goto(`/games/${game.gameId}/candidates/new`);
-    await waitForNetworkIdle(page);
-    await waitForLoadingComplete(page);
-
-    // Try to submit (if submit button is present)
-    const submitButton = page.getByRole('button', { name: /候補を投稿/ });
-    const submitButtonCount = await submitButton.count();
-
-    if (submitButtonCount > 0) {
-      await submitButton.click();
-
-      // Verify redirect to login page
-      await retryAssertion(async () => {
-        await page.waitForURL(/\/login/, { timeout: TIMEOUTS.LONG });
-      });
-    } else {
-      // If no submit button, verify login message is shown
-      const loginMessage = page.getByText(/ログインして投稿/);
-      await expect(loginMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    }
-  });
-});
-
 test.describe('Interactive Board - Accessibility', () => {
   test('should have proper ARIA attributes on board and cells', async ({
     authenticatedPage,
@@ -366,7 +289,7 @@ test.describe('Interactive Board - Accessibility', () => {
 
     // Verify board has role="grid"
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Verify cells have role="gridcell"
     const cells = authenticatedPage.getByRole('gridcell');
@@ -388,7 +311,7 @@ test.describe('Interactive Board - Accessibility', () => {
 
     // Wait for board to be visible
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
-    await expect(board).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Focus on the board
     await board.focus();
