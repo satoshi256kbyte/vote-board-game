@@ -146,7 +146,7 @@ describe('Candidate Submission Integration', () => {
       });
 
       // Verify board is disabled during submission
-      const anotherCell = screen.getByRole('gridcell', { name: /C4.*選択可能/ });
+      const anotherCell = screen.getByRole('gridcell', { name: /F4.*選択可能/ });
       fireEvent.click(anotherCell);
 
       // Selection should not change
@@ -196,15 +196,15 @@ describe('Candidate Submission Integration', () => {
       fireEvent.click(d3Cell);
       expect(screen.getByRole('gridcell', { name: /D3/, selected: true })).toBeInTheDocument();
 
-      // Select second cell (C4)
-      const c4Cell = screen.getByRole('gridcell', { name: /C4.*選択可能/ });
-      fireEvent.click(c4Cell);
+      // Select second cell (F4)
+      const f4Cell = screen.getByRole('gridcell', { name: /F4.*選択可能/ });
+      fireEvent.click(f4Cell);
 
       // Verify selection switched
       expect(
         screen.queryByRole('gridcell', { name: /D3/, selected: true })
       ).not.toBeInTheDocument();
-      expect(screen.getByRole('gridcell', { name: /C4/, selected: true })).toBeInTheDocument();
+      expect(screen.getByRole('gridcell', { name: /F4/, selected: true })).toBeInTheDocument();
     });
 
     it('should show error when clicking illegal move', () => {
@@ -278,13 +278,13 @@ describe('Candidate Submission Integration', () => {
       fireEvent.click(d3Cell);
       expect(screen.getByText(/D3に黒石を置いた場合/)).toBeInTheDocument();
 
-      // Select second cell (C4)
-      const c4Cell = screen.getByRole('gridcell', { name: /C4.*選択可能/ });
-      fireEvent.click(c4Cell);
+      // Select second cell (F4)
+      const f4Cell = screen.getByRole('gridcell', { name: /F4.*選択可能/ });
+      fireEvent.click(f4Cell);
 
       // Verify preview is updated
       expect(screen.queryByText(/D3に黒石を置いた場合/)).not.toBeInTheDocument();
-      expect(screen.getByText(/C4に黒石を置いた場合/)).toBeInTheDocument();
+      expect(screen.getByText(/F4に黒石を置いた場合/)).toBeInTheDocument();
     });
 
     it('should hide preview when selection is cleared', () => {
@@ -316,9 +316,9 @@ describe('Candidate Submission Integration', () => {
     it('should show preview for white player', () => {
       render(<CandidateForm {...defaultProps} currentPlayer="white" />);
 
-      // Select a legal move for white (E6 - row 5, col 4)
-      const e6Cell = screen.getByRole('gridcell', { name: /E6.*選択可能/ });
-      fireEvent.click(e6Cell);
+      // Select a legal move for white (F4 - row 3, col 5)
+      const f4Cell = screen.getByRole('gridcell', { name: /F4.*選択可能/ });
+      fireEvent.click(f4Cell);
 
       // Verify preview shows correct player (white)
       expect(screen.getByText(/白石を置いた場合/)).toBeInTheDocument();
