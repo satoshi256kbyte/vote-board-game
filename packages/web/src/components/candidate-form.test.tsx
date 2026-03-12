@@ -368,7 +368,7 @@ describe('CandidateForm', () => {
 
     it('should prevent cell selection during submission', async () => {
       vi.mocked(candidatesApi.createCandidate).mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
+        () => new Promise(() => {}) // never resolves - keeps isSubmitting true for the duration of the test
       );
 
       render(<CandidateForm {...defaultProps} />);
