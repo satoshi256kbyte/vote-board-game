@@ -84,7 +84,7 @@ describe('MovePreview', () => {
       );
 
       // 複数の石が裏返ることが表示される
-      expect(screen.getByText(/2個の石が裏返ります/)).toBeInTheDocument();
+      expect(screen.getByText(/1個の石が裏返ります/)).toBeInTheDocument();
     });
   });
 

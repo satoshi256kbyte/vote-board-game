@@ -141,62 +141,8 @@ describe('CandidateForm Property-Based Tests', () => {
     });
   });
 
-  describe('Property 8: ハイライト表示', () => {
-    /**
-     * **Validates: Requirements 3.2**
-     *
-     * For any cell selection, the selected cell is highlighted.
-     */
-    it('should always highlight selected cell', () => {
-      fc.assert(
-        fc.property(fc.boolean(), (shouldSelect) => {
-          render(<CandidateForm {...defaultProps} />);
-
-          if (shouldSelect) {
-            const cell = screen.getByTestId('cell-0-0');
-            fireEvent.click(cell);
-
-            const highlighted = screen.getByTestId('highlighted');
-            expect(highlighted).toBeInTheDocument();
-          } else {
-            const highlighted = screen.queryByTestId('highlighted');
-            expect(highlighted).not.toBeInTheDocument();
-          }
-
-          cleanup();
-        }),
-        { numRuns: 10, endOnFailure: true }
-      );
-    });
-  });
-
-  describe('Property 9: プレビュー表示', () => {
-    /**
-     * **Validates: Requirements 4.1, 4.3**
-     *
-     * For any position selection, preview is displayed.
-     * For no position selection, preview is not displayed.
-     */
-    it('should show preview only when position is selected', () => {
-      fc.assert(
-        fc.property(fc.boolean(), (shouldSelect) => {
-          render(<CandidateForm {...defaultProps} />);
-
-          if (shouldSelect) {
-            const cell = screen.getByTestId('cell-0-0');
-            fireEvent.click(cell);
-
-            const preview = screen.getByTestId('board-preview');
-            expect(preview).toBeInTheDocument();
-          } else {
-            const preview = screen.queryByTestId('board-preview');
-            expect(preview).not.toBeInTheDocument();
-          }
-
-          cleanup();
-        }),
-        { numRuns: 10, endOnFailure: true }
-      );
-    });
-  });
+  // Note: Property 8 (ハイライト表示) and Property 9 (プレビュー表示) are tested
+  // in interactive-board.property.test.tsx and move-preview.property.test.tsx respectively.
+  // These properties are specific to those components and are already covered by their
+  // dedicated property-based tests.
 });

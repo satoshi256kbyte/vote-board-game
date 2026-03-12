@@ -70,7 +70,7 @@ export const BoardCell = memo(function BoardCell({
     <div
       role="gridcell"
       aria-label={ariaLabel}
-      aria-selected={isSelected}
+      {...(isSelected && { 'aria-selected': true })}
       className={`
         relative
         border

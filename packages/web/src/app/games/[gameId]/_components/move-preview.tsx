@@ -11,9 +11,7 @@
 
 import React, { useMemo } from 'react';
 import { BoardPreview } from './board-preview';
-import { CellState } from '@vote-board-game/api/lib/othello/types';
-import { validateMove } from '@vote-board-game/api/lib/othello/validation';
-import { executeMove } from '@vote-board-game/api/lib/othello/moves';
+import { BoardState, Position } from '@/lib/utils/legal-moves';
 
 interface MovePreviewProps {
   /** 現在の盤面状態（8x8配列: "0"=空, "1"=黒, "2"=白） */
@@ -25,33 +23,161 @@ interface MovePreviewProps {
 }
 
 /**
- * 文字列配列の盤面を数値配列に変換
+ * Direction vector for checking lines
+ */
+interface Direction {
+  readonly rowDelta: number;
+  readonly colDelta: number;
+}
+
+/**
+ * The 8 possible directions from any cell
+ */
+const DIRECTIONS: readonly Direction[] = [
+  { rowDelta: -1, colDelta: 0 }, // North
+  { rowDelta: -1, colDelta: 1 }, // Northeast
+  { rowDelta: 0, colDelta: 1 }, // East
+  { rowDelta: 1, colDelta: 1 }, // Southeast
+  { rowDelta: 1, colDelta: 0 }, // South
+  { rowDelta: 1, colDelta: -1 }, // Southwest
+  { rowDelta: 0, colDelta: -1 }, // West
+  { rowDelta: -1, colDelta: -1 }, // Northwest
+];
+
+/**
+ * 文字列配列の盤面をBoardState型に変換
  *
  * @param boardState - 文字列配列の盤面（"0", "1", "2"）
- * @returns 数値配列の盤面（0, 1, 2）
+ * @returns BoardState型の盤面（'empty', 'black', 'white'）
  */
-function convertBoardState(boardState: string[][]): readonly (readonly CellState[])[] {
-  return boardState.map((row) => row.map((cell) => parseInt(cell, 10) as CellState));
+function convertBoardState(boardState: string[][]): BoardState {
+  return boardState.map((row) =>
+    row.map((cell) => {
+      if (cell === '1') return 'black';
+      if (cell === '2') return 'white';
+      return 'empty';
+    })
+  );
 }
 
 /**
- * 数値配列の盤面を文字列配列に変換
+ * BoardState型の盤面を文字列配列に変換
  *
- * @param board - 数値配列の盤面（0, 1, 2）
+ * @param board - BoardState型の盤面（'empty', 'black', 'white'）
  * @returns 文字列配列の盤面（"0", "1", "2"）
  */
-function convertToStringBoard(board: readonly (readonly CellState[])[]): string[][] {
-  return board.map((row) => row.map((cell) => cell.toString()));
+function convertToStringBoard(board: BoardState): string[][] {
+  return board.map((row) =>
+    row.map((cell) => {
+      if (cell === 'black') return '1';
+      if (cell === 'white') return '2';
+      return '0';
+    })
+  );
 }
 
 /**
- * プレイヤー文字列をCellStateに変換
+ * Checks a single direction for flippable discs
  *
- * @param player - プレイヤー文字列（"black" | "white"）
- * @returns CellState（Black | White）
+ * @param boardState - The game board
+ * @param position - The starting position (where the new disc would be placed)
+ * @param direction - The direction to check
+ * @param player - The player making the move
+ * @returns An array of positions that would be flipped in this direction
  */
-function playerToCellState(player: 'black' | 'white'): CellState.Black | CellState.White {
-  return player === 'black' ? CellState.Black : CellState.White;
+function checkDirection(
+  boardState: BoardState,
+  position: Position,
+  direction: Direction,
+  player: 'black' | 'white'
+): Position[] {
+  const opponent = player === 'black' ? 'white' : 'black';
+  const flippedPositions: Position[] = [];
+
+  // Start from the next position in the direction
+  let currentRow = position.row + direction.rowDelta;
+  let currentCol = position.col + direction.colDelta;
+
+  // First, collect all consecutive opponent discs
+  while (
+    currentRow >= 0 &&
+    currentRow <= 7 &&
+    currentCol >= 0 &&
+    currentCol <= 7 &&
+    boardState[currentRow][currentCol] === opponent
+  ) {
+    flippedPositions.push({ row: currentRow, col: currentCol });
+    currentRow += direction.rowDelta;
+    currentCol += direction.colDelta;
+  }
+
+  // Check if the line ends with the player's own disc
+  // If not, or if we found no opponent discs, this direction is invalid
+  if (
+    flippedPositions.length === 0 ||
+    currentRow < 0 ||
+    currentRow > 7 ||
+    currentCol < 0 ||
+    currentCol > 7 ||
+    boardState[currentRow][currentCol] !== player
+  ) {
+    return [];
+  }
+
+  return flippedPositions;
+}
+
+/**
+ * Finds all positions that would be flipped by a move
+ *
+ * @param boardState - The game board
+ * @param position - The position where the disc would be placed
+ * @param player - The player making the move
+ * @returns An array of all positions that would be flipped
+ */
+function findFlippedPositions(
+  boardState: BoardState,
+  position: Position,
+  player: 'black' | 'white'
+): Position[] {
+  const allFlippedPositions: Position[] = [];
+
+  // Check all 8 directions
+  for (const direction of DIRECTIONS) {
+    const flippedInDirection = checkDirection(boardState, position, direction, player);
+    allFlippedPositions.push(...flippedInDirection);
+  }
+
+  return allFlippedPositions;
+}
+
+/**
+ * Applies a move to the board and returns the new board state
+ *
+ * @param boardState - The current board state
+ * @param position - The position where the disc is placed
+ * @param player - The player making the move
+ * @param flippedPositions - The positions that will be flipped
+ * @returns The new board state after applying the move
+ */
+function applyMove(
+  boardState: BoardState,
+  position: Position,
+  player: 'black' | 'white',
+  flippedPositions: Position[]
+): BoardState {
+  // Create a deep copy of the board
+  const newBoard: BoardState = boardState.map((row) => [...row]);
+
+  // Place the new disc
+  newBoard[position.row][position.col] = player;
+
+  // Flip all opponent discs
+  for (const pos of flippedPositions) {
+    newBoard[pos.row][pos.col] = player;
+  }
+
+  return newBoard;
 }
 
 /**
@@ -82,38 +208,30 @@ function positionToString(position: { row: number; col: number }): string {
  * 裏返される石を視覚的に示し、選択されたセルをハイライト表示します。
  */
 export function MovePreview({ boardState, selectedPosition, currentPlayer }: MovePreviewProps) {
-  // 盤面を数値配列に変換
-  const numericBoard = useMemo(() => convertBoardState(boardState), [boardState]);
+  // 盤面をBoardState型に変換
+  const convertedBoard = useMemo(() => convertBoardState(boardState), [boardState]);
 
-  // プレイヤーをCellStateに変換
-  const player = useMemo(() => playerToCellState(currentPlayer), [currentPlayer]);
-
-  // 手を検証して裏返される石を取得
-  const validationResult = useMemo(() => {
-    return validateMove(numericBoard, selectedPosition, player);
-  }, [numericBoard, selectedPosition, player]);
+  // 裏返される石を計算
+  const flippedPositions = useMemo(() => {
+    return findFlippedPositions(convertedBoard, selectedPosition, currentPlayer);
+  }, [convertedBoard, selectedPosition, currentPlayer]);
 
   // 手を適用した盤面を計算
   const previewBoard = useMemo(() => {
-    if (!validationResult.valid || !validationResult.flippedPositions) {
+    if (flippedPositions.length === 0) {
       // 無効な手の場合は元の盤面を返す
       return boardState;
     }
 
     // 手を適用
-    const newBoard = executeMove(
-      numericBoard,
-      selectedPosition,
-      player,
-      validationResult.flippedPositions
-    );
+    const newBoard = applyMove(convertedBoard, selectedPosition, currentPlayer, flippedPositions);
 
     // 文字列配列に変換
     return convertToStringBoard(newBoard);
-  }, [numericBoard, selectedPosition, player, validationResult, boardState]);
+  }, [convertedBoard, selectedPosition, currentPlayer, flippedPositions, boardState]);
 
   // 裏返される石の数
-  const flippedCount = validationResult.flippedPositions?.length ?? 0;
+  const flippedCount = flippedPositions.length;
 
   // 選択位置を文字列に変換（例: "D3"）
   const highlightPosition = useMemo(() => positionToString(selectedPosition), [selectedPosition]);

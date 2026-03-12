@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import * as fc from 'fast-check';
 import { MovePreview } from './move-preview';
 
@@ -68,7 +68,7 @@ describe('MovePreview - Property-based tests', () => {
           );
 
           // 1. プレビュー説明が表示される
-          expect(screen.getByText('手のプレビュー')).toBeInTheDocument();
+          expect(screen.getAllByText('手のプレビュー').length).toBeGreaterThan(0);
 
           // 2. 選択位置の説明が表示される（例: "D3に黒石を置いた場合"）
           const colLabel = String.fromCharCode(65 + selectedPosition.col); // A-H
@@ -88,6 +88,9 @@ describe('MovePreview - Property-based tests', () => {
           // "黒: X" と "白: Y" の形式で表示される
           expect(screen.getByText(/黒:/)).toBeInTheDocument();
           expect(screen.getByText(/白:/)).toBeInTheDocument();
+
+          // Cleanup after each iteration
+          cleanup();
 
           return true;
         }

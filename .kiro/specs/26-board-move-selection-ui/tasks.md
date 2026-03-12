@@ -8,7 +8,7 @@
 
 ## タスク
 
-- [ ] 1. ユーティリティ関数の実装
+- [x] 1. ユーティリティ関数の実装
   - [x] 1.1 座標パース・シリアライズ関数の実装
     - `lib/utils/coordinate.ts` を作成
     - `parseCoordinate(coordinate: string): Position | null` を実装
@@ -48,7 +48,7 @@
     - **Property 2: 合法手の計算と表示**
     - **Validates: Requirements 2.1, 2.3, 2.6**
 
-- [ ] 2. 基本コンポーネントの実装
+- [x] 2. 基本コンポーネントの実装
   - [x] 2.1 ValidMoveIndicatorコンポーネントの実装
     - `app/games/[gameId]/_components/valid-move-indicator.tsx` を作成
     - 薄い緑色の円を表示
@@ -77,7 +77,7 @@
     - アクセシビリティ属性のテスト
     - _Requirements: 1.5, 2.3, 4.1, 11.3, 11.4, 11.5_
 
-- [ ] 3. InteractiveBoardコンポーネントの実装
+- [x] 3. InteractiveBoardコンポーネントの実装
   - [x] 3.1 InteractiveBoardの基本構造を実装
     - `app/games/[gameId]/_components/interactive-board.tsx` を作成
     - TypeScriptインターフェースでpropsを定義
@@ -145,7 +145,7 @@
   - すべてのテストが通ることを確認
   - ユーザーに質問があれば確認
 
-- [ ] 5. MovePreviewコンポーネントの実装
+- [x] 5. MovePreviewコンポーネントの実装
   - [x] 5.1 MovePreviewコンポーネントを実装
     - `app/games/[gameId]/_components/move-preview.tsx` を作成
     - 既存のBoardPreview_Component（spec 23）を使用
@@ -155,17 +155,17 @@
     - 黒石と白石の数を表示
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-  - [~] 5.2 MovePreviewのユニットテストを作成
+  - [x] 5.2 MovePreviewのユニットテストを作成
     - `app/games/[gameId]/_components/move-preview.test.tsx` を作成
     - プレビュー表示、裏返される石の表示のテスト
     - _Requirements: 5.1, 5.3, 5.4, 5.5_
 
-  - [~] 5.3 MovePreviewのプロパティベーステストを作成
+  - [x] 5.3 MovePreviewのプロパティベーステストを作成
     - **Property 8: プレビューの表示と内容**
     - **Validates: Requirements 5.1, 5.3, 5.4, 5.5**
 
-- [ ] 6. CandidateFormへの統合
-  - [~] 6.1 CandidateFormを更新してInteractiveBoardを統合
+- [-] 6. CandidateFormへの統合
+  - [x] 6.1 CandidateFormを更新してInteractiveBoardを統合
     - `app/games/[gameId]/candidates/new/_components/candidate-form.tsx` を更新
     - InteractiveBoardコンポーネントを追加
     - 座標選択のロジックをInteractiveBoardに委譲
@@ -173,21 +173,21 @@
     - 座標が選択されていない場合のバリデーションエラー
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
 
-  - [~] 6.2 CandidateFormのユニットテストを更新
+  - [x] 6.2 CandidateFormのユニットテストを更新
     - `app/games/[gameId]/candidates/new/_components/candidate-form.test.tsx` を更新
     - InteractiveBoardとの連携テスト
     - 座標受け取りのテスト
     - バリデーションエラーのテスト
     - _Requirements: 6.2, 6.3, 6.4_
 
-  - [~] 6.3 統合テストを作成
+  - [x] 6.3 統合テストを作成
     - `app/games/[gameId]/candidates/new/integration.test.tsx` を作成
     - 完全なフォーム送信フロー（盤面でセル選択 → 説明文入力 → 送信 → リダイレクト）
     - Interactive_BoardとCandidate_Formの連携
     - プレビュー表示の統合
     - _Requirements: 6.1, 6.2, 6.3, 6.7_
 
-- [~] 7. チェックポイント - 統合機能の確認
+- [-] 7. チェックポイント - 統合機能の確認
   - すべてのテストが通ることを確認
   - ユーザーに質問があれば確認
 

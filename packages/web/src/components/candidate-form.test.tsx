@@ -26,33 +26,45 @@ vi.mock('@/lib/api/candidates', () => ({
   createCandidate: vi.fn(),
 }));
 
-vi.mock('@/components/board', () => ({
-  Board: ({
+vi.mock('@/app/games/[gameId]/_components/interactive-board', () => ({
+  InteractiveBoard: ({
     onCellClick,
-    highlightedCell,
+    selectedPosition,
+    currentPlayer,
   }: {
     onCellClick?: (row: number, col: number) => void;
-    highlightedCell?: { row: number; col: number };
+    selectedPosition?: { row: number; col: number } | null;
+    currentPlayer: 'black' | 'white';
+    boardState: string[][];
   }) => (
-    <div data-testid="board">
+    <div data-testid="interactive-board">
       <button data-testid="cell-0-0" onClick={() => onCellClick?.(0, 0)}>
         Cell 0,0
       </button>
       <button data-testid="cell-2-3" onClick={() => onCellClick?.(2, 3)}>
         Cell 2,3
       </button>
-      {highlightedCell && (
-        <div data-testid="highlighted-cell">
-          {highlightedCell.row},{highlightedCell.col}
+      {selectedPosition && (
+        <div data-testid="selected-position">
+          {selectedPosition.row},{selectedPosition.col}
         </div>
       )}
+      <div data-testid="current-player">{currentPlayer}</div>
     </div>
   ),
 }));
 
-vi.mock('@/app/games/[gameId]/_components/board-preview', () => ({
-  BoardPreview: ({ highlightPosition }: { highlightPosition?: string }) => (
-    <div data-testid="board-preview">Preview: {highlightPosition}</div>
+vi.mock('@/app/games/[gameId]/_components/move-preview', () => ({
+  MovePreview: ({
+    selectedPosition,
+    currentPlayer,
+  }: {
+    selectedPosition: { row: number; col: number };
+    currentPlayer: 'black' | 'white';
+  }) => (
+    <div data-testid="move-preview">
+      Preview: {selectedPosition.row},{selectedPosition.col} - {currentPlayer}
+    </div>
   ),
 }));
 
@@ -93,7 +105,7 @@ describe('CandidateForm', () => {
 
     it('should not show preview initially', () => {
       render(<CandidateForm {...defaultProps} />);
-      expect(screen.queryByTestId('board-preview')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('move-preview')).not.toBeInTheDocument();
     });
 
     it('should show character count as 0/200', () => {
@@ -109,7 +121,7 @@ describe('CandidateForm', () => {
       const cell = screen.getByTestId('cell-0-0');
       fireEvent.click(cell);
 
-      expect(screen.getByTestId('highlighted-cell')).toHaveTextContent('0,0');
+      expect(screen.getByTestId('selected-position')).toHaveTextContent('0,0');
     });
 
     it('should show preview when cell is selected', () => {
@@ -118,8 +130,72 @@ describe('CandidateForm', () => {
       const cell = screen.getByTestId('cell-2-3');
       fireEvent.click(cell);
 
-      expect(screen.getByTestId('board-preview')).toBeInTheDocument();
-      expect(screen.getByTestId('board-preview')).toHaveTextContent('Preview: D3');
+      expect(screen.getByTestId('move-preview')).toBeInTheDocument();
+      expect(screen.getByTestId('move-preview')).toHaveTextContent('Preview: 2,3 - black');
+    });
+
+    it('should toggle selection when clicking same cell twice', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const cell = screen.getByTestId('cell-0-0');
+
+      // First click - select
+      fireEvent.click(cell);
+      expect(screen.getByTestId('selected-position')).toHaveTextContent('0,0');
+
+      // Second click - deselect
+      fireEvent.click(cell);
+      expect(screen.queryByTestId('selected-position')).not.toBeInTheDocument();
+    });
+
+    it('should switch selection when clicking different cell', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      // Select first cell
+      const cell1 = screen.getByTestId('cell-0-0');
+      fireEvent.click(cell1);
+      expect(screen.getByTestId('selected-position')).toHaveTextContent('0,0');
+
+      // Select second cell
+      const cell2 = screen.getByTestId('cell-2-3');
+      fireEvent.click(cell2);
+      expect(screen.getByTestId('selected-position')).toHaveTextContent('2,3');
+    });
+
+    it('should hide preview when selection is cleared', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const cell = screen.getByTestId('cell-0-0');
+
+      // Select cell
+      fireEvent.click(cell);
+      expect(screen.getByTestId('move-preview')).toBeInTheDocument();
+
+      // Deselect cell
+      fireEvent.click(cell);
+      expect(screen.queryByTestId('move-preview')).not.toBeInTheDocument();
+    });
+
+    it('should pass correct boardState to InteractiveBoard', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      // InteractiveBoard should be rendered (verified by presence of cells)
+      expect(screen.getByTestId('interactive-board')).toBeInTheDocument();
+    });
+
+    it('should pass correct currentPlayer to InteractiveBoard', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      expect(screen.getByTestId('current-player')).toHaveTextContent('black');
+    });
+
+    it('should pass correct currentPlayer to MovePreview', () => {
+      render(<CandidateForm {...defaultProps} />);
+
+      const cell = screen.getByTestId('cell-0-0');
+      fireEvent.click(cell);
+
+      expect(screen.getByTestId('move-preview')).toHaveTextContent('black');
     });
 
     it.skip('should clear position error when cell is selected', async () => {
@@ -229,6 +305,44 @@ describe('CandidateForm', () => {
       expect(candidatesApi.createCandidate).not.toHaveBeenCalled();
     });
 
+    it('should serialize position correctly in API call', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockResolvedValue({
+        candidateId: 'test-candidate-id',
+        gameId: 'test-game-id',
+        turnNumber: 5,
+        position: '2,3',
+        description: 'テスト説明文',
+        voteCount: 0,
+        createdBy: 'test-user',
+        status: 'VOTING',
+        votingDeadline: '2024-01-01T00:00:00Z',
+        createdAt: '2024-01-01T00:00:00Z',
+      });
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Select position (2,3)
+      const cell = screen.getByTestId('cell-2-3');
+      fireEvent.click(cell);
+
+      // Enter description
+      const textarea = screen.getByLabelText('説明文（最大200文字）');
+      fireEvent.change(textarea, { target: { value: 'テスト説明文' } });
+
+      // Submit
+      const submitButton = screen.getByRole('button', { name: '候補を投稿' });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(candidatesApi.createCandidate).toHaveBeenCalledWith(
+          'test-game-id',
+          5,
+          '2,3', // Position should be serialized as "row,col"
+          'テスト説明文'
+        );
+      });
+    });
+
     it('should disable button and show loading state during submission', async () => {
       vi.mocked(candidatesApi.createCandidate).mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 100))
@@ -250,6 +364,36 @@ describe('CandidateForm', () => {
       await waitFor(() => {
         expect(screen.getByRole('button', { name: '送信中...' })).toBeDisabled();
       });
+    });
+
+    it('should prevent cell selection during submission', async () => {
+      vi.mocked(candidatesApi.createCandidate).mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
+
+      render(<CandidateForm {...defaultProps} />);
+
+      // Fill form
+      const cell1 = screen.getByTestId('cell-0-0');
+      fireEvent.click(cell1);
+
+      const textarea = screen.getByLabelText('説明文（最大200文字）');
+      fireEvent.change(textarea, { target: { value: 'テスト説明文' } });
+
+      // Submit
+      const submitButton = screen.getByRole('button', { name: '候補を投稿' });
+      fireEvent.click(submitButton);
+
+      // Try to click another cell during submission
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: '送信中...' })).toBeDisabled();
+      });
+
+      const cell2 = screen.getByTestId('cell-2-3');
+      fireEvent.click(cell2);
+
+      // Selection should not change (still 0,0)
+      expect(screen.getByTestId('selected-position')).toHaveTextContent('0,0');
     });
 
     it('should call API with correct parameters on successful submission', async () => {

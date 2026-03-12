@@ -12,8 +12,8 @@
 
 import React, { useState, useMemo, type FormEvent, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Board } from '@/components/board';
-import { BoardPreview } from '@/app/games/[gameId]/_components/board-preview';
+import { InteractiveBoard } from '@/app/games/[gameId]/_components/interactive-board';
+import { MovePreview } from '@/app/games/[gameId]/_components/move-preview';
 import { createCandidate } from '@/lib/api/candidates';
 import { ApiError } from '@/lib/api/client';
 import { candidateFormSchema } from '@/lib/validation/candidate-form-schema';
@@ -34,13 +34,32 @@ interface CandidateFormProps {
 }
 
 /**
+ * BoardStateを文字列配列に変換
+ * InteractiveBoardが期待する形式に変換します
+ */
+function convertBoardStateToStringArray(boardState: BoardState): string[][] {
+  return boardState.board.map((row) =>
+    row.map((cell) => {
+      if (cell === 1) return 'black';
+      if (cell === 2) return 'white';
+      return 'empty';
+    })
+  );
+}
+
+/**
  * CandidateForm Component
  *
  * 候補投稿フォームを表示します。
  * ユーザーは盤面上でセルをクリックして位置を選択し、
  * 説明文を入力してから候補を投稿できます。
  */
-export function CandidateForm({ gameId, turnNumber, currentBoardState }: CandidateFormProps) {
+export function CandidateForm({
+  gameId,
+  turnNumber,
+  currentBoardState,
+  currentPlayer,
+}: CandidateFormProps) {
   const router = useRouter();
 
   // フォーム状態管理
@@ -55,16 +74,34 @@ export function CandidateForm({ gameId, turnNumber, currentBoardState }: Candida
     description?: string;
   }>({});
 
+  // BoardStateを文字列配列に変換（InteractiveBoard用）
+  const boardStateArray = useMemo(
+    () => convertBoardStateToStringArray(currentBoardState),
+    [currentBoardState]
+  );
+
+  // BoardStateを文字列配列に変換（MovePreview用）
+  const boardStateForPreview = useMemo(
+    () => currentBoardState.board.map((row) => row.map((cell) => cell.toString())),
+    [currentBoardState]
+  );
+
   /**
    * セルクリックハンドラー
-   * 位置を選択し、位置エラーをクリアします
+   * InteractiveBoardから呼び出されます
+   * InteractiveBoardは合法手のみを通知するため、ここでは追加のバリデーションは不要です
    */
   const handleCellClick = (row: number, col: number): void => {
     // 送信中は操作不可
     if (isSubmitting) return;
 
-    // 選択位置の更新
-    setSelectedPosition({ row, col });
+    // 同じセルをクリックした場合は選択を解除（トグル動作）
+    if (selectedPosition?.row === row && selectedPosition?.col === col) {
+      setSelectedPosition(null);
+    } else {
+      // 新しいセルを選択
+      setSelectedPosition({ row, col });
+    }
 
     // 位置エラーのクリア
     if (validationErrors.position) {
@@ -168,13 +205,8 @@ export function CandidateForm({ gameId, turnNumber, currentBoardState }: Candida
 
   /**
    * 選択位置を "D3" 形式に変換
+   * MovePreviewコンポーネントで使用されなくなったため削除
    */
-  const highlightPosition = useMemo(() => {
-    if (!selectedPosition) return undefined;
-    const col = String.fromCharCode(65 + selectedPosition.col); // 0->A, 1->B, ...
-    const row = (selectedPosition.row + 1).toString(); // 0->1, 1->2, ...
-    return `${col}${row}`;
-  }, [selectedPosition]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" role="form">
@@ -194,10 +226,12 @@ export function CandidateForm({ gameId, turnNumber, currentBoardState }: Candida
           位置を選択してください
         </div>
         <div aria-labelledby="board-selection-label">
-          <Board
-            boardState={currentBoardState}
+          <InteractiveBoard
+            boardState={boardStateArray}
+            currentPlayer={currentPlayer}
+            selectedPosition={selectedPosition}
             onCellClick={handleCellClick}
-            highlightedCell={selectedPosition ?? undefined}
+            disabled={isSubmitting}
           />
         </div>
         {validationErrors.position && (
@@ -211,9 +245,10 @@ export function CandidateForm({ gameId, turnNumber, currentBoardState }: Candida
       {selectedPosition && (
         <div>
           <label className="block text-sm font-medium mb-2">プレビュー</label>
-          <BoardPreview
-            boardState={currentBoardState.board.map((row) => row.map((cell) => cell.toString()))}
-            highlightPosition={highlightPosition}
+          <MovePreview
+            boardState={boardStateForPreview}
+            selectedPosition={selectedPosition}
+            currentPlayer={currentPlayer}
           />
         </div>
       )}
