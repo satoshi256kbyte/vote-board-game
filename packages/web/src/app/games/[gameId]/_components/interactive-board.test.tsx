@@ -715,4 +715,148 @@ describe('InteractiveBoard', () => {
       expect(d3CellAfter).toBeInTheDocument();
     });
   });
+
+  describe('タッチデバイス対応', () => {
+    it('should handle touch events on cells', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // 合法手のセル（D3）をタッチ
+      const d3Cell = screen.getByRole('gridcell', { name: /D3.*選択可能/ });
+      fireEvent.touchEnd(d3Cell);
+
+      // onCellClickが呼ばれることを確認
+      expect(mockOnCellClick).toHaveBeenCalledWith(2, 3);
+    });
+
+    it('should prevent default on touch events to prevent double-tap zoom', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+
+      // タッチスタートイベントを作成
+      const touchStartEvent = new TouchEvent('touchstart', {
+        bubbles: true,
+        cancelable: true,
+        touches: [{ clientX: 0, clientY: 0 } as Touch],
+      });
+      const preventDefaultSpy = vi.spyOn(touchStartEvent, 'preventDefault');
+
+      grid.dispatchEvent(touchStartEvent);
+
+      // preventDefaultが呼ばれることを確認（ダブルタップズーム防止）
+      expect(preventDefaultSpy).toHaveBeenCalled();
+    });
+
+    it('should have touch-action: none to disable swipe gestures', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      const grid = screen.getByRole('grid');
+
+      // touch-action: noneが設定されていることを確認
+      expect(grid).toHaveStyle({ touchAction: 'none' });
+    });
+
+    it('should have minimum 44px touch target size on cells', () => {
+      const mockOnCellClick = vi.fn();
+      const { container } = render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+          cellSize={30} // モバイルサイズ
+        />
+      );
+
+      // セルを取得
+      const cells = container.querySelectorAll('[role="gridcell"]');
+      const firstCell = cells[0] as HTMLElement;
+
+      // 最小タッチターゲットサイズ（44px）が設定されていることを確認
+      const styles = window.getComputedStyle(firstCell);
+      expect(styles.minWidth).toBe('44px');
+      expect(styles.minHeight).toBe('44px');
+    });
+
+    it('should provide visual feedback on tap with active state', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // セルを取得
+      const d3Cell = screen.getByRole('gridcell', { name: /D3.*選択可能/ });
+
+      // active:bg-green-500クラスが設定されていることを確認（タップ時の視覚的フィードバック）
+      expect(d3Cell).toHaveClass('active:bg-green-500');
+    });
+
+    it('should not respond to touch events when disabled', () => {
+      const mockOnCellClick = vi.fn();
+      render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+          disabled={true}
+        />
+      );
+
+      // セルをタッチ
+      const d3Cell = screen.getByRole('gridcell', { name: /D3/ });
+      fireEvent.touchEnd(d3Cell);
+
+      // onCellClickが呼ばれないことを確認
+      expect(mockOnCellClick).not.toHaveBeenCalled();
+    });
+
+    it('should have touch-action: none on cells to disable swipe', () => {
+      const mockOnCellClick = vi.fn();
+      const { container } = render(
+        <InteractiveBoard
+          boardState={initialBoardState}
+          currentPlayer="black"
+          selectedPosition={null}
+          onCellClick={mockOnCellClick}
+        />
+      );
+
+      // セルを取得
+      const cells = container.querySelectorAll('[role="gridcell"]');
+      const firstCell = cells[0] as HTMLElement;
+
+      // touch-action: noneが設定されていることを確認
+      expect(firstCell).toHaveStyle({ touchAction: 'none' });
+    });
+  });
 });

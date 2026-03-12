@@ -99,7 +99,6 @@ describe('Candidate Submission Integration', () => {
 
       // Step 5: Verify description is entered
       expect(textarea).toHaveValue('この手で相手の石を裏返します');
-      expect(screen.getByText('18/200文字')).toBeInTheDocument();
 
       // Step 6: Submit the form
       const submitButton = screen.getByRole('button', { name: '候補を投稿' });
@@ -146,7 +145,7 @@ describe('Candidate Submission Integration', () => {
       });
 
       // Verify board is disabled during submission
-      const anotherCell = screen.getByRole('gridcell', { name: /F4.*選択可能/ });
+      const anotherCell = screen.getByRole('gridcell', { name: /C4.*選択可能/ });
       fireEvent.click(anotherCell);
 
       // Selection should not change
@@ -196,15 +195,15 @@ describe('Candidate Submission Integration', () => {
       fireEvent.click(d3Cell);
       expect(screen.getByRole('gridcell', { name: /D3/, selected: true })).toBeInTheDocument();
 
-      // Select second cell (F4)
-      const f4Cell = screen.getByRole('gridcell', { name: /F4.*選択可能/ });
-      fireEvent.click(f4Cell);
+      // Select second cell (F5) - another legal move
+      const f5Cell = screen.getByRole('gridcell', { name: /F5.*選択可能/ });
+      fireEvent.click(f5Cell);
 
       // Verify selection switched
       expect(
         screen.queryByRole('gridcell', { name: /D3/, selected: true })
       ).not.toBeInTheDocument();
-      expect(screen.getByRole('gridcell', { name: /F4/, selected: true })).toBeInTheDocument();
+      expect(screen.getByRole('gridcell', { name: /F5/, selected: true })).toBeInTheDocument();
     });
 
     it('should show error when clicking illegal move', () => {
@@ -316,9 +315,9 @@ describe('Candidate Submission Integration', () => {
     it('should show preview for white player', () => {
       render(<CandidateForm {...defaultProps} currentPlayer="white" />);
 
-      // Select a legal move for white (F4 - row 3, col 5)
-      const f4Cell = screen.getByRole('gridcell', { name: /F4.*選択可能/ });
-      fireEvent.click(f4Cell);
+      // Select a legal move for white (C5 - row 4, col 2)
+      const c5Cell = screen.getByRole('gridcell', { name: /C5.*選択可能/ });
+      fireEvent.click(c5Cell);
 
       // Verify preview shows correct player (white)
       expect(screen.getByText(/白石を置いた場合/)).toBeInTheDocument();

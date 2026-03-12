@@ -170,6 +170,12 @@ export const InteractiveBoard = memo(function InteractiveBoard({
     setFocusedCell(null);
   }, []);
 
+  // タッチイベントハンドラー
+  const handleTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    // ダブルタップズームを防止
+    event.preventDefault();
+  }, []);
+
   return (
     <div className="inline-block">
       {/* Error message */}
@@ -190,7 +196,11 @@ export const InteractiveBoard = memo(function InteractiveBoard({
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         onBlur={handleBlur}
+        onTouchStart={handleTouchStart}
         className="grid grid-cols-8 gap-0 border-2 border-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+        style={{
+          touchAction: 'none', // スワイプジェスチャーを無効化
+        }}
       >
         {boardState.map((row, rowIndex) =>
           row.map((cell, colIndex) => {

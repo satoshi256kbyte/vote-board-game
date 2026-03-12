@@ -65,8 +65,21 @@ export const BoardCell = memo(function BoardCell({
     }
   };
 
+  // タッチイベントハンドラー
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    // タップ時の視覚的フィードバックのため、クリックハンドラーを呼び出す
+    // preventDefault()でダブルタップズームを防止
+    event.preventDefault();
+    if (!disabled) {
+      onClick(row, col);
+    }
+  };
+
   // 石のサイズ（セルサイズの80%）
   const discSize = cellSize * 0.8;
+
+  // タッチターゲットサイズを確保（最小44px）
+  const minTouchTargetSize = 44;
 
   return (
     <div
@@ -84,14 +97,19 @@ export const BoardCell = memo(function BoardCell({
         motion-reduce:transition-none
         ${isHovered && !disabled ? 'bg-green-600' : ''}
         ${disabled ? 'cursor-not-allowed opacity-50' : ''}
+        active:bg-green-500
       `}
       style={{
         width: `${cellSize}px`,
         height: `${cellSize}px`,
+        minWidth: `${minTouchTargetSize}px`,
+        minHeight: `${minTouchTargetSize}px`,
+        touchAction: 'none', // スワイプジェスチャーを無効化
       }}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={onMouseLeave}
+      onTouchEnd={handleTouchEnd}
     >
       {/* 選択ハイライト */}
       {isSelected && (

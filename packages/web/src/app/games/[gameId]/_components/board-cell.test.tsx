@@ -78,7 +78,7 @@ describe('BoardCell', () => {
       expect(highlight).not.toBeInTheDocument();
 
       const cell = container.querySelector('[role="gridcell"]');
-      expect(cell).toHaveAttribute('aria-selected', 'false');
+      expect(cell).not.toHaveAttribute('aria-selected');
     });
   });
 
@@ -194,6 +194,78 @@ describe('BoardCell', () => {
       // フォーカスインジケーターは表示されない（選択が優先）
       const focusIndicator = container.querySelector('.ring-2.ring-blue-500');
       expect(focusIndicator).not.toBeInTheDocument();
+    });
+  });
+
+  describe('タッチイベント', () => {
+    it('タッチエンド時にonClickが呼ばれる', () => {
+      const onClick = vi.fn();
+      const { container } = render(<BoardCell {...defaultProps} onClick={onClick} />);
+      const cell = container.querySelector('[role="gridcell"]');
+
+      if (cell) {
+        fireEvent.touchEnd(cell);
+      }
+
+      expect(onClick).toHaveBeenCalledWith(0, 0);
+    });
+
+    it('タッチイベントでpreventDefaultが呼ばれる（ダブルタップズーム防止）', () => {
+      const onClick = vi.fn();
+      const { container } = render(<BoardCell {...defaultProps} onClick={onClick} />);
+      const cell = container.querySelector('[role="gridcell"]');
+
+      if (cell) {
+        const touchEndEvent = new TouchEvent('touchend', {
+          bubbles: true,
+          cancelable: true,
+        });
+        const preventDefaultSpy = vi.spyOn(touchEndEvent, 'preventDefault');
+
+        cell.dispatchEvent(touchEndEvent);
+
+        expect(preventDefaultSpy).toHaveBeenCalled();
+      }
+    });
+
+    it('disabled時はタッチイベントでonClickが呼ばれない', () => {
+      const onClick = vi.fn();
+      const { container } = render(
+        <BoardCell {...defaultProps} onClick={onClick} disabled={true} />
+      );
+      const cell = container.querySelector('[role="gridcell"]');
+
+      if (cell) {
+        fireEvent.touchEnd(cell);
+      }
+
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('最小44pxのタッチターゲットサイズを持つ', () => {
+      const { container } = render(<BoardCell {...defaultProps} cellSize={30} />);
+      const cell = container.querySelector('[role="gridcell"]') as HTMLElement;
+
+      expect(cell).toHaveStyle({
+        minWidth: '44px',
+        minHeight: '44px',
+      });
+    });
+
+    it('touch-action: noneを持つ（スワイプジェスチャー無効化）', () => {
+      const { container } = render(<BoardCell {...defaultProps} />);
+      const cell = container.querySelector('[role="gridcell"]') as HTMLElement;
+
+      expect(cell).toHaveStyle({
+        touchAction: 'none',
+      });
+    });
+
+    it('タップ時の視覚的フィードバック用のactive状態クラスを持つ', () => {
+      const { container } = render(<BoardCell {...defaultProps} />);
+      const cell = container.querySelector('[role="gridcell"]');
+
+      expect(cell).toHaveClass('active:bg-green-500');
     });
   });
 });
