@@ -187,6 +187,7 @@ inclusion: manual
 | 6.2.4.7 CandidateFormへの統合                    | 完了       | 26-board-move-selection-ui    |
 | 6.2.4.8 キーボード操作の実装                     | 完了       | 26-board-move-selection-ui    |
 | 6.2.4.9 タッチデバイス対応                       | 完了       | 26-board-move-selection-ui    |
+| 6.2.4.10 E2Eテストの実装                         | 完了       | 26-board-move-selection-ui    |
 
 ### 🚀 デプロイ: 投票機能を開発環境にデプロイ
 
