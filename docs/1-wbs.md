@@ -172,14 +172,16 @@ inclusion: manual
 
 ### 6.2 フロントエンド開発
 
-| 項目                               | ステータス | Spec                          |
-| :--------------------------------- | :--------- | :---------------------------- |
-| 6.2.1 次の一手候補一覧表示         | 完了       | 23-move-candidates-display    |
-| 6.2.2 候補投稿フォーム             | 完了       | 24-candidate-submission-form  |
-| 6.2.3 投票ボタン・投票状況表示     | 完了       | 25-vote-button-status-display |
-| 6.2.4 盤面上での手の選択UI         | 進行中     | 26-board-move-selection-ui    |
-| 6.2.4.1 BoardCellコンポーネント    | 完了       | 26-board-move-selection-ui    |
-| 6.2.4.2 InteractiveBoardの基本構造 | 完了       | 26-board-move-selection-ui    |
+| 項目                                             | ステータス | Spec                          |
+| :----------------------------------------------- | :--------- | :---------------------------- |
+| 6.2.1 次の一手候補一覧表示                       | 完了       | 23-move-candidates-display    |
+| 6.2.2 候補投稿フォーム                           | 完了       | 24-candidate-submission-form  |
+| 6.2.3 投票ボタン・投票状況表示                   | 完了       | 25-vote-button-status-display |
+| 6.2.4 盤面上での手の選択UI                       | 進行中     | 26-board-move-selection-ui    |
+| 6.2.4.1 BoardCellコンポーネント                  | 完了       | 26-board-move-selection-ui    |
+| 6.2.4.2 InteractiveBoardの基本構造               | 完了       | 26-board-move-selection-ui    |
+| 6.2.4.3 InteractiveBoardのユニットテスト         | 完了       | 26-board-move-selection-ui    |
+| 6.2.4.4 InteractiveBoardのプロパティベーステスト | 完了       | 26-board-move-selection-ui    |
 
 ### 🚀 デプロイ: 投票機能を開発環境にデプロイ
 
