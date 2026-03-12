@@ -157,22 +157,21 @@ describe('Feature: board-move-selection-ui, Property 3: セル選択の排他性
   });
 
   it('should always have at most one selected cell for any selection sequence', () => {
+    // Standard initial Othello position
+    const initialBoardState: ('empty' | 'black' | 'white')[][] = [
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ];
+
     fc.assert(
       fc.property(
-        // Generate initial board state
-        fc.constantFrom(
-          // Standard initial Othello position
-          [
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-          ]
-        ),
+        fc.constantFrom(initialBoardState),
         fc.constantFrom('black', 'white'),
         // Generate sequence of cell selections
         fc.array(
@@ -203,10 +202,7 @@ describe('Feature: board-move-selection-ui, Property 3: セル選択の排他性
           );
 
           // Calculate legal moves once
-          const legalMoves = calculateLegalMoves(
-            boardState as ('empty' | 'black' | 'white')[][],
-            currentPlayer
-          );
+          const legalMoves = calculateLegalMoves(boardState, currentPlayer);
 
           // Perform each selection
           selections.forEach((selection) => {
@@ -247,21 +243,21 @@ describe('Feature: board-move-selection-ui, Property 3: セル選択の排他性
   });
 
   it('should always clear previous selection when new cell is selected', () => {
+    // Standard initial Othello position
+    const initialBoardState: ('empty' | 'black' | 'white')[][] = [
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ];
+
     fc.assert(
       fc.property(
-        fc.constantFrom(
-          // Standard initial Othello position
-          [
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-          ]
-        ),
+        fc.constantFrom(initialBoardState),
         fc.constantFrom('black', 'white'),
         (boardState, currentPlayer) => {
           const legalMoves = calculateLegalMoves(
@@ -346,21 +342,21 @@ describe('Feature: board-move-selection-ui, Property 4: 合法手のみ選択可
   });
 
   it('should never call onCellClick for illegal moves', () => {
+    // Standard initial Othello position
+    const initialBoardState: ('empty' | 'black' | 'white')[][] = [
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ];
+
     fc.assert(
       fc.property(
-        fc.constantFrom(
-          // Standard initial Othello position
-          [
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-          ]
-        ),
+        fc.constantFrom(initialBoardState),
         fc.constantFrom('black', 'white'),
         // Generate random cell position
         fc.record({
@@ -368,10 +364,7 @@ describe('Feature: board-move-selection-ui, Property 4: 合法手のみ選択可
           col: fc.integer({ min: 0, max: 7 }),
         }),
         (boardState, currentPlayer, position) => {
-          const legalMoves = calculateLegalMoves(
-            boardState as ('empty' | 'black' | 'white')[][],
-            currentPlayer
-          );
+          const legalMoves = calculateLegalMoves(boardState, currentPlayer);
 
           const isLegal = legalMoves.some((m) => m.row === position.row && m.col === position.col);
 
@@ -415,27 +408,24 @@ describe('Feature: board-move-selection-ui, Property 4: 合法手のみ選択可
   });
 
   it('should always display error message for illegal move clicks on empty cells', () => {
+    // Standard initial Othello position
+    const initialBoardState: ('empty' | 'black' | 'white')[][] = [
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ];
+
     fc.assert(
       fc.property(
-        fc.constantFrom(
-          // Standard initial Othello position
-          [
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-          ]
-        ),
+        fc.constantFrom(initialBoardState),
         fc.constantFrom('black', 'white'),
         (boardState, currentPlayer) => {
-          const legalMoves = calculateLegalMoves(
-            boardState as ('empty' | 'black' | 'white')[][],
-            currentPlayer
-          );
+          const legalMoves = calculateLegalMoves(boardState, currentPlayer);
 
           // Find an empty cell that is NOT a legal move
           let illegalEmptyCell: { row: number; col: number } | null = null;
@@ -490,27 +480,24 @@ describe('Feature: board-move-selection-ui, Property 4: 合法手のみ選択可
   });
 
   it('should always allow clicking legal moves without error', () => {
+    // Standard initial Othello position
+    const initialBoardState: ('empty' | 'black' | 'white')[][] = [
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+      ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+    ];
+
     fc.assert(
       fc.property(
-        fc.constantFrom(
-          // Standard initial Othello position
-          [
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'white', 'black', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'black', 'white', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-            ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
-          ]
-        ),
+        fc.constantFrom(initialBoardState),
         fc.constantFrom('black', 'white'),
         (boardState, currentPlayer) => {
-          const legalMoves = calculateLegalMoves(
-            boardState as ('empty' | 'black' | 'white')[][],
-            currentPlayer
-          );
+          const legalMoves = calculateLegalMoves(boardState, currentPlayer);
 
           // Skip if no legal moves
           if (legalMoves.length === 0) {
