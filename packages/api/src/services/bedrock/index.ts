@@ -43,6 +43,7 @@ export type {
     ConverseParams,
     GenerateTextParams,
     GenerateTextResponse,
+<<<<<<< HEAD
 } from './types';
 Message,
     ContentBlock,
@@ -52,4 +53,6 @@ Message,
     ConverseParams,
     GenerateTextParams,
     GenerateTextResponse,
+=======
+>>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
 } from './types';

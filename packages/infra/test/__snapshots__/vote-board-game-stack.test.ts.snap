@@ -506,6 +506,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
         "Environment": {
           "Variables": {
+            "BEDROCK_MAX_TOKENS": "2048",
+            "BEDROCK_MODEL_ID": "amazon.nova-pro-v1:0",
+            "BEDROCK_REGION": "ap-northeast-1",
+            "BEDROCK_TEMPERATURE": "0.7",
+            "BEDROCK_TOP_P": "0.9",
             "NODE_ENV": "dev",
             "NODE_OPTIONS": "--enable-source-maps",
             "TABLE_NAME": {
@@ -528,7 +533,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           ],
         },
         "Runtime": "nodejs20.x",
-        "Timeout": 300,
+        "Timeout": 30,
         "TracingConfig": {
           "Mode": "Active",
         },
@@ -596,6 +601,13 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "rules_to_suppress": [
             {
               "applies_to": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWSLambdaBasicExecutionRole is AWS managed policy for Lambda logging",
+            },
+            {
+              "applies_to": [
                 {
                   "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
                 },
@@ -610,6 +622,14 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       "Properties": {
         "PolicyDocument": {
           "Statement": [
+            {
+              "Action": [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:bedrock:ap-northeast-1::foundation-model/amazon.nova-pro-v1:0",
+            },
             {
               "Action": [
                 "xray:PutTraceSegments",
@@ -700,7 +720,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       "DeletionPolicy": "Delete",
       "Properties": {
         "LogGroupName": "/aws/lambda/vbg-dev-lambda-batch",
-        "RetentionInDays": 7,
+        "RetentionInDays": 30,
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
@@ -3022,6 +3042,11 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
         },
         "Environment": {
           "Variables": {
+            "BEDROCK_MAX_TOKENS": "2048",
+            "BEDROCK_MODEL_ID": "amazon.nova-pro-v1:0",
+            "BEDROCK_REGION": "ap-northeast-1",
+            "BEDROCK_TEMPERATURE": "0.7",
+            "BEDROCK_TOP_P": "0.9",
             "NODE_ENV": "prod",
             "NODE_OPTIONS": "--enable-source-maps",
             "TABLE_NAME": {
@@ -3044,7 +3069,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           ],
         },
         "Runtime": "nodejs20.x",
-        "Timeout": 300,
+        "Timeout": 30,
         "TracingConfig": {
           "Mode": "Active",
         },
@@ -3168,6 +3193,13 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
           "rules_to_suppress": [
             {
               "applies_to": [
+                "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWSLambdaBasicExecutionRole is AWS managed policy for Lambda logging",
+            },
+            {
+              "applies_to": [
                 {
                   "regex": "/^Resource::<VoteBoardGameTable.*\\.Arn>/index/\\*$/g",
                 },
@@ -3182,6 +3214,14 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       "Properties": {
         "PolicyDocument": {
           "Statement": [
+            {
+              "Action": [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:bedrock:ap-northeast-1::foundation-model/amazon.nova-pro-v1:0",
+            },
             {
               "Action": [
                 "xray:PutTraceSegments",
@@ -3272,7 +3312,7 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
       "DeletionPolicy": "Retain",
       "Properties": {
         "LogGroupName": "/aws/lambda/vbg-prod-lambda-batch",
-        "RetentionInDays": 7,
+        "RetentionInDays": 30,
       },
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Retain",
