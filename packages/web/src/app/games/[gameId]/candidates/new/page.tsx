@@ -12,12 +12,12 @@ import { CandidateForm } from '@/components/candidate-form';
 import type { BoardState } from '@/types/game';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     gameId: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     turnNumber?: string;
-  };
+  }>;
 }
 
 /**
@@ -52,8 +52,9 @@ async function fetchGame(gameId: string) {
  * Allows authenticated users to submit move candidates for a game.
  */
 export default async function CandidateSubmissionPage({ params, searchParams }: PageProps) {
-  const gameId = params.gameId;
-  const turnNumber = searchParams.turnNumber ? parseInt(searchParams.turnNumber, 10) : undefined;
+  const { gameId } = await params;
+  const { turnNumber: turnNumberStr } = await searchParams;
+  const turnNumber = turnNumberStr ? parseInt(turnNumberStr, 10) : undefined;
 
   // Fetch game data
   const game = await fetchGame(gameId);

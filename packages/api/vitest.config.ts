@@ -11,6 +11,7 @@ export default defineConfig({
       ALLOWED_ORIGINS: 'http://localhost:3000,https://*.vercel.app',
     },
     testTimeout: 15000,
+    silent: true,
     reporters: process.env.CI ? ['basic'] : ['default'],
     coverage: {
       provider: 'v8',

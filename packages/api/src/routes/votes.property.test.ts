@@ -169,7 +169,9 @@ describe('Vote API - プロパティテスト', () => {
           return !uuidRegex.test(s) && s.length > 0;
         }),
         async (invalidGameId) => {
-          const encodedId = encodeURIComponent(invalidGameId);
+          // Encode dots as %2E to prevent URL path normalization
+          // ("." and ".." are special path segments that get normalized away by URL parsers)
+          const encodedId = encodeURIComponent(invalidGameId).replace(/\./g, '%2E');
           const res = await app.request(`/api/games/${encodedId}/turns/5/votes/me`, {
             method: 'GET',
           });
