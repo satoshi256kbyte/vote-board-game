@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-/**
- * Unit tests for RetryHandler
- *
- * Requirements: 4.1, 4.4, 4.5, 10.4
- */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RetryHandler } from './retry-handler';
-
-=======
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { RetryHandler } from './retry-handler';
 
@@ -25,16 +14,11 @@ import { RetryHandler } from './retry-handler';
  * - エクスポネンシャルバックオフの計算
  */
 
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
 describe('RetryHandler', () => {
     let retryHandler: RetryHandler;
     let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-<<<<<<< HEAD
-        retryHandler = new RetryHandler(3, 1000);
-        consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-=======
         // デフォルト設定: maxRetries=3, baseDelay=1000
         retryHandler = new RetryHandler(3, 1000);
 
@@ -42,135 +26,10 @@ describe('RetryHandler', () => {
         consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
         // タイマーをモック
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
         vi.useFakeTimers();
     });
 
     afterEach(() => {
-<<<<<<< HEAD
-        consoleLogSpy.mockRestore();
-        vi.useRealTimers();
-    });
-
-    describe('execute', () => {
-        it('should return result on first successful attempt', async () => {
-            const fn = vi.fn().mockResolvedValue('success');
-
-            const result = await retryHandler.execute(fn);
-
-            expect(result).toBe('success');
-            expect(fn).toHaveBeenCalledTimes(1);
-        });
-
-        it('should retry on ThrottlingException', async () => {
-            const error = new Error('Rate exceeded');
-            error.name = 'ThrottlingException';
-
-            const fn = vi
-                .fn()
-                .mockRejectedValueOnce(error)
-                .mockRejectedValueOnce(error)
-                .mockResolvedValue('success');
-
-            const promise = retryHandler.execute(fn);
-
-            // Fast-forward through retries
-            await vi.runAllTimersAsync();
-
-            const result = await promise;
-
-            expect(result).toBe('success');
-            expect(fn).toHaveBeenCalledTimes(3);
-        });
-
-        it('should retry on TimeoutError', async () => {
-            const error = new Error('Request timeout');
-            error.name = 'TimeoutError';
-
-            const fn = vi.fn().mockRejectedValueOnce(error).mockResolvedValue('success');
-
-            const promise = retryHandler.execute(fn);
-
-            await vi.runAllTimersAsync();
-
-            const result = await promise;
-
-            expect(result).toBe('success');
-            expect(fn).toHaveBeenCalledTimes(2);
-        });
-
-        it('should retry on ServiceUnavailableException', async () => {
-            const error = new Error('Service unavailable');
-            error.name = 'ServiceUnavailableException';
-
-            const fn = vi.fn().mockRejectedValueOnce(error).mockResolvedValue('success');
-
-            const promise = retryHandler.execute(fn);
-
-            await vi.runAllTimersAsync();
-
-            const result = await promise;
-
-            expect(result).toBe('success');
-            expect(fn).toHaveBeenCalledTimes(2);
-        });
-
-        it('should not retry on validation errors', async () => {
-            const error = new Error('Invalid input');
-            error.name = 'ValidationException';
-
-            const fn = vi.fn().mockRejectedValue(error);
-
-            await expect(retryHandler.execute(fn)).rejects.toThrow('Invalid input');
-            expect(fn).toHaveBeenCalledTimes(1);
-        });
-
-        it('should throw error after max retries exhausted', async () => {
-            const error = new Error('Throttled');
-            error.name = 'ThrottlingException';
-
-            const fn = vi.fn().mockRejectedValue(error);
-
-            const executePromise = retryHandler.execute(fn);
-
-            // Run all timers and wait for promise to settle
-            const [result] = await Promise.allSettled([
-                executePromise,
-                vi.runAllTimersAsync(),
-            ]);
-
-            expect(result.status).toBe('rejected');
-            if (result.status === 'rejected') {
-                expect(result.reason.message).toBe('Throttled');
-            }
-            expect(fn).toHaveBeenCalledTimes(4); // Initial + 3 retries
-        });
-
-        it('should log retry attempts', async () => {
-            const error = new Error('Throttled');
-            error.name = 'ThrottlingException';
-
-            const fn = vi.fn().mockRejectedValueOnce(error).mockResolvedValue('success');
-
-            const promise = retryHandler.execute(fn);
-
-            await vi.runAllTimersAsync();
-
-            await promise;
-
-            expect(consoleLogSpy).toHaveBeenCalledWith(
-                expect.stringContaining('BEDROCK_RETRY')
-            );
-            expect(consoleLogSpy).toHaveBeenCalledWith(
-                expect.stringContaining('attemptNumber')
-            );
-        });
-    });
-
-    describe('isRetryableError', () => {
-        it('should return true for ThrottlingException', () => {
-            const error = new Error('Rate exceeded');
-=======
         vi.restoreAllMocks();
         vi.useRealTimers();
     });
@@ -202,16 +61,11 @@ describe('RetryHandler', () => {
         it('should identify ThrottlingException as retryable', () => {
             // **Validates: Requirements 9.3**
             const error = new Error('Request throttled');
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
             error.name = 'ThrottlingException';
 
             expect(retryHandler.isRetryableError(error)).toBe(true);
         });
 
-<<<<<<< HEAD
-        it('should return true for TimeoutError', () => {
-            const error = new Error('Request timeout');
-=======
         it('should identify throttling message as retryable', () => {
             // **Validates: Requirements 9.3**
             const error = new Error('Rate limit exceeded, throttling request');
@@ -222,16 +76,11 @@ describe('RetryHandler', () => {
         it('should identify TimeoutError as retryable', () => {
             // **Validates: Requirements 9.3**
             const error = new Error('Request timed out');
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
             error.name = 'TimeoutError';
 
             expect(retryHandler.isRetryableError(error)).toBe(true);
         });
 
-<<<<<<< HEAD
-        it('should return true for ServiceUnavailableException', () => {
-            const error = new Error('Service unavailable');
-=======
         it('should identify timeout message as retryable', () => {
             // **Validates: Requirements 9.3**
             const error = new Error('Connection timeout after 30 seconds');
@@ -242,35 +91,11 @@ describe('RetryHandler', () => {
         it('should identify ServiceUnavailableException as retryable', () => {
             // **Validates: Requirements 9.3**
             const error = new Error('Service temporarily unavailable');
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
             error.name = 'ServiceUnavailableException';
 
             expect(retryHandler.isRetryableError(error)).toBe(true);
         });
 
-<<<<<<< HEAD
-        it('should return true for errors with "throttl" in message', () => {
-            const error = new Error('Request was throttled');
-
-            expect(retryHandler.isRetryableError(error)).toBe(true);
-        });
-
-        it('should return true for errors with "timeout" in message', () => {
-            const error = new Error('Connection timeout occurred');
-
-            expect(retryHandler.isRetryableError(error)).toBe(true);
-        });
-
-        it('should return true for errors with "service unavailable" in message', () => {
-            const error = new Error('The service unavailable at this time');
-
-            expect(retryHandler.isRetryableError(error)).toBe(true);
-        });
-
-        it('should return false for ValidationException', () => {
-            const error = new Error('Invalid input');
-            error.name = 'ValidationException';
-=======
         it('should identify service unavailable message as retryable', () => {
             // **Validates: Requirements 9.3**
             const error = new Error('The service unavailable, please try again');
@@ -299,25 +124,11 @@ describe('RetryHandler', () => {
         it('should identify generic Error as non-retryable', () => {
             // **Validates: Requirements 9.3**
             const error = new Error('Something went wrong');
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
 
             expect(retryHandler.isRetryableError(error)).toBe(false);
         });
 
         it('should return false for non-Error objects', () => {
-<<<<<<< HEAD
-            expect(retryHandler.isRetryableError('string error')).toBe(false);
-            expect(retryHandler.isRetryableError(null)).toBe(false);
-            expect(retryHandler.isRetryableError(undefined)).toBe(false);
-        });
-    });
-
-    describe('calculateDelay', () => {
-        it('should calculate exponential backoff for attempt 0', () => {
-            const delay = retryHandler.calculateDelay(0);
-
-            // 2^0 * 1000 + jitter (0-1000) = 1000-2000
-=======
             // **Validates: Requirements 9.3**
             expect(retryHandler.isRetryableError('string error')).toBe(false);
             expect(retryHandler.isRetryableError(null)).toBe(false);
@@ -335,7 +146,7 @@ describe('RetryHandler', () => {
             const mockFn = vi.fn().mockRejectedValue(error);
 
             // Attach error handler immediately to prevent unhandled rejection
-            const executePromise = retryHandler.execute(mockFn).catch(e => e);
+            const executePromise = retryHandler.execute(mockFn).catch((e) => e);
 
             // 各リトライの遅延を進める
             for (let i = 0; i < 3; i++) {
@@ -358,7 +169,7 @@ describe('RetryHandler', () => {
 
             const mockFn = vi.fn().mockRejectedValue(error);
 
-            const executePromise = retryHandler.execute(mockFn).catch(e => e);
+            const executePromise = retryHandler.execute(mockFn).catch((e) => e);
 
             for (let i = 0; i < 3; i++) {
                 await vi.runAllTimersAsync();
@@ -401,17 +212,13 @@ describe('RetryHandler', () => {
 
             const mockFn = vi.fn().mockRejectedValue(error);
 
-            const executePromise = retryHandler.execute(mockFn).catch(e => e);
+            const executePromise = retryHandler.execute(mockFn).catch((e) => e);
 
             // 最初のリトライ
             await vi.runAllTimersAsync();
 
-            expect(consoleLogSpy).toHaveBeenCalledWith(
-                expect.stringContaining('"type":"BEDROCK_RETRY"')
-            );
-            expect(consoleLogSpy).toHaveBeenCalledWith(
-                expect.stringContaining('"attemptNumber":1')
-            );
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('"type":"BEDROCK_RETRY"'));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('"attemptNumber":1'));
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 expect.stringContaining('"errorType":"ThrottlingException"')
             );
@@ -472,47 +279,28 @@ describe('RetryHandler', () => {
             // 2^0 * 1000 = 1000ms + jitter (0-1000ms)
             const delay = retryHandler.calculateDelay(0);
 
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
             expect(delay).toBeGreaterThanOrEqual(1000);
             expect(delay).toBeLessThan(2000);
         });
 
         it('should calculate exponential backoff for attempt 1', () => {
-<<<<<<< HEAD
-            const delay = retryHandler.calculateDelay(1);
-
-            // 2^1 * 1000 + jitter (0-1000) = 2000-3000
-=======
             // **Validates: Requirements 9.5**
             // 2^1 * 1000 = 2000ms + jitter (0-1000ms)
             const delay = retryHandler.calculateDelay(1);
 
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
             expect(delay).toBeGreaterThanOrEqual(2000);
             expect(delay).toBeLessThan(3000);
         });
 
         it('should calculate exponential backoff for attempt 2', () => {
-<<<<<<< HEAD
-            const delay = retryHandler.calculateDelay(2);
-
-            // 2^2 * 1000 + jitter (0-1000) = 4000-5000
-=======
             // **Validates: Requirements 9.5**
             // 2^2 * 1000 = 4000ms + jitter (0-1000ms)
             const delay = retryHandler.calculateDelay(2);
 
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
             expect(delay).toBeGreaterThanOrEqual(4000);
             expect(delay).toBeLessThan(5000);
         });
 
-<<<<<<< HEAD
-        it('should include jitter in delay calculation', () => {
-            const delays = Array.from({ length: 10 }, () => retryHandler.calculateDelay(0));
-
-            // All delays should be different due to jitter
-=======
         it('should calculate exponential backoff for attempt 3', () => {
             // **Validates: Requirements 9.5**
             // 2^3 * 1000 = 8000ms + jitter (0-1000ms)
@@ -527,45 +315,11 @@ describe('RetryHandler', () => {
             const delays = Array.from({ length: 10 }, () => retryHandler.calculateDelay(0));
 
             // ジッターにより、各遅延は異なるはず
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
             const uniqueDelays = new Set(delays);
             expect(uniqueDelays.size).toBeGreaterThan(1);
         });
     });
 
-<<<<<<< HEAD
-    describe('custom configuration', () => {
-        it('should respect custom maxRetries', async () => {
-            const customHandler = new RetryHandler(1, 1000);
-            const error = new Error('Throttled');
-            error.name = 'ThrottlingException';
-
-            const fn = vi.fn().mockRejectedValue(error);
-
-            const executePromise = customHandler.execute(fn);
-
-            // Run all timers and wait for promise to settle
-            const [result] = await Promise.allSettled([
-                executePromise,
-                vi.runAllTimersAsync(),
-            ]);
-
-            expect(result.status).toBe('rejected');
-            if (result.status === 'rejected') {
-                expect(result.reason.message).toBe('Throttled');
-            }
-            expect(fn).toHaveBeenCalledTimes(2); // Initial + 1 retry
-        });
-
-        it('should respect custom baseDelay', () => {
-            const customHandler = new RetryHandler(3, 500);
-            const delay = customHandler.calculateDelay(0);
-
-            // 2^0 * 500 + jitter (0-1000) = 500-1500
-            expect(delay).toBeGreaterThanOrEqual(500);
-            expect(delay).toBeLessThan(1500);
-        });
-=======
     describe('constructor - カスタム設定', () => {
         it('should use custom maxRetries', async () => {
             // **Validates: Requirements 9.5**
@@ -575,7 +329,7 @@ describe('RetryHandler', () => {
 
             const mockFn = vi.fn().mockRejectedValue(error);
 
-            const executePromise = customHandler.execute(mockFn).catch(e => e);
+            const executePromise = customHandler.execute(mockFn).catch((e) => e);
 
             // 2回のリトライ
             await vi.runAllTimersAsync();
@@ -622,7 +376,7 @@ describe('RetryHandler', () => {
 
             const mockFn = vi.fn().mockRejectedValue(error);
 
-            const executePromise = retryHandler.execute(mockFn).catch(e => e);
+            const executePromise = retryHandler.execute(mockFn).catch((e) => e);
 
             // 3回のリトライを進める
             await vi.runAllTimersAsync();
@@ -644,7 +398,7 @@ describe('RetryHandler', () => {
 
             const mockFn = vi.fn().mockRejectedValue(error);
 
-            const executePromise = retryHandler.execute(mockFn).catch(e => e);
+            const executePromise = retryHandler.execute(mockFn).catch((e) => e);
 
             for (let i = 0; i < 3; i++) {
                 await vi.runAllTimersAsync();
@@ -662,7 +416,7 @@ describe('RetryHandler', () => {
 
             const mockFn = vi.fn().mockRejectedValue(error);
 
-            const executePromise = retryHandler.execute(mockFn).catch(e => e);
+            const executePromise = retryHandler.execute(mockFn).catch((e) => e);
 
             // 3回のリトライを進める
             for (let i = 0; i < 3; i++) {
@@ -677,7 +431,6 @@ describe('RetryHandler', () => {
 
             // 各ログエントリを検証
             const logCalls = consoleLogSpy.mock.calls.map((call) => JSON.parse(call[0] as string));
-
             expect(logCalls[0].attemptNumber).toBe(1);
             expect(logCalls[1].attemptNumber).toBe(2);
             expect(logCalls[2].attemptNumber).toBe(3);
@@ -710,7 +463,7 @@ describe('RetryHandler', () => {
 
             const mockFn = vi.fn(() => Promise.reject(error));
 
-            const executePromise = retryHandler.execute(mockFn).catch(e => e);
+            const executePromise = retryHandler.execute(mockFn).catch((e) => e);
 
             for (let i = 0; i < 3; i++) {
                 await vi.runAllTimersAsync();
@@ -736,7 +489,7 @@ describe('RetryHandler', () => {
                 .mockRejectedValueOnce(throttleError)
                 .mockRejectedValueOnce(validationError);
 
-            const executePromise = retryHandler.execute(mockFn).catch(e => e);
+            const executePromise = retryHandler.execute(mockFn).catch((e) => e);
 
             // 最初のリトライ
             await vi.runAllTimersAsync();
@@ -749,6 +502,5 @@ describe('RetryHandler', () => {
             // 初回（ThrottlingException） + 1回のリトライ（ValidationError）
             expect(mockFn).toHaveBeenCalledTimes(2);
         });
->>>>>>> 0ae9e5a (feat: AWS Bedrock (Nova Pro) integration)
     });
 });

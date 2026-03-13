@@ -20,7 +20,7 @@
   - 基本的なファイル構造を準備（index.ts, types.ts, errors.ts）
   - _Requirements: 1.1, 1.2_
 
-- [ ] 2. 型定義とエラークラスの実装
+- [x] 2. 型定義とエラークラスの実装
   - [x] 2.1 TypeScript型定義を作成（types.ts）
     - Message, ContentBlock, SystemMessage インターフェースを定義
     - ConverseParams, GenerateTextParams, GenerateTextResponse インターフェースを定義
@@ -73,7 +73,7 @@
     - **Validates: Requirements 5.3, 5.4**
     - _Requirements: 9.6_
 
-- [ ] 6. RetryHandler の実装
+- [x] 6. RetryHandler の実装
   - [x] 6.1 RetryHandler クラスを実装（retry-handler.ts）
     - execute メソッドを実装（リトライロジック付きで関数を実行）
     - isRetryableError メソッドを実装（ThrottlingException, TimeoutError, ServiceUnavailableException を判定）
@@ -100,11 +100,11 @@
     - **Validates: Requirements 10.4, 10.5**
     - _Requirements: 9.3, 9.5_
 
-- [-] 7. Checkpoint - ユーティリティ層の確認
+- [x] 7. Checkpoint - ユーティリティ層の確認
   - すべてのテストが通ることを確認し、質問があればユーザーに確認する
 
-- [ ] 8. BedrockClient の実装
-  - [~] 8.1 BedrockClient シングルトンクラスを実装（bedrock-client.ts）
+- [x] 8. BedrockClient の実装
+  - [x] 8.1 BedrockClient シングルトンクラスを実装（bedrock-client.ts）
     - AWS SDK v3 (@aws-sdk/client-bedrock-runtime) を使用
     - getInstance メソッドを実装（シングルトンパターン）
     - converse メソッドを実装（ConverseCommand を使用）
@@ -112,26 +112,26 @@
     - resetInstance メソッドを実装（テスト用）
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 3.1, 3.2, 8.1, 8.2_
 
-  - [~] 8.2 BedrockClient のユニットテストを作成（bedrock-client.test.ts）
+  - [x] 8.2 BedrockClient のユニットテストを作成（bedrock-client.test.ts）
     - シングルトンパターンのテスト（同じインスタンスが返されることを確認）
     - converse メソッドのテスト（モックを使用）
     - converseStream メソッドのテスト（モックを使用）
     - 初期化失敗時のエラーハンドリングテスト
     - _Requirements: 1.5, 9.2_
 
-  - [~] 8.3 BedrockClient のプロパティベーステストを作成（bedrock-client.property.test.ts）
+  - [x] 8.3 BedrockClient のプロパティベーステストを作成（bedrock-client.property.test.ts）
     - **Property 1: Singleton Client Reuse**
     - **Validates: Requirements 1.3**
     - _Requirements: 9.2_
 
-- [ ] 9. BedrockService の実装
-  - [~] 9.1 BedrockService クラスを実装（bedrock-service.ts）
+- [x] 9. BedrockService の実装
+  - [x] 9.1 BedrockService クラスを実装（bedrock-service.ts）
     - コンストラクタを実装（BedrockClient, RetryHandler, TokenCounter, BedrockConfig を注入）
     - generateText メソッドを実装（プロンプトバリデーション、API呼び出し、トークンカウント、ロギング）
     - generateTextStream メソッドを実装（ストリーミングレスポンス処理）
     - _Requirements: 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.2, 4.6, 8.1, 8.2, 8.3, 8.4, 8.5, 10.1, 10.2, 10.3, 10.6_
 
-  - [~] 9.2 BedrockService のユニットテストを作成（bedrock-service.test.ts）
+  - [x] 9.2 BedrockService のユニットテストを作成（bedrock-service.test.ts）
     - generateText の成功ケーステスト
     - 空のプロンプトのバリデーションエラーテスト
     - プロンプト長制限（100,000文字）のテスト
@@ -141,7 +141,7 @@
     - generateTextStream のテスト（チャンク集約、エラーハンドリング）
     - _Requirements: 9.2, 9.3, 9.4, 9.6, 9.8_
 
-  - [~] 9.3 BedrockService のプロパティベーステストを作成（bedrock-service.property.test.ts）
+  - [x] 9.3 BedrockService のプロパティベーステストを作成（bedrock-service.property.test.ts）
     - **Property 3: Parameter Override Precedence**
     - **Validates: Requirements 2.5**
     - **Property 4: Empty Prompt Rejection**
@@ -164,25 +164,25 @@
     - **Validates: Requirements 10.6**
     - _Requirements: 9.2, 9.3, 9.4, 9.6_
 
-- [ ] 10. Checkpoint - コアサービス層の確認
+- [x] 10. Checkpoint - コアサービス層の確認
   - すべてのテストが通ることを確認し、質問があればユーザーに確認する
 
-- [ ] 11. パブリックAPIのエクスポート
-  - [~] 11.1 index.ts でパブリックAPIをエクスポート
+- [x] 11. パブリックAPIのエクスポート
+  - [x] 11.1 index.ts でパブリックAPIをエクスポート
     - BedrockClient, BedrockService, RetryHandler, TokenCounter をエクスポート
     - loadBedrockConfig, BedrockConfig をエクスポート
     - エラークラス（BedrockError, BedrockValidationError, BedrockModelNotFoundError, BedrockRetryFailedError）をエクスポート
     - 型定義（GenerateTextParams, GenerateTextResponse, GenerateTextStreamResponse）をエクスポート
     - _Requirements: 1.1, 1.2_
 
-- [ ] 12. CDKインフラストラクチャの更新
-  - [~] 12.1 Batch Lambda に Bedrock IAM 権限を追加
+- [x] 12. CDKインフラストラクチャの更新
+  - [x] 12.1 Batch Lambda に Bedrock IAM 権限を追加
     - bedrock:InvokeModel 権限を追加
     - bedrock:InvokeModelWithResponseStream 権限を追加
     - リソースを Nova Pro モデル ARN に制限（arn:aws:bedrock:ap-northeast-1::foundation-model/amazon.nova-pro-v1:0）
     - _Requirements: 6.1, 6.2, 6.3, 6.5_
 
-  - [~] 12.2 Batch Lambda に環境変数を追加
+  - [x] 12.2 Batch Lambda に環境変数を追加
     - BEDROCK_MODEL_ID: amazon.nova-pro-v1:0
     - BEDROCK_REGION: ap-northeast-1
     - BEDROCK_MAX_TOKENS: 2048
@@ -190,39 +190,39 @@
     - BEDROCK_TOP_P: 0.9
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [~] 12.3 Lambda 設定を更新
+  - [x] 12.3 Lambda 設定を更新
     - タイムアウトを 30 秒に設定
     - メモリを 512 MB に設定
     - CloudWatch Logs 保持期間を 30 日に設定
     - _Requirements: 11.4, 11.5, 11.6_
 
-  - [~] 12.4 CDK テストを作成（packages/infra/test/bedrock-infrastructure.test.ts）
+  - [x] 12.4 CDK テストを作成（packages/infra/test/bedrock-infrastructure.test.ts）
     - IAM 権限のテスト（bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream）
     - 環境変数のテスト
     - Lambda 設定のテスト（タイムアウト、メモリ）
     - CloudWatch Logs 保持期間のテスト
     - _Requirements: 11.1, 11.2, 11.3, 11.7_
 
-- [ ] 13. 依存関係の追加
-  - [~] 13.1 packages/api/package.json に @aws-sdk/client-bedrock-runtime を追加
+- [x] 13. 依存関係の追加
+  - [x] 13.1 packages/api/package.json に @aws-sdk/client-bedrock-runtime を追加
     - バージョン: ^3.716.0
     - pnpm install を実行
     - _Requirements: 1.2_
 
-- [ ] 14. 統合と検証
-  - [~] 14.1 Batch Lambda で BedrockService を使用する例を実装
+- [x] 14. 統合と検証
+  - [x] 14.1 Batch Lambda で BedrockService を使用する例を実装
     - BedrockClient, BedrockService, RetryHandler, TokenCounter を初期化
     - generateText メソッドを呼び出してテスト
     - ログ出力を確認
     - _Requirements: 1.3, 3.1, 3.6, 10.1, 10.2_
 
-  - [~] 14.2 統合テストを作成（bedrock-integration.test.ts）
+  - [x] 14.2 統合テストを作成（bedrock-integration.test.ts）
     - BedrockService の初期化から API 呼び出しまでの E2E テスト
     - エラーハンドリングの統合テスト
     - トークンカウントとロギングの統合テスト
     - _Requirements: 9.8_
 
-- [ ] 15. Final Checkpoint - すべてのテストとビルドの確認
+- [x] 15. Final Checkpoint - すべてのテストとビルドの確認
   - すべてのユニットテストが通ることを確認
   - すべてのプロパティベーステストが通ることを確認
   - CDK テストが通ることを確認
