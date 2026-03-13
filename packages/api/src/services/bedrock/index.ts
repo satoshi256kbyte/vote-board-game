@@ -9,10 +9,10 @@
 
 // Error classes
 export {
-    BedrockError,
-    BedrockValidationError,
-    BedrockModelNotFoundError,
-    BedrockRetryFailedError,
+  BedrockError,
+  BedrockValidationError,
+  BedrockModelNotFoundError,
+  BedrockRetryFailedError,
 } from './errors';
 
 // Configuration
@@ -35,12 +35,12 @@ export type { GenerateTextStreamResponse } from './bedrock-service';
 
 // Types
 export type {
-    Message,
-    ContentBlock,
-    SystemMessage,
-    TokenUsageMetrics,
-    BedrockLogEntry,
-    ConverseParams,
-    GenerateTextParams,
-    GenerateTextResponse,
+  Message,
+  ContentBlock,
+  SystemMessage,
+  TokenUsageMetrics,
+  BedrockLogEntry,
+  ConverseParams,
+  GenerateTextParams,
+  GenerateTextResponse,
 } from './types';
