@@ -197,8 +197,9 @@ describe('Bedrock Infrastructure', () => {
         },
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const batchLogGroup = Object.values(logGroups)[0] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const batchLogGroup = Object.values(logGroups)[0] as {
+        Properties: { RetentionInDays: number };
+      };
       expect(batchLogGroup.Properties.RetentionInDays).toBe(30);
     });
 
@@ -226,8 +227,13 @@ describe('Bedrock Infrastructure', () => {
 
       expect(Object.keys(roles).length).toBe(1);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const role = Object.values(roles)[0] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const role = Object.values(roles)[0] as {
+        Properties: {
+          AssumeRolePolicyDocument: {
+            Statement: Array<{ Action: string; Principal: { Service: string } }>;
+          };
+        };
+      };
       expect(role.Properties.AssumeRolePolicyDocument.Statement[0].Action).toBe('sts:AssumeRole');
       expect(role.Properties.AssumeRolePolicyDocument.Statement[0].Principal.Service).toBe(
         'lambda.amazonaws.com'
@@ -248,16 +254,25 @@ describe('Bedrock Infrastructure', () => {
 
       // Verify that a policy is attached to this role
       const policies = template.findResources('AWS::IAM::Policy');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const batchLambdaPolicies = Object.values(policies).filter((policy: any) => {
-        const statements = policy.Properties?.PolicyDocument?.Statement || [];
-        return statements.some(
-          (stmt: any) =>
-            stmt.Action?.includes('bedrock:InvokeModel') ||
-            stmt.Action?.includes('bedrock:InvokeModelWithResponseStream')
-        );
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const batchLambdaPolicies = Object.values(policies).filter(
+        (policy: {
+          Properties?: {
+            PolicyDocument?: {
+              Statement?: Array<{ Action?: string[] | string }>;
+            };
+          };
+        }) => {
+          const statements = policy.Properties?.PolicyDocument?.Statement || [];
+          return statements.some(
+            (stmt: { Action?: string[] | string }) =>
+              (Array.isArray(stmt.Action) && stmt.Action.includes('bedrock:InvokeModel')) ||
+              (Array.isArray(stmt.Action) &&
+                stmt.Action.includes('bedrock:InvokeModelWithResponseStream')) ||
+              stmt.Action === 'bedrock:InvokeModel' ||
+              stmt.Action === 'bedrock:InvokeModelWithResponseStream'
+          );
+        }
+      );
 
       expect(batchLambdaPolicies.length).toBeGreaterThan(0);
     });
