@@ -11,6 +11,7 @@ import {
   BedrockRuntimeClient,
   ConverseCommand,
   ConverseStreamCommand,
+  type ConverseCommandInput,
   type ConverseCommandOutput,
   type ConverseStreamCommandOutput,
 } from '@aws-sdk/client-bedrock-runtime';
@@ -64,12 +65,13 @@ export class BedrockClient {
    * @returns Converse API レスポンス
    */
   public async converse(params: ConverseParams): Promise<ConverseCommandOutput> {
-    const command = new ConverseCommand({
+    const input: ConverseCommandInput = {
       modelId: params.modelId,
-      messages: params.messages,
-      system: params.system,
+      messages: params.messages as ConverseCommandInput['messages'],
+      system: params.system as ConverseCommandInput['system'],
       inferenceConfig: params.inferenceConfig,
-    });
+    };
+    const command = new ConverseCommand(input);
 
     return await this.client.send(command);
   }
@@ -82,12 +84,13 @@ export class BedrockClient {
    * @returns ストリーミングレスポンス
    */
   public async converseStream(params: ConverseParams): Promise<ConverseStreamCommandOutput> {
-    const command = new ConverseStreamCommand({
+    const input: ConverseCommandInput = {
       modelId: params.modelId,
-      messages: params.messages,
-      system: params.system,
+      messages: params.messages as ConverseCommandInput['messages'],
+      system: params.system as ConverseCommandInput['system'],
       inferenceConfig: params.inferenceConfig,
-    });
+    };
+    const command = new ConverseStreamCommand(input);
 
     return await this.client.send(command);
   }

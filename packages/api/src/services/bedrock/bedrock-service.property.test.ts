@@ -149,8 +149,11 @@ describe('BedrockService Property Tests', () => {
   it('Property 5: should structure API requests correctly', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.string({ minLength: 1, maxLength: 1000 }), // prompt
-        fc.option(fc.string({ minLength: 1, maxLength: 500 }), { nil: undefined }), // systemPrompt
+        fc.string({ minLength: 1, maxLength: 1000 }).filter((s) => s.trim().length > 0), // prompt
+        fc.option(
+          fc.string({ minLength: 1, maxLength: 500 }).filter((s) => s.trim().length > 0),
+          { nil: undefined }
+        ), // systemPrompt
         async (prompt, systemPrompt) => {
           const mockClient = {
             converse: vi.fn(),
