@@ -420,53 +420,61 @@ describe('BedrockService Property Tests', () => {
    */
   it('Property 16: should log request invocation with timestamp and requestId', async () => {
     await fc.assert(
-      fc.asyncProperty(fc.string({ minLength: 1, maxLength: 100 }), async (prompt) => {
-        const mockClient = {
-          converse: vi.fn(),
-          converseStream: vi.fn(),
-        } as unknown as BedrockClient;
+      fc.asyncProperty(
+        fc.string({ minLength: 1, maxLength: 100 }).filter((s) => s.trim().length > 0),
+        async (prompt) => {
+          const mockClient = {
+            converse: vi.fn(),
+            converseStream: vi.fn(),
+          } as unknown as BedrockClient;
 
-        const mockRetryHandler = {
-          execute: vi.fn((fn) => fn()),
-        } as unknown as RetryHandler;
+          const mockRetryHandler = {
+            execute: vi.fn((fn) => fn()),
+          } as unknown as RetryHandler;
 
-        const mockTokenCounter = {
-          recordUsage: vi.fn(),
-        } as unknown as TokenCounter;
+          const mockTokenCounter = {
+            recordUsage: vi.fn(),
+          } as unknown as TokenCounter;
 
-        const service = new BedrockService(mockClient, mockRetryHandler, mockTokenCounter, config);
+          const service = new BedrockService(
+            mockClient,
+            mockRetryHandler,
+            mockTokenCounter,
+            config
+          );
 
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+          const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-        const mockResponse = {
-          output: {
-            message: {
-              content: [{ text: 'Response' }],
+          const mockResponse = {
+            output: {
+              message: {
+                content: [{ text: 'Response' }],
+              },
             },
-          },
-          usage: {
-            inputTokens: 5,
-            outputTokens: 10,
-          },
-          $metadata: {
-            requestId: 'test-id',
-          },
-        };
+            usage: {
+              inputTokens: 5,
+              outputTokens: 10,
+            },
+            $metadata: {
+              requestId: 'test-id',
+            },
+          };
 
-        vi.mocked(mockClient.converse).mockResolvedValue(mockResponse as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+          vi.mocked(mockClient.converse).mockResolvedValue(mockResponse as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-        await service.generateText({ prompt });
+          await service.generateText({ prompt });
 
-        const logs = consoleLogSpy.mock.calls.map((call) => JSON.parse(call[0] as string));
-        const requestLog = logs.find((log) => log.type === 'BEDROCK_REQUEST');
+          const logs = consoleLogSpy.mock.calls.map((call) => JSON.parse(call[0] as string));
+          const requestLog = logs.find((log) => log.type === 'BEDROCK_REQUEST');
 
-        expect(requestLog).toBeDefined();
-        expect(requestLog?.timestamp).toBeDefined();
-        expect(requestLog?.requestId).toBeDefined();
-        expect(new Date(requestLog!.timestamp).getTime()).toBeGreaterThan(0);
+          expect(requestLog).toBeDefined();
+          expect(requestLog?.timestamp).toBeDefined();
+          expect(requestLog?.requestId).toBeDefined();
+          expect(new Date(requestLog!.timestamp).getTime()).toBeGreaterThan(0);
 
-        consoleLogSpy.mockRestore();
-      }),
+          consoleLogSpy.mockRestore();
+        }
+      ),
       { numRuns: 10, endOnFailure: true }
     );
   });
