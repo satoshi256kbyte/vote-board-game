@@ -28,11 +28,11 @@
 
 - [x] 4.1 `packages/api/src/services/candidate-generator/index.ts` を作成し、CandidateGenerator クラスを実装する（generateCandidates、processGame メソッド）
   - Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 6.1, 6.2, 6.3, 6.4, 7.1, 7.2, 7.3, 8.1, 8.2, 8.3, 8.4
-- [-] 4.2 `packages/api/src/services/candidate-generator/__tests__/candidate-generator.test.ts` を作成し、CandidateGenerator の統合テストを実装する（モック使用：正常系、0件対局、パース失敗スキップ、合法手0件スキップ、Bedrockエラー、DB保存失敗、重複除外、フィールド値検証）
+- [x] 4.2 `packages/api/src/services/candidate-generator/__tests__/candidate-generator.test.ts` を作成し、CandidateGenerator の統合テストを実装する（モック使用：正常系、0件対局、パース失敗スキップ、合法手0件スキップ、Bedrockエラー、DB保存失敗、重複除外、フィールド値検証）
   - [x] 4.2.1 Property 6: 処理サマリーの整合性 - successCount + failedCount + skippedCount == totalGames を検証
   - [x] 4.2.2 Property 7: 重複ポジションの除外 - 既存候補と新規候補を生成し、重複除外後に同一ポジションが含まれないことを検証
 
 ## 5. batch.ts の統合
 
-- [~] 5.1 `packages/api/src/batch.ts` を修正し、CandidateGenerator のインスタンス生成と `generateCandidates()` 呼び出しを追加する
+- [x] 5.1 `packages/api/src/batch.ts` を修正し、CandidateGenerator のインスタンス生成と `generateCandidates()` 呼び出しを追加する
   - Requirements: 1.1, 8.1, 8.4
