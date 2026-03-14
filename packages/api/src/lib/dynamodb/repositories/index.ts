@@ -3,3 +3,4 @@ export { GameRepository } from './game';
 export { CandidateRepository } from './candidate';
 export { VoteRepository } from './vote';
 export { UserRepository } from './user';
+export { CommentaryRepository } from './commentary';
