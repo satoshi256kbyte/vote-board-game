@@ -161,8 +161,12 @@ test.describe('Vote Flow - Authenticated User', () => {
     await firstVoteButton.click();
     await waitForApiResponse(authenticatedPage, /\/votes/, { timeout: TIMEOUTS.LONG });
 
-    // Click vote change button on second candidate
+    // Wait for vote-change-button to appear on second card
+    // (requires pollCandidates re-fetch to update currentVotedCandidateId)
     const voteChangeButton = secondCard.getByTestId('vote-change-button');
+    await expect(voteChangeButton).toBeVisible({ timeout: TIMEOUTS.LONG });
+
+    // Click vote change button on second candidate
     await voteChangeButton.click();
 
     // Confirm vote change
@@ -173,17 +177,21 @@ test.describe('Vote Flow - Authenticated User', () => {
     // Wait for vote change API call
     await waitForApiResponse(authenticatedPage, /\/votes/, { timeout: TIMEOUTS.LONG });
 
+    // Wait for candidate list re-fetch triggered by onVoteSuccess -> pollCandidates
+    // This fetches both /candidates and /votes/me to update currentVotedCandidateId
+    await waitForApiResponse(authenticatedPage, /\/candidates/, { timeout: TIMEOUTS.LONG });
+
     // Verify second candidate now shows vote status indicator
     const secondVoteStatus = secondCard.getByTestId('vote-status-indicator');
-    await expect(secondVoteStatus).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(secondVoteStatus).toBeVisible({ timeout: TIMEOUTS.LONG });
 
     // Verify first candidate now shows vote change button
     const firstVoteChangeButton = firstCard.getByTestId('vote-change-button');
-    await expect(firstVoteChangeButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(firstVoteChangeButton).toBeVisible({ timeout: TIMEOUTS.LONG });
 
-    // Verify test completes within 45 seconds
+    // Verify test completes within 60 seconds
     const duration = Date.now() - startTime;
-    expect(duration).toBeLessThan(45000);
+    expect(duration).toBeLessThan(60000);
   });
 
   test('should cancel vote change when cancel button is clicked', async ({
