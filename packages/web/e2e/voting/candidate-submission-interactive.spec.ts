@@ -98,8 +98,8 @@ test.describe('Interactive Board - Candidate Submission', () => {
     const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).first();
     await legalMoveCell.click();
 
-    // Verify move preview label is displayed
-    const previewLabel = authenticatedPage.getByText('プレビュー');
+    // Verify move preview label is displayed (use exact match to avoid matching "手のプレビュー")
+    const previewLabel = authenticatedPage.getByText('プレビュー', { exact: true });
     await expect(previewLabel).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
   });
 
@@ -154,8 +154,10 @@ test.describe('Interactive Board - Candidate Submission', () => {
     });
     await submitButton.click();
 
-    // Verify validation error is displayed
-    const errorMessage = authenticatedPage.getByText('位置を選択してください');
+    // Verify validation error is displayed (target the alert role to avoid matching the label)
+    const errorMessage = authenticatedPage.locator('p[role="alert"]', {
+      hasText: '位置を選択してください',
+    });
     await expect(errorMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
   });
 
@@ -172,8 +174,9 @@ test.describe('Interactive Board - Candidate Submission', () => {
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
     await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
-    // Select a legal move cell
-    const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).first();
+    // Select the last legal move cell to avoid conflict with pre-created test candidates
+    // (fixture creates candidates at D3 and C4, so we pick the last legal move which is E6 or F5)
+    const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).last();
     await legalMoveCell.click();
 
     // Fill in description
@@ -188,9 +191,9 @@ test.describe('Interactive Board - Candidate Submission', () => {
     });
     await submitButton.click();
 
-    // Verify redirect to game detail page
-    await authenticatedPage.waitForURL(`/games/${game.gameId}`, {
-      timeout: TIMEOUTS.LONG,
+    // Verify redirect to game detail page (use wildcard to handle URL variations)
+    await authenticatedPage.waitForURL(`**/games/${game.gameId}`, {
+      timeout: TIMEOUTS.NAVIGATION,
     });
   });
 
@@ -226,8 +229,10 @@ test.describe('Interactive Board - Candidate Submission', () => {
     if (illegalMoveCell) {
       await illegalMoveCell.click();
 
-      // Verify error message is displayed
-      const errorAlert = authenticatedPage.getByRole('alert');
+      // Verify error message is displayed (use specific locator to avoid matching Next.js route announcer)
+      const errorAlert = authenticatedPage.locator('div[role="alert"]', {
+        hasText: 'この位置には石を置けません',
+      });
       await expect(errorAlert).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
       await expect(errorAlert).toContainText('この位置には石を置けません');
     }
@@ -248,8 +253,8 @@ test.describe('Interactive Board - Candidate Submission', () => {
     const board = authenticatedPage.getByRole('grid', { name: 'オセロの盤面' });
     await expect(board).toBeVisible({ timeout: TIMEOUTS.LONG });
 
-    // Select a legal move cell
-    const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).first();
+    // Select the last legal move cell to avoid conflict with pre-created test candidates
+    const legalMoveCell = authenticatedPage.getByRole('gridcell', { name: /選択可能/ }).last();
     await legalMoveCell.click();
 
     // Fill in description
@@ -264,9 +269,9 @@ test.describe('Interactive Board - Candidate Submission', () => {
     });
     await submitButton.click();
 
-    // Wait for redirect
-    await authenticatedPage.waitForURL(`/games/${game.gameId}`, {
-      timeout: TIMEOUTS.LONG,
+    // Wait for redirect (use wildcard to handle URL variations)
+    await authenticatedPage.waitForURL(`**/games/${game.gameId}`, {
+      timeout: TIMEOUTS.NAVIGATION,
     });
 
     const endTime = Date.now();
