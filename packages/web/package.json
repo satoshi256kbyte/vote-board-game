@@ -20,6 +20,7 @@
     "test:e2e:webkit": "playwright test --project=webkit",
     "test:e2e:all-browsers": "./e2e/scripts/test-all-browsers.sh",
     "test:e2e:coverage": "node e2e/scripts/verify-coverage.js",
+    "test:e2e:setup": "./e2e/scripts/setup-env.sh",
     "playwright:install": "playwright install --with-deps chromium",
     "playwright:install:all": "playwright install --with-deps",
     "clean": "rm -rf .next out *.tsbuildinfo"
