@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { CandidateCard } from './candidate-card';
 import { CandidateSortFilter } from './candidate-sort-filter';
 import { getCandidates, getVoteStatus } from '@/lib/api/candidates';
@@ -52,7 +52,7 @@ export function CandidateList({
   const [sortBy, setSortBy] = useState<SortBy>('voteCount');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [filter, setFilter] = useState<Filter>('all');
-  const [isPolling, setIsPolling] = useState(false);
+  const isPollingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   // Get current voted candidate ID
@@ -66,9 +66,9 @@ export function CandidateList({
 
   // Polling function
   const pollCandidates = useCallback(async () => {
-    if (isPolling) return; // Prevent concurrent polling
+    if (isPollingRef.current) return; // Prevent concurrent polling
 
-    setIsPolling(true);
+    isPollingRef.current = true;
     try {
       const updatedCandidates = await getCandidates(gameId, turnNumber);
       setCandidates(updatedCandidates);
@@ -88,9 +88,9 @@ export function CandidateList({
       console.error('[CandidateList] Failed to fetch candidates:', err);
       setError('候補の取得に失敗しました');
     } finally {
-      setIsPolling(false);
+      isPollingRef.current = false;
     }
-  }, [gameId, turnNumber, isAuthenticated, isPolling]);
+  }, [gameId, turnNumber, isAuthenticated]);
 
   // Set up polling interval (30 seconds)
   useEffect(() => {
