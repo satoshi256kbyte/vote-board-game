@@ -6,6 +6,10 @@ import {
   TokenCounter,
   loadBedrockConfig,
 } from './services/bedrock/index.js';
+import { CandidateGenerator } from './services/candidate-generator/index.js';
+import { GameRepository } from './lib/dynamodb/repositories/game.js';
+import { CandidateRepository } from './lib/dynamodb/repositories/candidate.js';
+import { docClient, TABLE_NAME } from './lib/dynamodb.js';
 
 // Lambda実行環境で1度だけ初期化（コールドスタート時のみ）
 // Requirements: 1.3, 12.3
@@ -14,6 +18,14 @@ const bedrockClient = BedrockClient.getInstance(config.region);
 const retryHandler = new RetryHandler(3, 1000);
 const tokenCounter = new TokenCounter();
 const bedrockService = new BedrockService(bedrockClient, retryHandler, tokenCounter, config);
+
+// CandidateGenerator の初期化（Lambda実行環境で1度だけ）
+// Requirements: 1.1, 8.1, 8.4
+const candidateGenerator = new CandidateGenerator(
+  bedrockService,
+  new GameRepository(),
+  new CandidateRepository(docClient, TABLE_NAME)
+);
 
 /**
  * 日次バッチ処理
@@ -31,35 +43,10 @@ export const handler: ScheduledHandler = async (event) => {
     // TODO: 次の一手決定処理を実装
     console.log('Next move determination completed');
 
-    // AI候補生成処理の例
-    // Requirements: 3.1, 3.6, 10.1, 10.2
-    console.log('Starting AI candidate generation...');
-
-    const response = await bedrockService.generateText({
-      prompt: `あなたはオセロの専門家です。以下の盤面状態から、次の一手の候補を3つ提案してください。
-
-盤面状態: 初期配置（中央に白黒が配置された状態）
-現在の手番: 黒
-
-各候補について、以下の情報を含めてください：
-1. 手の位置（例: D3）
-2. 手の説明（200文字以内）
-3. 期待される効果
-
-JSON形式で回答してください。`,
-      systemPrompt: 'あなたはオセロの専門家として、初心者にもわかりやすく次の一手を提案します。',
-      maxTokens: 1000,
-    });
-
-    console.log('AI candidate generation completed', {
-      textLength: response.text.length,
-      usage: response.usage,
-    });
-
-    // 生成されたテキストをログに出力（開発時のみ）
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Generated candidates:', response.text);
-    }
+    // AI候補生成処理
+    // Requirements: 1.1, 8.1, 8.4
+    const summary = await candidateGenerator.generateCandidates();
+    console.log('Candidate generation completed', summary);
   } catch (error) {
     console.error('Batch process failed', error);
     throw error;
