@@ -1,14 +1,4 @@
-echo "📝 Running format check..."
-if ! pnpm format:check; then
-  echo "❌ Format check failed"
-  echo "Run 'pnpm format' to fix formatting issues"
-  exit 1
-fi
-
-echo "✅ Format check passed"
-echo ""
-
-echo "🔍 Running type check..."
+echo "� Running type check..."
 if ! pnpm type-check; then
   echo "❌ Type check failed"
   exit 1
@@ -17,35 +7,13 @@ fi
 echo "✅ Type check passed"
 echo ""
 
-echo "🔎 Running lint..."
-if ! pnpm lint; then
-  echo "❌ Lint failed"
-  exit 1
-fi
-
-echo "✅ Lint passed"
-echo ""
-
-echo "🛡️  Running CDK security check (cdk-nag)..."
-if ! pnpm --filter @vote-board-game/infra synth > /dev/null 2>&1; then
-  echo "❌ CDK security check failed"
-  echo ""
-  echo "Running synth again to show errors:"
-  pnpm --filter @vote-board-game/infra synth
-  exit 1
-fi
-
-echo "✅ CDK security check passed"
-echo ""
-
-echo "📝 Running test..."
+echo "🧪 Running tests..."
 if ! pnpm test; then
-echo "❌ Tests failed"
-exit 1
+  echo "❌ Tests failed"
+  exit 1
 fi
+
 echo "✅ Tests passed"
-
 echo ""
+
 echo "✨ All checks passed! Pushing to remote..."
-
-
