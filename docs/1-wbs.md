@@ -200,7 +200,7 @@ inclusion: manual
 | 項目                           | ステータス | Spec                            |
 | :----------------------------- | :--------- | :------------------------------ |
 | 7.1.1 Bedrock (Nova Pro) 統合  | 完了       | 27-bedrock-nova-pro-integration |
-| 7.1.2 次の一手候補生成ロジック | 進行中     | 28-move-candidate-generation    |
+| 7.1.2 次の一手候補生成ロジック | 完了       | 28-move-candidate-generation    |
 | 7.1.3 対局解説生成ロジック     |            |                                 |
 | 7.1.4 AI の手の実行ロジック    |            |                                 |
 
