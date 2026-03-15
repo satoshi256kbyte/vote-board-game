@@ -97,6 +97,76 @@ describe('CandidateGenerator', () => {
     generator = new CandidateGenerator(mockBedrock, mockGameRepo, mockCandidateRepo);
   });
 
+  // --- 手番判定テスト (Requirements 1.1, 1.2) ---
+
+  it('手番判定: 次ターンがAI手番（aiSide=BLACK, currentTurn=1 → nextTurn=2=偶数=BLACK）の場合スキップされる', async () => {
+    // aiSide='BLACK', currentTurn=1 → nextTurn=2 → 偶数 → BLACK → AI手番 → スキップ
+    const game = createMockGame({ aiSide: 'BLACK', currentTurn: 1 });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game] });
+
+    const summary = await generator.generateCandidates();
+
+    expect(summary.totalGames).toBe(1);
+    expect(summary.skippedCount).toBe(1);
+    expect(summary.results[0].status).toBe('skipped');
+    expect(summary.results[0].reason).toBe('Next turn is AI turn');
+    expect(mockBedrock.generateText).not.toHaveBeenCalled();
+  });
+
+  it('手番判定: 次ターンがAI手番（aiSide=WHITE, currentTurn=2 → nextTurn=3=奇数=WHITE）の場合スキップされる', async () => {
+    // aiSide='WHITE', currentTurn=2 → nextTurn=3 → 奇数 → WHITE → AI手番 → スキップ
+    const game = createMockGame({ aiSide: 'WHITE', currentTurn: 2 });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game] });
+
+    const summary = await generator.generateCandidates();
+
+    expect(summary.totalGames).toBe(1);
+    expect(summary.skippedCount).toBe(1);
+    expect(summary.results[0].status).toBe('skipped');
+    expect(summary.results[0].reason).toBe('Next turn is AI turn');
+    expect(mockBedrock.generateText).not.toHaveBeenCalled();
+  });
+
+  it('手番判定: 次ターンが集合知手番（aiSide=BLACK, currentTurn=2 → nextTurn=3=奇数=WHITE=集合知）の場合候補生成が実行される', async () => {
+    // aiSide='BLACK', currentTurn=2 → nextTurn=3 → 奇数 → WHITE → 集合知手番 → 候補生成
+    const game = createMockGame({ aiSide: 'BLACK', currentTurn: 2 });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game] });
+    vi.mocked(mockCandidateRepo.listByTurn).mockResolvedValue([]);
+    vi.mocked(mockBedrock.generateText).mockResolvedValue({
+      text: validAIResponse,
+      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+    });
+    vi.mocked(mockCandidateRepo.create).mockResolvedValue({} as CandidateEntity);
+
+    const summary = await generator.generateCandidates();
+
+    expect(summary.totalGames).toBe(1);
+    expect(summary.successCount).toBe(1);
+    expect(summary.skippedCount).toBe(0);
+    expect(mockBedrock.generateText).toHaveBeenCalledTimes(1);
+  });
+
+  it('手番判定: 次ターンが集合知手番（aiSide=WHITE, currentTurn=1 → nextTurn=2=偶数=BLACK=集合知）の場合候補生成が実行される', async () => {
+    // aiSide='WHITE', currentTurn=1 → nextTurn=2 → 偶数 → BLACK → 集合知手番 → 候補生成
+    const game = createMockGame({ aiSide: 'WHITE', currentTurn: 1 });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game] });
+    vi.mocked(mockCandidateRepo.listByTurn).mockResolvedValue([]);
+    vi.mocked(mockBedrock.generateText).mockResolvedValue({
+      text: validAIResponse,
+      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+    });
+    vi.mocked(mockCandidateRepo.create).mockResolvedValue({} as CandidateEntity);
+
+    const summary = await generator.generateCandidates();
+
+    expect(summary.totalGames).toBe(1);
+    expect(summary.successCount).toBe(1);
+    expect(summary.skippedCount).toBe(0);
+    expect(mockBedrock.generateText).toHaveBeenCalledTimes(1);
+  });
+
+  // --- 正常系・既存テスト ---
+
   it('正常系: アクティブな対局に対して候補を生成・保存する', async () => {
     vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({
       items: [createMockGame()],
