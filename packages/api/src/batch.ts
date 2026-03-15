@@ -7,8 +7,10 @@ import {
   loadBedrockConfig,
 } from './services/bedrock/index.js';
 import { CandidateGenerator } from './services/candidate-generator/index.js';
+import { CommentaryGenerator } from './services/commentary-generator/index.js';
 import { GameRepository } from './lib/dynamodb/repositories/game.js';
 import { CandidateRepository } from './lib/dynamodb/repositories/candidate.js';
+import { CommentaryRepository } from './lib/dynamodb/repositories/commentary.js';
 import { docClient, TABLE_NAME } from './lib/dynamodb.js';
 
 // Lambda実行環境で1度だけ初期化（コールドスタート時のみ）
@@ -27,11 +29,22 @@ const candidateGenerator = new CandidateGenerator(
   new CandidateRepository(docClient, TABLE_NAME)
 );
 
+// CommentaryGenerator の初期化（Lambda実行環境で1度だけ）
+// Requirements: 9.1, 9.2, 9.3
+const commentaryGenerator = new CommentaryGenerator(
+  bedrockService,
+  new GameRepository(),
+  new CommentaryRepository(docClient, TABLE_NAME),
+  docClient,
+  TABLE_NAME
+);
+
 /**
  * 日次バッチ処理
  * - 投票集計
  * - 次の一手決定
  * - 次の一手候補のAI生成
+ * - 対局解説のAI生成
  */
 export const handler: ScheduledHandler = async (event) => {
   console.log('Batch process started', { event });
@@ -47,6 +60,15 @@ export const handler: ScheduledHandler = async (event) => {
     // Requirements: 1.1, 8.1, 8.4
     const summary = await candidateGenerator.generateCandidates();
     console.log('Candidate generation completed', summary);
+
+    // AI対局解説生成処理（候補生成の後に実行）
+    // Requirements: 9.1, 9.2, 9.3, 9.4
+    try {
+      const commentarySummary = await commentaryGenerator.generateCommentaries();
+      console.log('Commentary generation completed', commentarySummary);
+    } catch (commentaryError) {
+      console.error('Commentary generation failed', commentaryError);
+    }
   } catch (error) {
     console.error('Batch process failed', error);
     throw error;
