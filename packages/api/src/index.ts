@@ -5,6 +5,7 @@ import { candidatesRouter, gameCandidatesRouter } from './routes/candidates.js';
 import { votesRouter, gameVotesRouter } from './routes/votes.js';
 import { authRouter } from './routes/auth.js';
 import { profileRouter } from './routes/profile.js';
+import { commentaryRouter } from './routes/commentary.js';
 import { createAuthMiddleware } from './lib/auth/auth-middleware.js';
 import { corsMiddleware } from './middleware/cors.js';
 import type { AuthVariables } from './lib/auth/types.js';
@@ -67,6 +68,7 @@ app.get('/health', (c) => {
 app.route('/api/games', gamesRouter);
 app.route('/api', gameCandidatesRouter);
 app.route('/api', gameVotesRouter);
+app.route('/api', commentaryRouter);
 app.route('/api/candidates', candidatesRouter);
 app.route('/api/votes', votesRouter);
 app.route('/api/profile', profileRouter);
