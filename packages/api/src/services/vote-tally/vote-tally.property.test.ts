@@ -37,10 +37,13 @@ const candidateArbitrary: fc.Arbitrary<CandidateEntity> = fc
   .record({
     candidateId: fc.uuid(),
     voteCount: fc.nat({ max: 1000 }),
-    createdAt: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
+    createdAt: fc.integer({
+      min: new Date('2020-01-01T00:00:00Z').getTime(),
+      max: new Date('2030-12-31T23:59:59Z').getTime(),
+    }),
   })
   .map(({ candidateId, voteCount, createdAt }) =>
-    createCandidate(candidateId, voteCount, createdAt.toISOString())
+    createCandidate(candidateId, voteCount, new Date(createdAt).toISOString())
   );
 
 /** 空でない CandidateEntity 配列の Arbitrary */
