@@ -7,7 +7,9 @@
 
 import type { Board, Position } from '../../lib/othello/index.js';
 import { CellState } from '../../lib/othello/index.js';
-import type { GameEntity } from '../../lib/dynamodb/types.js';
+
+// isAITurn は game-utils.ts に移動済み。既存コードの互換性のため re-export する。
+export { isAITurn } from '../../lib/game-utils.js';
 
 const CELL_CHARS: Record<CellState, string> = {
   [CellState.Empty]: '.',
@@ -25,18 +27,6 @@ export function formatBoard(board: Board): string {
     return `${i} ${cells}`;
   });
   return [header, ...rows].join('\n');
-}
-
-/**
- * 現在の手番がAI側かどうかを判定する
- *
- * 偶数ターン → 黒の手番（先手）
- * 奇数ターン → 白の手番（後手）
- * aiSide と一致すれば AI の手番
- */
-export function isAITurn(game: GameEntity): boolean {
-  const currentColor = game.currentTurn % 2 === 0 ? 'BLACK' : 'WHITE';
-  return currentColor === game.aiSide;
 }
 
 /**
