@@ -339,3 +339,137 @@ describe('Feature: 23-move-candidates-display, Property 2: 候補カードの必
     );
   });
 });
+
+describe('Feature: ai-content-display, Property 1: AI バッジ表示は source フィールドと一致する', () => {
+  /**
+   * **Validates: Requirements 1.1, 1.2**
+   *
+   * For any candidate data, AICandidateBadge is displayed only when source === 'ai',
+   * and not displayed when source === 'user'. Badge display matches the source field exactly.
+   */
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
+  });
+
+  it('should display AI badge if and only if source is "ai"', () => {
+    fc.assert(
+      fc.property(
+        candidateArb(),
+        fc.uuid(),
+        fc.nat({ max: 100 }),
+        (candidate, gameId, turnNumber) => {
+          const { container } = render(
+            <CandidateCard
+              candidate={candidate}
+              gameId={gameId}
+              turnNumber={turnNumber}
+              isAuthenticated={false}
+              currentVotedCandidateId={undefined}
+              onVoteSuccess={() => {}}
+            />
+          );
+
+          const badge = container.querySelector('[aria-label="AI が生成した候補"]');
+
+          if (candidate.source === 'ai') {
+            expect(badge).toBeTruthy();
+            expect(badge?.textContent).toBe('AI生成');
+          } else {
+            expect(badge).toBeNull();
+          }
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});
+
+describe('Feature: ai-content-display, Property 2: 投稿者名表示は source に基づいて正しくマッピングされる', () => {
+  /**
+   * **Validates: Requirements 2.1, 2.2**
+   *
+   * For any candidate data, when source === 'ai' the poster name shows "AI",
+   * and when source === 'user' the postedByUsername field value is displayed.
+   */
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
+  });
+
+  /**
+   * Generator that produces realistic candidates where source and postedByUsername
+   * are correctly correlated (as mapCandidate would produce).
+   */
+  function realisticCandidateArb(): fc.Arbitrary<Candidate> {
+    return fc
+      .record({
+        id: fc.uuid(),
+        gameId: fc.uuid(),
+        turnNumber: fc.nat({ max: 100 }),
+        position: positionArb(),
+        description: fc.string({ minLength: 1, maxLength: 200 }),
+        boardState: boardStateArb(),
+        voteCount: fc.nat({ max: 10000 }),
+        postedBy: fc.uuid(),
+        status: fc.constantFrom('active' as const, 'closed' as const),
+        deadline: fc
+          .integer({ min: Date.now() - 86400000, max: Date.now() + 86400000 })
+          .map((ts) => new Date(ts).toISOString()),
+        createdAt: fc
+          .integer({ min: Date.now() - 86400000 * 30, max: Date.now() })
+          .map((ts) => new Date(ts).toISOString()),
+        source: fc.constantFrom('ai' as const, 'user' as const),
+        username: fc.string({ minLength: 1, maxLength: 50 }),
+      })
+      .map((data) => ({
+        ...data,
+        // Mimic mapCandidate: AI source → "AI", user source → username
+        postedByUsername: data.source === 'ai' ? 'AI' : data.username,
+      }));
+  }
+
+  it('should display "AI" as poster name for ai source, and postedByUsername for user source', () => {
+    fc.assert(
+      fc.property(
+        realisticCandidateArb(),
+        fc.uuid(),
+        fc.nat({ max: 100 }),
+        (candidate, gameId, turnNumber) => {
+          const { container } = render(
+            <CandidateCard
+              candidate={candidate}
+              gameId={gameId}
+              turnNumber={turnNumber}
+              isAuthenticated={false}
+              currentVotedCandidateId={undefined}
+              onVoteSuccess={() => {}}
+            />
+          );
+
+          const posterElement = container.querySelector('[data-testid="candidate-poster"]');
+          expect(posterElement).toBeTruthy();
+
+          if (candidate.source === 'ai') {
+            // AI candidates: poster name must be "AI"
+            expect(posterElement?.textContent).toBe('AI');
+          } else {
+            // User candidates: poster name must be the user's username
+            expect(posterElement?.textContent).toBe(candidate.postedByUsername);
+          }
+        }
+      ),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});
