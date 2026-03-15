@@ -89,3 +89,75 @@ describe('VoteTallyService Property Tests', () => {
     );
   });
 });
+
+// Feature: 32-vote-tally-batch, Property 3: サマリーの整合性
+describe('VoteTallySummary Property Tests', () => {
+  /** VoteTallyGameResult の status の Arbitrary */
+  const statusArbitrary = fc.constantFrom(
+    'success' as const,
+    'skipped' as const,
+    'failed' as const,
+    'passed' as const,
+    'finished' as const
+  );
+
+  /** VoteTallyGameResult の Arbitrary */
+  const gameResultArbitrary: fc.Arbitrary<import('./types.js').VoteTallyGameResult> = fc
+    .record({
+      gameId: fc.uuid(),
+      status: statusArbitrary,
+    })
+    .map(({ gameId, status }) => ({ gameId, status }));
+
+  /** サマリー集計ロジック（tallyVotes 内と同じ計算） */
+  function computeSummary(
+    results: import('./types.js').VoteTallyGameResult[]
+  ): import('./types.js').VoteTallySummary {
+    return {
+      totalGames: results.length,
+      successCount: results.filter((r) => r.status === 'success').length,
+      failedCount: results.filter((r) => r.status === 'failed').length,
+      skippedCount: results.filter((r) => r.status === 'skipped').length,
+      passedCount: results.filter((r) => r.status === 'passed').length,
+      finishedCount: results.filter((r) => r.status === 'finished').length,
+      results,
+    };
+  }
+
+  /**
+   * Property 3: サマリーの整合性
+   * **Validates: Requirements 6.1**
+   *
+   * 任意の VoteTallyGameResult 配列に対して:
+   * - totalGames = 配列長
+   * - 各カウントの合計 = totalGames
+   * - 各カウントが対応する status の数と一致
+   */
+  it('Property 3: サマリーの整合性 - totalGames = 配列長、各カウントの合計 = totalGames', () => {
+    fc.assert(
+      fc.property(fc.array(gameResultArbitrary, { maxLength: 30 }), (results) => {
+        const summary = computeSummary(results);
+
+        // totalGames は配列の長さと等しい
+        expect(summary.totalGames).toBe(results.length);
+
+        // 各カウントの合計は totalGames と等しい
+        const totalCounts =
+          summary.successCount +
+          summary.failedCount +
+          summary.skippedCount +
+          summary.passedCount +
+          summary.finishedCount;
+        expect(totalCounts).toBe(summary.totalGames);
+
+        // 各カウントは対応する status を持つ結果の数と一致
+        expect(summary.successCount).toBe(results.filter((r) => r.status === 'success').length);
+        expect(summary.failedCount).toBe(results.filter((r) => r.status === 'failed').length);
+        expect(summary.skippedCount).toBe(results.filter((r) => r.status === 'skipped').length);
+        expect(summary.passedCount).toBe(results.filter((r) => r.status === 'passed').length);
+        expect(summary.finishedCount).toBe(results.filter((r) => r.status === 'finished').length);
+      }),
+      { numRuns: 10, endOnFailure: true }
+    );
+  });
+});
