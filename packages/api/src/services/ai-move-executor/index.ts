@@ -19,6 +19,7 @@ import {
 } from '../../lib/othello/index.js';
 import type { Board, Position, Player } from '../../lib/othello/index.js';
 import { isAITurn, buildAIMovePrompt, getAIMoveSystemPrompt } from './prompt-builder.js';
+import { determineWinner } from '../../lib/game-utils.js';
 import { parseAIMoveResponse } from './response-parser.js';
 import type { AIMoveDecision, AIMoveGameResult, AIMoveProcessingSummary } from './types.js';
 
@@ -243,18 +244,7 @@ export class AIMoveExecutor {
     const blackCount = countDiscs(board, CellState.Black);
     const whiteCount = countDiscs(board, CellState.White);
 
-    let winner: 'AI' | 'COLLECTIVE' | 'DRAW';
-    const aiColor = game.aiSide === 'BLACK' ? CellState.Black : CellState.White;
-    const aiCount = countDiscs(board, aiColor);
-    const collectiveCount = aiColor === CellState.Black ? whiteCount : blackCount;
-
-    if (aiCount > collectiveCount) {
-      winner = 'AI';
-    } else if (collectiveCount > aiCount) {
-      winner = 'COLLECTIVE';
-    } else {
-      winner = 'DRAW';
-    }
+    const winner = determineWinner(board, game.aiSide);
 
     await this.gameRepository.finish(game.gameId, winner);
 
