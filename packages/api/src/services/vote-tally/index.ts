@@ -36,16 +36,47 @@ export class VoteTallyService {
    * 全アクティブ対局の投票集計を実行する
    */
   async tallyVotes(): Promise<VoteTallySummary> {
-    // TODO: タスク 3.5 で実装
-    return {
-      totalGames: 0,
-      successCount: 0,
-      failedCount: 0,
-      skippedCount: 0,
-      passedCount: 0,
-      finishedCount: 0,
-      results: [],
+    console.log(JSON.stringify({ type: 'VOTE_TALLY_START', timestamp: new Date().toISOString() }));
+
+    const { items: activeGames } = await this.gameRepository.listByStatus('ACTIVE');
+    const results: VoteTallyGameResult[] = [];
+
+    for (const game of activeGames) {
+      try {
+        const result = await this.processGame(game);
+        results.push(result);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : 'Unknown error';
+        console.log(
+          JSON.stringify({ type: 'VOTE_TALLY_GAME_FAILED', gameId: game.gameId, reason })
+        );
+        results.push({ gameId: game.gameId, status: 'failed', reason });
+      }
+    }
+
+    const summary: VoteTallySummary = {
+      totalGames: activeGames.length,
+      successCount: results.filter((r) => r.status === 'success').length,
+      failedCount: results.filter((r) => r.status === 'failed').length,
+      skippedCount: results.filter((r) => r.status === 'skipped').length,
+      passedCount: results.filter((r) => r.status === 'passed').length,
+      finishedCount: results.filter((r) => r.status === 'finished').length,
+      results,
     };
+
+    console.log(
+      JSON.stringify({
+        type: 'VOTE_TALLY_COMPLETE',
+        totalGames: summary.totalGames,
+        successCount: summary.successCount,
+        failedCount: summary.failedCount,
+        skippedCount: summary.skippedCount,
+        passedCount: summary.passedCount,
+        finishedCount: summary.finishedCount,
+      })
+    );
+
+    return summary;
   }
 
   /**
