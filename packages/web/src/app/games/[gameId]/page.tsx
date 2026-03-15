@@ -13,10 +13,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchGame, ApiError } from '@/lib/api/client';
 import { getCandidates, getVoteStatus } from '@/lib/api/candidates';
+import { getCommentaries } from '@/lib/api/commentary';
+import type { Commentary } from '@/lib/api/commentary';
 import type { Candidate, VoteStatus } from '@/lib/api/candidates';
 import { Board } from '@/components/board';
 import { MoveHistory } from '@/components/move-history';
 import { CandidateList } from '@/app/games/[gameId]/_components/candidate-list';
+import { CommentarySection } from '@/app/games/[gameId]/_components/commentary-section';
 import { ShareButton } from '@/components/share-button';
 import { storageService } from '@/lib/services/storage-service';
 import Link from 'next/link';
@@ -30,6 +33,9 @@ export default function GameDetailPage() {
   const [game, setGame] = useState<Game | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [voteStatus, setVoteStatus] = useState<VoteStatus | null>(null);
+  const [commentaries, setCommentaries] = useState<Commentary[]>([]);
+  const [commentariesLoading, setCommentariesLoading] = useState(true);
+  const [commentariesError, setCommentariesError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [candidatesLoading, setCandidatesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,38 +65,52 @@ export default function GameDetailPage() {
         setError(null);
         setLoading(false);
 
-        // Fetch candidates and vote status after game is loaded
+        // Fetch candidates and commentaries in parallel after game is loaded
         setCandidatesLoading(true);
-        try {
-          const candidatesData = await getCandidates(gameId, gameData.currentTurn);
-          if (mounted) {
-            setCandidates(candidatesData);
-          }
+        setCommentariesLoading(true);
 
-          // Fetch vote status if authenticated
-          if (isAuthenticated) {
-            try {
-              const voteStatusData = await getVoteStatus(gameId, gameData.currentTurn);
-              if (mounted) {
-                setVoteStatus(voteStatusData);
-              }
-            } catch (voteErr) {
-              console.warn('[GameDetailPage] Failed to fetch vote status:', voteErr);
-              // Vote status fetch failure should not block the page
-              if (mounted) {
-                setVoteStatus(null);
-              }
+        const [candidatesResult, commentariesResult] = await Promise.allSettled([
+          getCandidates(gameId, gameData.currentTurn),
+          getCommentaries(gameId),
+        ]);
+
+        if (!mounted) return;
+
+        // Handle candidates result
+        if (candidatesResult.status === 'fulfilled') {
+          setCandidates(candidatesResult.value);
+        } else {
+          console.error('[GameDetailPage] Failed to fetch candidates:', candidatesResult.reason);
+          setCandidates([]);
+        }
+        setCandidatesLoading(false);
+
+        // Handle commentaries result
+        if (commentariesResult.status === 'fulfilled') {
+          setCommentaries(commentariesResult.value);
+          setCommentariesError(null);
+        } else {
+          console.error(
+            '[GameDetailPage] Failed to fetch commentaries:',
+            commentariesResult.reason
+          );
+          setCommentaries([]);
+          setCommentariesError('解説の取得に失敗しました');
+        }
+        setCommentariesLoading(false);
+
+        // Fetch vote status if authenticated
+        if (isAuthenticated) {
+          try {
+            const voteStatusData = await getVoteStatus(gameId, gameData.currentTurn);
+            if (mounted) {
+              setVoteStatus(voteStatusData);
             }
-          }
-        } catch (err) {
-          console.error('[GameDetailPage] Failed to fetch candidates:', err);
-          // Candidates fetch failure should not block the page
-          if (mounted) {
-            setCandidates([]);
-          }
-        } finally {
-          if (mounted) {
-            setCandidatesLoading(false);
+          } catch (voteErr) {
+            console.warn('[GameDetailPage] Failed to fetch vote status:', voteErr);
+            if (mounted) {
+              setVoteStatus(null);
+            }
           }
         }
       } catch (err) {
@@ -285,12 +305,13 @@ export default function GameDetailPage() {
             </div>
 
             {/* AI Commentary Section */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">AI解説</h2>
-              <p className="text-gray-600">
-                この対局のAI解説は準備中です。今後のアップデートで追加される予定です。
-              </p>
-            </div>
+            <CommentarySection
+              commentaries={commentaries}
+              isLoading={commentariesLoading}
+              error={commentariesError}
+              gameStatus={game.status as 'ACTIVE' | 'FINISHED'}
+              currentTurn={game.currentTurn}
+            />
 
             {/* Move History */}
             {moves.length > 0 && (
