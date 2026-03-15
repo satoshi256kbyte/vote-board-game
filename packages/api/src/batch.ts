@@ -9,6 +9,7 @@ import {
 import { CandidateGenerator } from './services/candidate-generator/index.js';
 import { CommentaryGenerator } from './services/commentary-generator/index.js';
 import { AIMoveExecutor } from './services/ai-move-executor/index.js';
+import { VoteTallyService } from './services/vote-tally/index.js';
 import { GameRepository } from './lib/dynamodb/repositories/game.js';
 import { CandidateRepository } from './lib/dynamodb/repositories/candidate.js';
 import { CommentaryRepository } from './lib/dynamodb/repositories/commentary.js';
@@ -38,6 +39,14 @@ const aiMoveExecutor = new AIMoveExecutor(
   new MoveRepository(docClient, TABLE_NAME)
 );
 
+// VoteTallyService の初期化（Lambda実行環境で1度だけ）
+// Requirements: 7.3
+const voteTallyService = new VoteTallyService(
+  new GameRepository(),
+  new CandidateRepository(docClient, TABLE_NAME),
+  new MoveRepository(docClient, TABLE_NAME)
+);
+
 // CommentaryGenerator の初期化（Lambda実行環境で1度だけ）
 // Requirements: 9.1, 9.2, 9.3
 const commentaryGenerator = new CommentaryGenerator(
@@ -59,11 +68,15 @@ export const handler: ScheduledHandler = async (event) => {
   console.log('Batch process started', { event });
 
   try {
-    // TODO: 投票集計処理を実装
-    console.log('Vote aggregation completed');
-
-    // TODO: 次の一手決定処理を実装
-    console.log('Next move determination completed');
+    // 投票集計処理
+    // Requirements: 7.1, 7.2
+    try {
+      const voteTallySummary = await voteTallyService.tallyVotes();
+      console.log('Vote tally completed', voteTallySummary);
+    } catch (voteTallyError) {
+      console.error('Vote tally failed', voteTallyError);
+      // 後続処理は継続
+    }
 
     // AI手実行処理（投票集計後、候補生成前に実行）
     try {
