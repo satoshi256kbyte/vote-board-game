@@ -8,9 +8,11 @@ import {
 } from './services/bedrock/index.js';
 import { CandidateGenerator } from './services/candidate-generator/index.js';
 import { CommentaryGenerator } from './services/commentary-generator/index.js';
+import { AIMoveExecutor } from './services/ai-move-executor/index.js';
 import { GameRepository } from './lib/dynamodb/repositories/game.js';
 import { CandidateRepository } from './lib/dynamodb/repositories/candidate.js';
 import { CommentaryRepository } from './lib/dynamodb/repositories/commentary.js';
+import { MoveRepository } from './lib/dynamodb/repositories/move.js';
 import { docClient, TABLE_NAME } from './lib/dynamodb.js';
 
 // Lambda実行環境で1度だけ初期化（コールドスタート時のみ）
@@ -27,6 +29,13 @@ const candidateGenerator = new CandidateGenerator(
   bedrockService,
   new GameRepository(),
   new CandidateRepository(docClient, TABLE_NAME)
+);
+
+// AIMoveExecutor の初期化（Lambda実行環境で1度だけ）
+const aiMoveExecutor = new AIMoveExecutor(
+  bedrockService,
+  new GameRepository(),
+  new MoveRepository(docClient, TABLE_NAME)
 );
 
 // CommentaryGenerator の初期化（Lambda実行環境で1度だけ）
@@ -55,6 +64,15 @@ export const handler: ScheduledHandler = async (event) => {
 
     // TODO: 次の一手決定処理を実装
     console.log('Next move determination completed');
+
+    // AI手実行処理（投票集計後、候補生成前に実行）
+    try {
+      const aiMoveSummary = await aiMoveExecutor.executeAIMoves();
+      console.log('AI move execution completed', aiMoveSummary);
+    } catch (aiMoveError) {
+      console.error('AI move execution failed', aiMoveError);
+      // 後続処理は継続
+    }
 
     // AI候補生成処理
     // Requirements: 1.1, 8.1, 8.4
