@@ -27,13 +27,14 @@ describe('Commentary API Client - Property-based tests', () => {
   });
 
   // 解説データのアービトラリ生成
+  // fc.date は shrinking 時に Invalid Date を生成する可能性があるため、タイムスタンプ整数から生成
   const commentaryArb = fc.record({
     turnNumber: fc.integer({ min: 1, max: 100 }),
     content: fc.string({ minLength: 1, maxLength: 500 }).filter((s) => s.trim().length > 0),
     generatedBy: fc.constantFrom('AI', 'SYSTEM'),
     createdAt: fc
-      .date({ min: new Date('2024-01-01'), max: new Date('2025-12-31') })
-      .map((d) => d.toISOString()),
+      .integer({ min: 1704067200000, max: 1767225599000 })
+      .map((ts) => new Date(ts).toISOString()),
   });
 
   // 解説配列のアービトラリ生成
