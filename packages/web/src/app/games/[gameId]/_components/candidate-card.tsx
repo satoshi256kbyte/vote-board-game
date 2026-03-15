@@ -19,6 +19,7 @@
 
 import { useMemo } from 'react';
 import { BoardPreview } from './board-preview';
+import { AICandidateBadge } from './ai-candidate-badge';
 import { VoteButton } from './vote-button';
 import { VoteStatusIndicator } from './vote-status-indicator';
 import { calculateTimeRemaining } from '@/lib/utils/time-remaining';
@@ -134,6 +135,7 @@ export function CandidateCard({
         <div className="flex items-center gap-2 text-gray-600">
           <span className="font-medium">投稿者:</span>
           <span data-testid="candidate-poster">{candidate.postedByUsername}</span>
+          {candidate.source === 'ai' && <AICandidateBadge />}
         </div>
 
         {/* Vote Count */}
