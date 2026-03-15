@@ -15,3 +15,6 @@ export {
 } from './client';
 
 export { createVote, changeVote } from './votes';
+
+export { getCommentaries } from './commentary';
+export type { Commentary } from './commentary';
