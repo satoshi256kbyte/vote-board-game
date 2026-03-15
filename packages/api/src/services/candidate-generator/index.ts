@@ -14,6 +14,7 @@ import type { CandidateRepository } from '../../lib/dynamodb/repositories/candid
 import type { GameEntity } from '../../lib/dynamodb/types.js';
 import { getLegalMoves, CellState } from '../../lib/othello/index.js';
 import type { Board, Position } from '../../lib/othello/index.js';
+import { isAITurn } from '../../lib/game-utils.js';
 import { buildPrompt, getSystemPrompt } from './prompt-builder.js';
 import { parseAIResponse } from './response-parser.js';
 import type { GameProcessingResult, ProcessingSummary, ParsedCandidate } from './types.js';
@@ -63,6 +64,21 @@ export class CandidateGenerator {
   private async processGame(game: GameEntity): Promise<GameProcessingResult> {
     console.log(JSON.stringify({ type: 'CANDIDATE_GENERATION_GAME_START', gameId: game.gameId }));
     try {
+      // 次のターンが AI 側の手番かチェック
+      const nextTurnGame = { ...game, currentTurn: game.currentTurn + 1 };
+      if (isAITurn(nextTurnGame)) {
+        const reason = 'Next turn is AI turn';
+        console.log(
+          JSON.stringify({ type: 'CANDIDATE_GENERATION_GAME_SKIPPED', gameId: game.gameId, reason })
+        );
+        return {
+          gameId: game.gameId,
+          status: 'skipped',
+          candidatesGenerated: 0,
+          candidatesSaved: 0,
+          reason,
+        };
+      }
       // boardState をパース
       let boardState: BoardStateJSON;
       try {
