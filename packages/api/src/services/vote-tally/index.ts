@@ -51,9 +51,15 @@ export class VoteTallyService {
    * 最多得票候補の特定
    * voteCount 降順、同票時は createdAt 昇順でソートし先頭を返す
    */
-  findWinningCandidate(_candidates: CandidateEntity[]): CandidateEntity | null {
-    // TODO: タスク 3.2 で実装
-    return null;
+  findWinningCandidate(candidates: CandidateEntity[]): CandidateEntity | null {
+    if (candidates.length === 0) return null;
+
+    const sorted = [...candidates].sort((a, b) => {
+      if (b.voteCount !== a.voteCount) return b.voteCount - a.voteCount;
+      return a.createdAt.localeCompare(b.createdAt);
+    });
+
+    return sorted[0];
   }
 
   /**
