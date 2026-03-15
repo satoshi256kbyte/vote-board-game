@@ -202,7 +202,7 @@ inclusion: manual
 | 7.1.1 Bedrock (Nova Pro) 統合  | 完了       | 27-bedrock-nova-pro-integration |
 | 7.1.2 次の一手候補生成ロジック | 完了       | 28-move-candidate-generation    |
 | 7.1.3 対局解説生成ロジック     | 完了       | 29-game-commentary-generation   |
-| 7.1.4 AI の手の実行ロジック    | 進行中     | 30-ai-move-execution            |
+| 7.1.4 AI の手の実行ロジック    | 完了       | 30-ai-move-execution            |
 
 ### 7.2 フロントエンド開発
 

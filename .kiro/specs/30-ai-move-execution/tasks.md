@@ -27,4 +27,4 @@
 
 ## タスク 5: バッチ処理への統合
 
-- [-] 5.1 `packages/api/src/batch.ts` に `AIMoveExecutor` のインポートと初期化を追加し、投票集計後・候補生成前に `executeAIMoves()` を呼び出す処理を追加する（エラー時は後続処理を継続）
+- [x] 5.1 `packages/api/src/batch.ts` に `AIMoveExecutor` のインポートと初期化を追加し、投票集計後・候補生成前に `executeAIMoves()` を呼び出す処理を追加する（エラー時は後続処理を継続）
