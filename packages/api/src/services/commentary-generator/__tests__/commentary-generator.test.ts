@@ -241,6 +241,87 @@ describe('CommentaryGenerator', () => {
     expect(calls[0][0].turnNumber).toBe(5);
   });
 
+  it('BedrockService エラー時に次の対局の処理が継続される (要件 10.2, 10.4)', async () => {
+    const game1 = createMockGame({ gameId: 'game-fail', currentTurn: 2 });
+    const game2 = createMockGame({ gameId: 'game-ok', currentTurn: 3 });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game1, game2] });
+    vi.mocked(mockCommentaryRepo.getByGameAndTurn).mockResolvedValue(null);
+    mockDocClient.send.mockResolvedValue({ Items: mockMoveItems });
+
+    let callCount = 0;
+    vi.mocked(mockBedrock.generateText).mockImplementation(async () => {
+      callCount++;
+      if (callCount === 1) {
+        throw new Error('Bedrock throttling error');
+      }
+      return validAIResponse;
+    });
+    vi.mocked(mockCommentaryRepo.create).mockResolvedValue({} as CommentaryEntity);
+
+    const summary = await generator.generateCommentaries();
+
+    expect(summary.totalGames).toBe(2);
+    expect(summary.failedCount).toBe(1);
+    expect(summary.successCount).toBe(1);
+    expect(summary.results[0].gameId).toBe('game-fail');
+    expect(summary.results[0].status).toBe('failed');
+    expect(summary.results[1].gameId).toBe('game-ok');
+    expect(summary.results[1].status).toBe('success');
+    // 2番目の対局でも create が呼ばれていることを確認
+    expect(mockCommentaryRepo.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('boardState パース失敗時に次の対局の処理が継続される (要件 10.2)', async () => {
+    const game1 = createMockGame({
+      gameId: 'game-bad-board',
+      currentTurn: 2,
+      boardState: '{{invalid',
+    });
+    const game2 = createMockGame({ gameId: 'game-good', currentTurn: 3 });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game1, game2] });
+    vi.mocked(mockCommentaryRepo.getByGameAndTurn).mockResolvedValue(null);
+    mockDocClient.send.mockResolvedValue({ Items: mockMoveItems });
+    vi.mocked(mockBedrock.generateText).mockResolvedValue(validAIResponse);
+    vi.mocked(mockCommentaryRepo.create).mockResolvedValue({} as CommentaryEntity);
+
+    const summary = await generator.generateCommentaries();
+
+    expect(summary.totalGames).toBe(2);
+    expect(summary.skippedCount).toBe(1);
+    expect(summary.successCount).toBe(1);
+    expect(summary.results[0].gameId).toBe('game-bad-board');
+    expect(summary.results[0].status).toBe('skipped');
+    expect(summary.results[1].gameId).toBe('game-good');
+    expect(summary.results[1].status).toBe('success');
+  });
+
+  it('既存解説スキップ時に getByGameAndTurn が currentTurn で呼ばれる (要件 9.1, 9.2)', async () => {
+    const game = createMockGame({ currentTurn: 7 });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game] });
+    vi.mocked(mockCommentaryRepo.getByGameAndTurn).mockResolvedValue({} as CommentaryEntity);
+
+    const summary = await generator.generateCommentaries();
+
+    expect(mockCommentaryRepo.getByGameAndTurn).toHaveBeenCalledWith('game-1', 7);
+    expect(summary.skippedCount).toBe(1);
+    // BedrockService は呼ばれないこと
+    expect(mockBedrock.generateText).not.toHaveBeenCalled();
+  });
+
+  it('currentTurn が 0 の場合は getByGameAndTurn も呼ばれずスキップされる (要件 9.3)', async () => {
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({
+      items: [createMockGame({ currentTurn: 0 })],
+    });
+
+    const summary = await generator.generateCommentaries();
+
+    expect(summary.skippedCount).toBe(1);
+    expect(summary.results[0].reason).toContain('currentTurn');
+    // currentTurn==0 は getByGameAndTurn の前にスキップされる
+    expect(mockCommentaryRepo.getByGameAndTurn).not.toHaveBeenCalled();
+    expect(mockBedrock.generateText).not.toHaveBeenCalled();
+  });
+
   it('トークン使用量ログ: console.log にトークン使用量が出力される', async () => {
     vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({
       items: [createMockGame()],
