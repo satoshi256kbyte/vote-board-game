@@ -72,18 +72,38 @@ export const handler: ScheduledHandler = async (event) => {
     // Requirements: 7.1, 7.2
     try {
       const voteTallySummary = await voteTallyService.tallyVotes();
-      console.log('Vote tally completed', voteTallySummary);
+      console.log(
+        JSON.stringify({
+          type: 'BATCH_VOTE_TALLY_COMPLETED',
+          ...voteTallySummary,
+        })
+      );
     } catch (voteTallyError) {
-      console.error('Vote tally failed', voteTallyError);
+      console.error(
+        JSON.stringify({
+          type: 'BATCH_VOTE_TALLY_FAILED',
+          error: voteTallyError instanceof Error ? voteTallyError.message : 'Unknown error',
+        })
+      );
       // 後続処理は継続
     }
 
     // AI手実行処理（投票集計後、候補生成前に実行）
     try {
       const aiMoveSummary = await aiMoveExecutor.executeAIMoves();
-      console.log('AI move execution completed', aiMoveSummary);
+      console.log(
+        JSON.stringify({
+          type: 'BATCH_AI_MOVE_COMPLETED',
+          ...aiMoveSummary,
+        })
+      );
     } catch (aiMoveError) {
-      console.error('AI move execution failed', aiMoveError);
+      console.error(
+        JSON.stringify({
+          type: 'BATCH_AI_MOVE_FAILED',
+          error: aiMoveError instanceof Error ? aiMoveError.message : 'Unknown error',
+        })
+      );
       // 後続処理は継続
     }
 
@@ -111,10 +131,29 @@ export const handler: ScheduledHandler = async (event) => {
     // Requirements: 9.1, 9.2, 9.3, 9.4
     try {
       const commentarySummary = await commentaryGenerator.generateCommentaries();
-      console.log('Commentary generation completed', commentarySummary);
+      console.log(
+        JSON.stringify({
+          type: 'BATCH_COMMENTARY_GENERATION_COMPLETED',
+          ...commentarySummary,
+        })
+      );
     } catch (commentaryError) {
-      console.error('Commentary generation failed', commentaryError);
+      console.error(
+        JSON.stringify({
+          type: 'BATCH_COMMENTARY_GENERATION_FAILED',
+          error: commentaryError instanceof Error ? commentaryError.message : 'Unknown error',
+        })
+      );
     }
+
+    // バッチ全体の完了ログ
+    // Requirements: 3.3, 5.3
+    console.log(
+      JSON.stringify({
+        type: 'BATCH_PROCESS_COMPLETED',
+        timestamp: new Date().toISOString(),
+      })
+    );
   } catch (error) {
     console.error('Batch process failed', error);
     throw error;
