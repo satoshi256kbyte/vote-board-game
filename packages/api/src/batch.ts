@@ -89,8 +89,23 @@ export const handler: ScheduledHandler = async (event) => {
 
     // AI候補生成処理
     // Requirements: 1.1, 8.1, 8.4
-    const summary = await candidateGenerator.generateCandidates();
-    console.log('Candidate generation completed', summary);
+    try {
+      const candidateSummary = await candidateGenerator.generateCandidates();
+      console.log(
+        JSON.stringify({
+          type: 'BATCH_CANDIDATE_GENERATION_COMPLETED',
+          ...candidateSummary,
+        })
+      );
+    } catch (candidateError) {
+      console.error(
+        JSON.stringify({
+          type: 'BATCH_CANDIDATE_GENERATION_FAILED',
+          error: candidateError instanceof Error ? candidateError.message : 'Unknown error',
+        })
+      );
+      // 後続処理は継続
+    }
 
     // AI対局解説生成処理（候補生成の後に実行）
     // Requirements: 9.1, 9.2, 9.3, 9.4
