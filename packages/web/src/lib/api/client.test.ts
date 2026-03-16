@@ -6,9 +6,10 @@ import {
   fetchCandidates,
   createCandidate,
   vote,
+  fetchGameTurn,
   ApiError,
 } from './client';
-import type { Game, GameSummary, Candidate } from '@/types/game';
+import type { Game, GameSummary, Candidate, TurnResponse } from '@/types/game';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -446,6 +447,61 @@ describe('API Client', () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       await expect(vote('123', '456')).rejects.toThrow('Network error');
+    });
+  });
+
+  describe('fetchGameTurn', () => {
+    it('should fetch a specific turn', async () => {
+      const mockTurn: TurnResponse = {
+        gameId: '123e4567-e89b-12d3-a456-426614174000',
+        turnNumber: 3,
+        boardState: {
+          board: Array(8).fill(Array(8).fill(0)),
+        },
+        currentPlayer: 'BLACK',
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockTurn,
+      });
+
+      const result = await fetchGameTurn('123e4567-e89b-12d3-a456-426614174000', 3);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/games/123e4567-e89b-12d3-a456-426614174000/turns/3',
+        expect.objectContaining({
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toEqual(mockTurn);
+    });
+
+    it('should handle 404 error when turn not found', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({
+          error: 'NOT_FOUND',
+          message: 'Turn not found',
+        }),
+      });
+
+      try {
+        await fetchGameTurn('123e4567-e89b-12d3-a456-426614174000', 999);
+        expect.fail('Should have thrown an error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).statusCode).toBe(404);
+        expect((error as ApiError).errorCode).toBe('NOT_FOUND');
+      }
+    });
+
+    it('should handle network errors', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+      await expect(fetchGameTurn('123', 1)).rejects.toThrow('Network error');
     });
   });
 

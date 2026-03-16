@@ -12,6 +12,7 @@ import type {
   CreateGameRequest,
   Candidate,
   CreateCandidateRequest,
+  TurnResponse,
 } from '@/types/game';
 import { storageService } from '@/lib/services/storage-service';
 
@@ -379,6 +380,39 @@ export async function vote(gameId: string, candidateId: string): Promise<void> {
     });
 
     await handleResponse<void>(response);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      error instanceof Error ? error.message : 'ネットワークエラーが発生しました',
+      0
+    );
+  }
+}
+
+/**
+ * Fetch a specific turn's board state
+ *
+ * @param gameId - The game ID (UUID v4)
+ * @param turnNumber - The turn number (positive integer)
+ * @returns Promise with turn data including board state
+ *
+ * @throws {ApiError} When game or turn is not found (404) or other errors occur
+ */
+export async function fetchGameTurn(gameId: string, turnNumber: number): Promise<TurnResponse> {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}/api/games/${gameId}/turns/${turnNumber}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return handleResponse<TurnResponse>(response);
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

@@ -180,3 +180,31 @@ export interface GetGamesResponse {
   /** 次のページが存在する場合のカーソル */
   nextCursor?: string;
 }
+
+/**
+ * 特定ターンのレスポンス
+ */
+export interface TurnResponse {
+  /** ゲームID */
+  gameId: string;
+  /** ターン番号 */
+  turnNumber: number;
+  /** 盤面の状態 */
+  boardState: BoardState;
+  /** 現在のプレイヤー */
+  currentPlayer: PlayerColor;
+}
+
+/**
+ * 特定ターンのレスポンス
+ */
+export interface TurnResponse {
+  /** ゲームID */
+  gameId: string;
+  /** ターン番号 */
+  turnNumber: number;
+  /** 盤面の状態 */
+  boardState: BoardState;
+  /** 現在のプレイヤー */
+  currentPlayer: PlayerColor;
+}
