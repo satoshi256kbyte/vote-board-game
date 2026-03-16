@@ -1,8 +1,8 @@
 {
   "enabled": true,
   "name": "Update Infra Snapshot on API Changes",
-  "description": "Automatically update infra snapshot tests when API source code changes to prevent Lambda hash mismatches",
-  "version": "1",
+  "description": "Remind agent to update infra snapshot tests when API source code changes to prevent Lambda hash mismatches",
+  "version": "2",
   "when": {
     "type": "fileEdited",
     "patterns": [
@@ -11,8 +11,7 @@
     ]
   },
   "then": {
-    "type": "runCommand",
-    "command": "cd packages/infra && pnpm --filter @vote-board-game/api build && pnpm test -- -u",
-    "timeout": 120
+    "type": "askAgent",
+    "prompt": "API source code was changed. Remember to run `cd packages/infra && pnpm --filter @vote-board-game/api build && pnpm test -- -u` before committing to update infra snapshot tests. Do NOT run it now - wait until all code changes for the current task are complete."
   }
 }
