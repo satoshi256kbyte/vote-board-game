@@ -1,16 +1,16 @@
 /**
  * Share Button Component
  *
- * Provides social media sharing functionality using Web Share API
- * with fallback to copy link.
+ * Provides SNS-specific sharing buttons (X/Twitter, LINE, link copy).
  *
- * Requirements: Task 18
+ * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
  */
 
 'use client';
 
-import React, { useState } from 'react';
-import { Share2, Check } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Twitter, MessageCircle, Link } from 'lucide-react';
+import { buildShareUrlForX, buildShareUrlForLine } from '@/lib/ogp/ogp-utils';
 
 interface ShareButtonProps {
   /** タイトル */
@@ -19,109 +19,78 @@ interface ShareButtonProps {
   text: string;
   /** 共有するURL（省略時は現在のページ） */
   url?: string;
-  /** ボタンのスタイル（デフォルト: primary） */
-  variant?: 'primary' | 'secondary';
-  /** ボタンのサイズ（デフォルト: md） */
-  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
  * Share Button Component
+ *
+ * Displays 3 individual buttons: X (Twitter), LINE, and link copy.
  */
-export function ShareButton({
-  title,
-  text,
-  url,
-  variant = 'primary',
-  size = 'md',
-}: ShareButtonProps) {
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function ShareButton({ title, text: _text, url }: ShareButtonProps) {
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
 
-  const handleShare = async () => {
-    setError(null);
+  const handleShareX = useCallback(() => {
+    const xUrl = buildShareUrlForX(title, shareUrl);
+    window.open(xUrl, '_blank', 'noopener,noreferrer');
+  }, [title, shareUrl]);
 
-    // Check if Web Share API is available
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title,
-          text,
-          url: shareUrl,
-        });
-      } catch (err) {
-        // User cancelled or error occurred
-        if (err instanceof Error && err.name !== 'AbortError') {
-          console.error('Share failed:', err);
-          // Fallback to copy
-          await copyToClipboard();
-        }
-      }
-    } else {
-      // Fallback to copy link
-      await copyToClipboard();
-    }
-  };
+  const handleShareLine = useCallback(() => {
+    const lineUrl = buildShareUrlForLine(shareUrl);
+    window.open(lineUrl, '_blank', 'noopener,noreferrer');
+  }, [shareUrl]);
 
-  const copyToClipboard = async () => {
+  const handleCopyLink = useCallback(async () => {
     try {
+      if (!navigator.clipboard) {
+        setCopyStatus('リンクのコピーに失敗しました');
+        setTimeout(() => setCopyStatus(null), 2000);
+        return;
+      }
       await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Copy failed:', err);
-      setError('リンクのコピーに失敗しました');
+      setCopyStatus('コピーしました');
+      setTimeout(() => setCopyStatus(null), 2000);
+    } catch {
+      setCopyStatus('リンクのコピーに失敗しました');
+      setTimeout(() => setCopyStatus(null), 2000);
     }
-  };
+  }, [shareUrl]);
 
-  const baseClasses =
-    'inline-flex items-center gap-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
-
-  const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-blue-500',
-  };
-
-  const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
-  };
-
-  const iconSize = {
-    sm: 16,
-    md: 18,
-    lg: 20,
-  };
+  const buttonBase =
+    'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
 
   return (
-    <div className="relative">
+    <div className="flex items-center gap-2" data-testid="share-buttons">
       <button
-        onClick={handleShare}
-        className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]}`}
-        aria-label="シェア"
-        data-testid="share-button"
+        onClick={handleShareX}
+        className={`${buttonBase} bg-black text-white hover:bg-gray-800 focus:ring-gray-500`}
+        aria-label="Xでシェア"
+        data-testid="share-button-x"
       >
-        {copied ? (
-          <>
-            <Check size={iconSize[size]} />
-            <span>コピーしました</span>
-          </>
-        ) : (
-          <>
-            <Share2 size={iconSize[size]} />
-            <span>シェア</span>
-          </>
-        )}
+        <Twitter size={16} />
+        <span>X</span>
       </button>
 
-      {error && (
-        <div className="absolute top-full mt-2 left-0 right-0 p-2 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-xs text-red-600">{error}</p>
-        </div>
-      )}
+      <button
+        onClick={handleShareLine}
+        className={`${buttonBase} bg-[#06C755] text-white hover:bg-[#05b34c] focus:ring-green-500`}
+        aria-label="LINEでシェア"
+        data-testid="share-button-line"
+      >
+        <MessageCircle size={16} />
+        <span>LINE</span>
+      </button>
+
+      <button
+        onClick={handleCopyLink}
+        className={`${buttonBase} bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-blue-500`}
+        aria-label="リンクをコピー"
+        data-testid="share-button-copy"
+      >
+        <Link size={16} />
+        <span>{copyStatus || 'リンクコピー'}</span>
+      </button>
     </div>
   );
 }
