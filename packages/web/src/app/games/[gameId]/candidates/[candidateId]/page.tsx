@@ -177,12 +177,7 @@ export default async function CandidateDetailPage({ params }: CandidateDetailPag
               >
                 投票する
               </button>
-              <ShareButton
-                title={`候補: ${candidate.position}`}
-                text={candidate.description}
-                variant="secondary"
-                size="lg"
-              />
+              <ShareButton title={`候補: ${candidate.position}`} text={candidate.description} />
             </div>
           </div>
         </div>
