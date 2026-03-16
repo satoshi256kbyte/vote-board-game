@@ -8,6 +8,7 @@ import {
 } from './services/bedrock/index.js';
 import { CandidateGenerator } from './services/candidate-generator/index.js';
 import { CommentaryGenerator } from './services/commentary-generator/index.js';
+import { GameStateUpdater } from './services/game-state-updater/index.js';
 import { AIMoveExecutor } from './services/ai-move-executor/index.js';
 import { VoteTallyService } from './services/vote-tally/index.js';
 import { GameRepository } from './lib/dynamodb/repositories/game.js';
@@ -57,12 +58,20 @@ const commentaryGenerator = new CommentaryGenerator(
   TABLE_NAME
 );
 
+// GameStateUpdater の初期化（Lambda実行環境で1度だけ）
+// Requirements: 5.1, 5.3
+const gameStateUpdater = new GameStateUpdater(
+  new GameRepository(),
+  new CandidateRepository(docClient, TABLE_NAME)
+);
+
 /**
  * 日次バッチ処理
  * - 投票集計
  * - 次の一手決定
  * - 次の一手候補のAI生成
  * - 対局解説のAI生成
+ * - 対局状態の整合性検証・更新
  */
 export const handler: ScheduledHandler = async (event) => {
   console.log('Batch process started', { event });
@@ -142,6 +151,25 @@ export const handler: ScheduledHandler = async (event) => {
         JSON.stringify({
           type: 'BATCH_COMMENTARY_GENERATION_FAILED',
           error: commentaryError instanceof Error ? commentaryError.message : 'Unknown error',
+        })
+      );
+    }
+
+    // 対局状態更新処理（バッチ処理の最終ステップ）
+    // Requirements: 5.1, 5.2, 5.3, 5.4
+    try {
+      const gameStateSummary = await gameStateUpdater.updateGameStates();
+      console.log(
+        JSON.stringify({
+          type: 'BATCH_GAME_STATE_UPDATE_COMPLETED',
+          ...gameStateSummary,
+        })
+      );
+    } catch (gameStateError) {
+      console.error(
+        JSON.stringify({
+          type: 'BATCH_GAME_STATE_UPDATE_FAILED',
+          error: gameStateError instanceof Error ? gameStateError.message : 'Unknown error',
         })
       );
     }
