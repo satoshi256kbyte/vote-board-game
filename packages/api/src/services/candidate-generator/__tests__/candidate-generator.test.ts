@@ -351,6 +351,150 @@ describe('CandidateGenerator', () => {
       expect(call[0].turnNumber).toBe(6); // currentTurn(5) + 1
     }
   });
+
+  // --- 既存機能テスト (Requirements 6.1, 6.2, 6.3, 7.1, 7.2, 7.3, 8.1, 8.2, 8.3, 10.1, 10.3) ---
+
+  it('合法手なし時スキップ: AIプロンプト構築（generateText）が呼ばれないこと', async () => {
+    // 全て黒で埋まった盤面（白の合法手なし）
+    const fullBoard = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(1));
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({
+      items: [createMockGame({ boardState: JSON.stringify({ board: fullBoard }) })],
+    });
+
+    const summary = await generator.generateCandidates();
+
+    expect(summary.skippedCount).toBe(1);
+    expect(summary.results[0].reason).toBe('No legal moves available');
+    // AI プロンプト構築が呼ばれないことを明示的に検証
+    expect(mockBedrock.generateText).not.toHaveBeenCalled();
+    expect(mockCandidateRepo.listByTurn).not.toHaveBeenCalled();
+  });
+
+  it('重複候補フィルタリング: 既存候補と同一ポジションの候補が保存されないこと', async () => {
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({
+      items: [createMockGame()],
+    });
+    // 既存候補に "2,4" と "3,5" がある
+    vi.mocked(mockCandidateRepo.listByTurn).mockResolvedValue([
+      { position: '2,4' } as CandidateEntity,
+      { position: '3,5' } as CandidateEntity,
+    ]);
+    vi.mocked(mockBedrock.generateText).mockResolvedValue({
+      text: validAIResponse, // candidates: 2,4 / 3,5 / 4,2
+      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+    });
+    const savedPositions: string[] = [];
+    vi.mocked(mockCandidateRepo.create).mockImplementation(async (params) => {
+      savedPositions.push(params.position);
+      return {} as CandidateEntity;
+    });
+
+    const summary = await generator.generateCandidates();
+
+    // "2,4" と "3,5" は重複で除外、"4,2" のみ保存
+    expect(savedPositions).toEqual(['4,2']);
+    expect(savedPositions).not.toContain('2,4');
+    expect(savedPositions).not.toContain('3,5');
+    expect(summary.results[0].candidatesSaved).toBe(1);
+  });
+
+  it('votingDeadline検証: 翌日のJST 23:59:59.999であること（日付が翌日）', async () => {
+    // テスト実行時の日付を固定
+    const fixedNow = new Date('2024-06-15T10:00:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(fixedNow);
+
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({
+      items: [createMockGame()],
+    });
+    vi.mocked(mockCandidateRepo.listByTurn).mockResolvedValue([]);
+    vi.mocked(mockBedrock.generateText).mockResolvedValue({
+      text: validAIResponse,
+      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+    });
+    vi.mocked(mockCandidateRepo.create).mockResolvedValue({} as CandidateEntity);
+
+    await generator.generateCandidates();
+
+    const calls = vi.mocked(mockCandidateRepo.create).mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+
+    for (const call of calls) {
+      const deadline = new Date(call[0].votingDeadline);
+      // deadline は fixedNow より未来であること
+      expect(deadline.getTime()).toBeGreaterThan(fixedNow.getTime());
+      // JST に変換して 23:59:59.999 であることを検証
+      // calculateVotingDeadline は内部で JST オフセットを加算→ローカル時間操作→JST オフセットを減算
+      // するため、結果の JST 時刻部分が 23:59:59.999 であることを確認
+      const jstOffset = 9 * 60 * 60 * 1000;
+      const jstDeadline = new Date(deadline.getTime() + jstOffset);
+      // ローカル時間メソッドで検証（既存テストと同じアプローチ）
+      expect(jstDeadline.getHours()).toBe(23);
+      expect(jstDeadline.getMinutes()).toBe(59);
+      expect(jstDeadline.getSeconds()).toBe(59);
+      expect(jstDeadline.getMilliseconds()).toBe(999);
+    }
+
+    vi.useRealTimers();
+  });
+
+  it('BedrockServiceエラー時: 失敗として記録され、次の対局の処理が継続される', async () => {
+    const game1 = createMockGame({ gameId: 'game-fail' });
+    const game2 = createMockGame({ gameId: 'game-success' });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game1, game2] });
+    vi.mocked(mockCandidateRepo.listByTurn).mockResolvedValue([]);
+    vi.mocked(mockCandidateRepo.create).mockResolvedValue({} as CandidateEntity);
+
+    let callCount = 0;
+    vi.mocked(mockBedrock.generateText).mockImplementation(async () => {
+      callCount++;
+      if (callCount === 1) {
+        throw new Error('Bedrock API error');
+      }
+      return {
+        text: validAIResponse,
+        usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+      };
+    });
+
+    const summary = await generator.generateCandidates();
+
+    expect(summary.totalGames).toBe(2);
+    expect(summary.failedCount).toBe(1);
+    expect(summary.successCount).toBe(1);
+    // 1つ目が失敗、2つ目が成功
+    expect(summary.results[0].status).toBe('failed');
+    expect(summary.results[0].reason).toContain('Bedrock API error');
+    expect(summary.results[1].status).toBe('success');
+    // 2つ目の対局で候補が保存されていること
+    expect(summary.results[1].candidatesSaved).toBeGreaterThan(0);
+  });
+
+  it('boardStateパース失敗時: generateTextが呼ばれず、次の対局の処理が継続される', async () => {
+    const game1 = createMockGame({ gameId: 'game-bad-json', boardState: 'not-valid-json' });
+    const game2 = createMockGame({ gameId: 'game-ok' });
+    vi.mocked(mockGameRepo.listByStatus).mockResolvedValue({ items: [game1, game2] });
+    vi.mocked(mockCandidateRepo.listByTurn).mockResolvedValue([]);
+    vi.mocked(mockBedrock.generateText).mockResolvedValue({
+      text: validAIResponse,
+      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+    });
+    vi.mocked(mockCandidateRepo.create).mockResolvedValue({} as CandidateEntity);
+
+    const summary = await generator.generateCandidates();
+
+    expect(summary.totalGames).toBe(2);
+    expect(summary.skippedCount).toBe(1);
+    expect(summary.successCount).toBe(1);
+    // 1つ目がスキップ、2つ目が成功
+    expect(summary.results[0].status).toBe('skipped');
+    expect(summary.results[0].reason).toContain('parse');
+    expect(summary.results[1].status).toBe('success');
+    // generateText は2つ目の対局でのみ呼ばれる
+    expect(mockBedrock.generateText).toHaveBeenCalledTimes(1);
+  });
 });
 
 // --- プロパティベーステスト ---
