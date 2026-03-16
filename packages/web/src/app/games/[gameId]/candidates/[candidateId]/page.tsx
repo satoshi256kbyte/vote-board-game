@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { fetchGame, fetchCandidates, ApiError } from '@/lib/api/client';
 import { Board } from '@/components/board';
 import { ShareButton } from '@/components/share-button';
+import { formatCandidateTitle, truncateDescription, buildOgpImageUrl } from '@/lib/ogp/ogp-utils';
 import type { Metadata } from 'next';
 
 interface CandidateDetailPageProps {
@@ -39,20 +40,12 @@ export async function generateMetadata({ params }: CandidateDetailPageProps): Pr
       };
     }
 
-    const title = `次の一手候補: ${candidate.position}`;
-    const description = candidate.description || `${candidate.username}さんの候補`;
-
-    // Generate OGP image URL with query parameters
-    const ogImageUrl = new URL(
-      `/api/og/candidate/${candidateId}`,
-      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const title = formatCandidateTitle(candidate.position);
+    const description = truncateDescription(
+      candidate.description || `${candidate.username}さんの候補`,
+      100
     );
-    ogImageUrl.searchParams.set('position', candidate.position);
-    ogImageUrl.searchParams.set('votes', candidate.voteCount.toString());
-    ogImageUrl.searchParams.set('user', candidate.username);
-    if (candidate.description) {
-      ogImageUrl.searchParams.set('desc', candidate.description.substring(0, 100));
-    }
+    const ogImageUrl = buildOgpImageUrl(`/api/og/candidate/${candidateId}`);
 
     return {
       title,
@@ -62,7 +55,7 @@ export async function generateMetadata({ params }: CandidateDetailPageProps): Pr
         description,
         images: [
           {
-            url: ogImageUrl.toString(),
+            url: ogImageUrl,
             width: 1200,
             height: 630,
             alt: title,
@@ -74,7 +67,7 @@ export async function generateMetadata({ params }: CandidateDetailPageProps): Pr
         card: 'summary_large_image',
         title,
         description,
-        images: [ogImageUrl.toString()],
+        images: [ogImageUrl],
       },
     };
   } catch {
