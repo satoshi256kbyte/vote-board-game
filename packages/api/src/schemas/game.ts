@@ -32,3 +32,14 @@ export const createGameSchema = z.object({
 export const gameIdParamSchema = z.object({
   gameId: z.string().uuid(),
 });
+
+/**
+ * パスパラメータ :gameId と :turnNumber のバリデーションスキーマ
+ *
+ * - gameId: UUID v4 形式のゲームID
+ * - turnNumber: 正の整数のターン番号（1以上）
+ */
+export const gameTurnParamSchema = z.object({
+  gameId: z.string().uuid(),
+  turnNumber: z.coerce.number().int().min(1),
+});

@@ -4,6 +4,7 @@
  * ゲーム管理のためのRESTful APIエンドポイント群
  * - GET /api/games - ゲーム一覧取得
  * - GET /api/games/:gameId - ゲーム詳細取得
+ * - GET /api/games/:gameId/turns/:turnNumber - 特定ターンの盤面取得
  * - POST /api/games - ゲーム作成
  */
 
@@ -12,7 +13,14 @@ import { zValidator } from '@hono/zod-validator';
 import type { Context } from 'hono';
 import { GameService } from '../services/game.js';
 import { GameRepository } from '../lib/dynamodb/repositories/game.js';
-import { getGamesQuerySchema, createGameSchema, gameIdParamSchema } from '../schemas/game.js';
+import { MoveRepository } from '../lib/dynamodb/repositories/move.js';
+import { docClient, TABLE_NAME } from '../lib/dynamodb/index.js';
+import {
+  getGamesQuerySchema,
+  createGameSchema,
+  gameIdParamSchema,
+  gameTurnParamSchema,
+} from '../schemas/game.js';
 
 // バリデーションエラーハンドラー（共通）
 const validationErrorHandler = (
@@ -47,7 +55,8 @@ export function createGamesRouter(gameService?: GameService): Hono {
   const gamesRouter = new Hono();
 
   // GameService インスタンスの作成（依存性注入）
-  const service = gameService || new GameService(new GameRepository());
+  const service =
+    gameService || new GameService(new GameRepository(), new MoveRepository(docClient, TABLE_NAME));
 
   // GET /api/games - ゲーム一覧取得
   gamesRouter.get(
@@ -112,6 +121,44 @@ export function createGamesRouter(gameService?: GameService): Hono {
           {
             error: 'INTERNAL_ERROR',
             message: 'Failed to retrieve game',
+          },
+          500
+        );
+      }
+    }
+  );
+
+  // GET /api/games/:gameId/turns/:turnNumber - 特定ターンの盤面取得
+  gamesRouter.get(
+    '/:gameId/turns/:turnNumber',
+    zValidator('param', gameTurnParamSchema, validationErrorHandler),
+    async (c) => {
+      try {
+        const { gameId, turnNumber } = c.req.valid('param');
+
+        const turn = await service.getGameTurn(gameId, turnNumber);
+
+        if (!turn) {
+          return c.json(
+            {
+              error: 'NOT_FOUND',
+              message: 'Game or turn not found',
+            },
+            404
+          );
+        }
+
+        return c.json(turn, 200);
+      } catch (error) {
+        console.error('Failed to get game turn', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        });
+
+        return c.json(
+          {
+            error: 'INTERNAL_ERROR',
+            message: 'Failed to retrieve game turn',
           },
           500
         );

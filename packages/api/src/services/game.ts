@@ -4,8 +4,10 @@
 
 import { randomUUID } from 'crypto';
 import { GameRepository } from '../lib/dynamodb/repositories/game';
+import { MoveRepository } from '../lib/dynamodb/repositories/move';
 import {
   createInitialBoard,
+  executeMove,
   shouldEndGame,
   countDiscs,
   CellState,
@@ -14,12 +16,16 @@ import {
 import type {
   CreateGameResponse,
   GetGameResponse,
+  GetGameTurnResponse,
   GetGamesResponse,
   GameSummary,
 } from '../types/game';
 
 export class GameService {
-  constructor(private repository: GameRepository) {}
+  constructor(
+    private repository: GameRepository,
+    private moveRepository?: MoveRepository
+  ) {}
 
   /**
    * ゲーム一覧を取得
@@ -89,6 +95,59 @@ export class GameService {
     };
 
     return response;
+  }
+
+  /**
+   * 特定ターンの盤面を取得
+   * 初期盤面から手履歴をリプレイして該当ターンの盤面を再構築する
+   * Requirements: 2.1, 2.3
+   */
+  async getGameTurn(gameId: string, turnNumber: number): Promise<GetGameTurnResponse | null> {
+    // 1. ゲームの存在確認
+    const entity = await this.repository.getById(gameId);
+    if (!entity) {
+      return null;
+    }
+
+    // 2. ターン番号がゲームの現在ターン以下であることを確認
+    if (turnNumber > entity.currentTurn) {
+      return null;
+    }
+
+    // 3. MoveRepository が必要
+    if (!this.moveRepository) {
+      throw new Error('MoveRepository is required for getGameTurn');
+    }
+
+    // 4. 手履歴を取得
+    const moves = await this.moveRepository.listByGame(gameId);
+
+    // 5. ターン番号順にソート
+    const sortedMoves = [...moves].sort((a, b) => a.turnNumber - b.turnNumber);
+
+    // 6. 初期盤面から指定ターンまでリプレイ
+    let board: number[][] = createInitialBoard().map((row) => [...row]);
+
+    for (const move of sortedMoves) {
+      if (move.turnNumber >= turnNumber) {
+        break;
+      }
+
+      const [row, col] = move.position.split(',').map(Number);
+      const player = move.side === 'BLACK' ? CellState.Black : CellState.White;
+
+      board = executeMove(board as Board, { row, col }, player) as unknown as number[][];
+    }
+
+    // 7. 該当ターンの手番を決定（偶数ターン=黒、奇数ターン=白）
+    const currentPlayer: 'BLACK' | 'WHITE' = turnNumber % 2 === 0 ? 'BLACK' : 'WHITE';
+
+    return {
+      gameId,
+      turnNumber,
+      boardState: { board },
+      currentPlayer,
+    };
   }
 
   /**

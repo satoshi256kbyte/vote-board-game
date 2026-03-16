@@ -117,3 +117,21 @@ export interface CreateGameResponse {
   /** 更新日時（ISO 8601形式） */
   updatedAt: string;
 }
+
+/**
+ * 特定ターンの盤面取得APIのレスポンス
+ * GET /api/games/:gameId/turns/:turnNumber
+ */
+export interface GetGameTurnResponse {
+  /** ゲームID（UUID v4） */
+  gameId: string;
+  /** ターン番号 */
+  turnNumber: number;
+  /** 盤面の状態（パース済みオブジェクト） */
+  boardState: {
+    /** 8x8の盤面配列（0=空, 1=黒, 2=白） */
+    board: number[][];
+  };
+  /** 手番のプレイヤー */
+  currentPlayer: 'BLACK' | 'WHITE';
+}
