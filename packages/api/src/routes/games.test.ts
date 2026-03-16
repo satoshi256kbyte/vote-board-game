@@ -6,13 +6,19 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Hono } from 'hono';
 import { createGamesRouter } from './games.js';
-import type { GetGamesResponse, GetGameResponse, CreateGameResponse } from '../types/game.js';
+import type {
+  GetGamesResponse,
+  GetGameResponse,
+  GetGameTurnResponse,
+  CreateGameResponse,
+} from '../types/game.js';
 
 describe('Game API Routes', () => {
   let app: Hono;
   let mockGameService: {
     listGames: ReturnType<typeof vi.fn>;
     getGame: ReturnType<typeof vi.fn>;
+    getGameTurn: ReturnType<typeof vi.fn>;
     createGame: ReturnType<typeof vi.fn>;
   };
 
@@ -21,6 +27,7 @@ describe('Game API Routes', () => {
     mockGameService = {
       listGames: vi.fn(),
       getGame: vi.fn(),
+      getGameTurn: vi.fn(),
       createGame: vi.fn(),
     };
 
@@ -287,6 +294,121 @@ describe('Game API Routes', () => {
         expect(res.status).toBe(500);
         expect(data.error).toBe('INTERNAL_ERROR');
         expect(data.message).toBe('Failed to retrieve game');
+      });
+    });
+  });
+
+  describe('GET /api/games/:gameId/turns/:turnNumber', () => {
+    const validGameId = '123e4567-e89b-12d3-a456-426614174000';
+
+    describe('正常系', () => {
+      it('有効なgameIdとturnNumberでターンデータを取得できる', async () => {
+        // Arrange
+        const mockResponse: GetGameTurnResponse = {
+          gameId: validGameId,
+          turnNumber: 3,
+          boardState: {
+            board: [
+              [0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 1, 0, 0, 0, 0],
+              [0, 0, 0, 1, 1, 0, 0, 0],
+              [0, 0, 0, 1, 2, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0],
+            ],
+          },
+          currentPlayer: 'WHITE',
+        };
+        mockGameService.getGameTurn.mockResolvedValue(mockResponse);
+
+        // Act
+        const res = await app.request(`/api/games/${validGameId}/turns/3`);
+        const data = await res.json();
+
+        // Assert
+        expect(res.status).toBe(200);
+        expect(data).toEqual(mockResponse);
+        expect(mockGameService.getGameTurn).toHaveBeenCalledWith(validGameId, 3);
+      });
+    });
+
+    describe('エラー系', () => {
+      it('存在しないgameIdで404エラーを返す', async () => {
+        // Arrange
+        mockGameService.getGameTurn.mockResolvedValue(null);
+
+        // Act
+        const res = await app.request(`/api/games/${validGameId}/turns/1`);
+        const data = await res.json();
+
+        // Assert
+        expect(res.status).toBe(404);
+        expect(data.error).toBe('NOT_FOUND');
+        expect(data.message).toBe('Game or turn not found');
+      });
+
+      it('存在しないターン番号で404エラーを返す', async () => {
+        // Arrange
+        mockGameService.getGameTurn.mockResolvedValue(null);
+
+        // Act
+        const res = await app.request(`/api/games/${validGameId}/turns/999`);
+        const data = await res.json();
+
+        // Assert
+        expect(res.status).toBe(404);
+        expect(data.error).toBe('NOT_FOUND');
+        expect(data.message).toBe('Game or turn not found');
+      });
+
+      it('無効なUUID形式のgameIdで400エラーを返す', async () => {
+        // Act
+        const res = await app.request('/api/games/invalid-uuid/turns/1');
+        const data = await res.json();
+
+        // Assert
+        expect(res.status).toBe(400);
+        expect(data.error).toBe('VALIDATION_ERROR');
+        expect(data.message).toBe('Validation failed');
+        expect(data.details.fields).toBeDefined();
+      });
+
+      it('無効なturnNumber（0）で400エラーを返す', async () => {
+        // Act
+        const res = await app.request(`/api/games/${validGameId}/turns/0`);
+        const data = await res.json();
+
+        // Assert
+        expect(res.status).toBe(400);
+        expect(data.error).toBe('VALIDATION_ERROR');
+        expect(data.details.fields).toBeDefined();
+      });
+
+      it('無効なturnNumber（負の数）で400エラーを返す', async () => {
+        // Act
+        const res = await app.request(`/api/games/${validGameId}/turns/-1`);
+        const data = await res.json();
+
+        // Assert
+        expect(res.status).toBe(400);
+        expect(data.error).toBe('VALIDATION_ERROR');
+        expect(data.details.fields).toBeDefined();
+      });
+
+      it('サービス層でエラーが発生した場合に500エラーを返す', async () => {
+        // Arrange
+        mockGameService.getGameTurn.mockRejectedValue(new Error('Database error'));
+
+        // Act
+        const res = await app.request(`/api/games/${validGameId}/turns/1`);
+        const data = await res.json();
+
+        // Assert
+        expect(res.status).toBe(500);
+        expect(data.error).toBe('INTERNAL_ERROR');
+        expect(data.message).toBe('Failed to retrieve game turn');
       });
     });
   });
