@@ -161,4 +161,85 @@ describe('batch handler', () => {
       'generateCommentaries',
     ]);
   });
+
+  /**
+   * CandidateGenerator エラー隔離テスト
+   * Validates: Requirements 2.1, 2.2
+   */
+  it('CandidateGenerator の失敗時に CommentaryGenerator が実行される', async () => {
+    mockGenerateCandidates.mockImplementation(async () => {
+      callOrder.push('generateCandidates');
+      throw new Error('Candidate generation failed');
+    });
+
+    const { handler } = await import('./batch.js');
+
+    await handler({} as never, {} as never, () => {});
+
+    expect(mockGenerateCandidates).toHaveBeenCalledTimes(1);
+    expect(mockGenerateCommentaries).toHaveBeenCalledTimes(1);
+
+    // CandidateGenerator が失敗しても CommentaryGenerator は実行される
+    expect(callOrder).toEqual([
+      'tallyVotes',
+      'executeAIMoves',
+      'generateCandidates',
+      'generateCommentaries',
+    ]);
+  });
+
+  /**
+   * AIMoveExecutor エラー隔離テスト
+   * Validates: Requirements 3.2
+   */
+  it('AIMoveExecutor の失敗時に CandidateGenerator と CommentaryGenerator が実行される', async () => {
+    mockExecuteAIMoves.mockImplementation(async () => {
+      callOrder.push('executeAIMoves');
+      throw new Error('AI move execution failed');
+    });
+
+    const { handler } = await import('./batch.js');
+
+    await handler({} as never, {} as never, () => {});
+
+    expect(mockExecuteAIMoves).toHaveBeenCalledTimes(1);
+    expect(mockGenerateCandidates).toHaveBeenCalledTimes(1);
+    expect(mockGenerateCommentaries).toHaveBeenCalledTimes(1);
+
+    // AIMoveExecutor が失敗しても後続の CandidateGenerator と CommentaryGenerator は実行される
+    expect(callOrder).toEqual([
+      'tallyVotes',
+      'executeAIMoves',
+      'generateCandidates',
+      'generateCommentaries',
+    ]);
+  });
+
+  /**
+   * 全サービスの実行順序保証テスト
+   * Validates: Requirements 3.1
+   */
+  it('全サービスの実行順序が VoteTallyService → AIMoveExecutor → CandidateGenerator → CommentaryGenerator である', async () => {
+    const { handler } = await import('./batch.js');
+
+    await handler({} as never, {} as never, () => {});
+
+    // 実行順序を厳密に検証
+    expect(callOrder).toEqual([
+      'tallyVotes',
+      'executeAIMoves',
+      'generateCandidates',
+      'generateCommentaries',
+    ]);
+
+    // インデックスベースでも順序を検証
+    const tallyIndex = callOrder.indexOf('tallyVotes');
+    const aiMoveIndex = callOrder.indexOf('executeAIMoves');
+    const candidateIndex = callOrder.indexOf('generateCandidates');
+    const commentaryIndex = callOrder.indexOf('generateCommentaries');
+
+    expect(tallyIndex).toBeLessThan(aiMoveIndex);
+    expect(aiMoveIndex).toBeLessThan(candidateIndex);
+    expect(candidateIndex).toBeLessThan(commentaryIndex);
+  });
 });
