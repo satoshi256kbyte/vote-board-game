@@ -75,6 +75,14 @@ vi.mock('./services/commentary-generator/index.js', () => ({
   })),
 }));
 
+// GameStateUpdater モック
+const mockUpdateGameStates = vi.fn();
+vi.mock('./services/game-state-updater/index.js', () => ({
+  GameStateUpdater: vi.fn().mockImplementation(() => ({
+    updateGameStates: mockUpdateGameStates,
+  })),
+}));
+
 describe('batch handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -105,6 +113,17 @@ describe('batch handler', () => {
       callOrder.push('generateCommentaries');
       return { totalGames: 0, results: [] };
     });
+    mockUpdateGameStates.mockImplementation(async () => {
+      callOrder.push('updateGameStates');
+      return {
+        totalGames: 0,
+        okCount: 0,
+        finishedCount: 0,
+        warningCount: 0,
+        errorCount: 0,
+        results: [],
+      };
+    });
   });
 
   it('VoteTallyService が AIMoveExecutor の前に実行される', async () => {
@@ -134,6 +153,7 @@ describe('batch handler', () => {
     expect(mockExecuteAIMoves).toHaveBeenCalledTimes(1);
     expect(mockGenerateCandidates).toHaveBeenCalledTimes(1);
     expect(mockGenerateCommentaries).toHaveBeenCalledTimes(1);
+    expect(mockUpdateGameStates).toHaveBeenCalledTimes(1);
 
     // 失敗後も後続サービスが順番通り実行される
     expect(callOrder).toEqual([
@@ -141,6 +161,7 @@ describe('batch handler', () => {
       'executeAIMoves',
       'generateCandidates',
       'generateCommentaries',
+      'updateGameStates',
     ]);
   });
 
@@ -153,12 +174,14 @@ describe('batch handler', () => {
     expect(mockExecuteAIMoves).toHaveBeenCalledTimes(1);
     expect(mockGenerateCandidates).toHaveBeenCalledTimes(1);
     expect(mockGenerateCommentaries).toHaveBeenCalledTimes(1);
+    expect(mockUpdateGameStates).toHaveBeenCalledTimes(1);
 
     expect(callOrder).toEqual([
       'tallyVotes',
       'executeAIMoves',
       'generateCandidates',
       'generateCommentaries',
+      'updateGameStates',
     ]);
   });
 
@@ -178,6 +201,7 @@ describe('batch handler', () => {
 
     expect(mockGenerateCandidates).toHaveBeenCalledTimes(1);
     expect(mockGenerateCommentaries).toHaveBeenCalledTimes(1);
+    expect(mockUpdateGameStates).toHaveBeenCalledTimes(1);
 
     // CandidateGenerator が失敗しても CommentaryGenerator は実行される
     expect(callOrder).toEqual([
@@ -185,6 +209,7 @@ describe('batch handler', () => {
       'executeAIMoves',
       'generateCandidates',
       'generateCommentaries',
+      'updateGameStates',
     ]);
   });
 
@@ -205,6 +230,7 @@ describe('batch handler', () => {
     expect(mockExecuteAIMoves).toHaveBeenCalledTimes(1);
     expect(mockGenerateCandidates).toHaveBeenCalledTimes(1);
     expect(mockGenerateCommentaries).toHaveBeenCalledTimes(1);
+    expect(mockUpdateGameStates).toHaveBeenCalledTimes(1);
 
     // AIMoveExecutor が失敗しても後続の CandidateGenerator と CommentaryGenerator は実行される
     expect(callOrder).toEqual([
@@ -212,6 +238,7 @@ describe('batch handler', () => {
       'executeAIMoves',
       'generateCandidates',
       'generateCommentaries',
+      'updateGameStates',
     ]);
   });
 
@@ -230,6 +257,7 @@ describe('batch handler', () => {
       'executeAIMoves',
       'generateCandidates',
       'generateCommentaries',
+      'updateGameStates',
     ]);
 
     // インデックスベースでも順序を検証
@@ -241,5 +269,93 @@ describe('batch handler', () => {
     expect(tallyIndex).toBeLessThan(aiMoveIndex);
     expect(aiMoveIndex).toBeLessThan(candidateIndex);
     expect(candidateIndex).toBeLessThan(commentaryIndex);
+  });
+
+  /**
+   * GameStateUpdater が CommentaryGenerator の後に実行されるテスト
+   * Validates: Requirements 5.1
+   */
+  it('GameStateUpdater が CommentaryGenerator の後に実行される', async () => {
+    const { handler } = await import('./batch.js');
+
+    await handler({} as never, {} as never, () => {});
+
+    expect(mockGenerateCommentaries).toHaveBeenCalledTimes(1);
+    expect(mockUpdateGameStates).toHaveBeenCalledTimes(1);
+
+    const commentaryIndex = callOrder.indexOf('generateCommentaries');
+    const gameStateIndex = callOrder.indexOf('updateGameStates');
+    expect(commentaryIndex).toBeLessThan(gameStateIndex);
+  });
+
+  /**
+   * GameStateUpdater の失敗時にエラーログが出力されるテスト
+   * Validates: Requirements 5.2
+   */
+  it('GameStateUpdater の失敗時に BATCH_GAME_STATE_UPDATE_FAILED エラーログが出力される', async () => {
+    mockUpdateGameStates.mockImplementation(async () => {
+      callOrder.push('updateGameStates');
+      throw new Error('Game state update failed');
+    });
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { handler } = await import('./batch.js');
+
+    await handler({} as never, {} as never, () => {});
+
+    expect(mockUpdateGameStates).toHaveBeenCalledTimes(1);
+
+    // BATCH_GAME_STATE_UPDATE_FAILED ログが出力されること
+    const errorCalls = consoleSpy.mock.calls.map((call) => {
+      try {
+        return JSON.parse(call[0] as string);
+      } catch {
+        return null;
+      }
+    });
+    const failedLog = errorCalls.find((log) => log?.type === 'BATCH_GAME_STATE_UPDATE_FAILED');
+    expect(failedLog).toBeDefined();
+    expect(failedLog.error).toBe('Game state update failed');
+
+    consoleSpy.mockRestore();
+  });
+
+  /**
+   * 5つのサービスの実行順序保証テスト
+   * Validates: Requirements 5.1, 5.4
+   */
+  it('5つのサービスの実行順序が VoteTallyService → AIMoveExecutor → CandidateGenerator → CommentaryGenerator → GameStateUpdater である', async () => {
+    const { handler } = await import('./batch.js');
+
+    await handler({} as never, {} as never, () => {});
+
+    // 5つ全てのサービスが呼び出されること
+    expect(mockTallyVotes).toHaveBeenCalledTimes(1);
+    expect(mockExecuteAIMoves).toHaveBeenCalledTimes(1);
+    expect(mockGenerateCandidates).toHaveBeenCalledTimes(1);
+    expect(mockGenerateCommentaries).toHaveBeenCalledTimes(1);
+    expect(mockUpdateGameStates).toHaveBeenCalledTimes(1);
+
+    // 実行順序を厳密に検証
+    expect(callOrder).toEqual([
+      'tallyVotes',
+      'executeAIMoves',
+      'generateCandidates',
+      'generateCommentaries',
+      'updateGameStates',
+    ]);
+
+    // インデックスベースでも全5サービスの順序を検証
+    const tallyIndex = callOrder.indexOf('tallyVotes');
+    const aiMoveIndex = callOrder.indexOf('executeAIMoves');
+    const candidateIndex = callOrder.indexOf('generateCandidates');
+    const commentaryIndex = callOrder.indexOf('generateCommentaries');
+    const gameStateIndex = callOrder.indexOf('updateGameStates');
+
+    expect(tallyIndex).toBeLessThan(aiMoveIndex);
+    expect(aiMoveIndex).toBeLessThan(candidateIndex);
+    expect(candidateIndex).toBeLessThan(commentaryIndex);
+    expect(commentaryIndex).toBeLessThan(gameStateIndex);
   });
 });
