@@ -222,7 +222,7 @@ inclusion: manual
 | 8.1 投票締切・集計バッチ | 完了       | 32-vote-tally-batch              |
 | 8.2 次の一手確定処理     | 完了       | 32-vote-tally-batch              |
 | 8.3 AI 候補生成バッチ    | 完了       | 33-ai-candidate-generation-batch |
-| 8.4 対局状態更新バッチ   |            |                                  |
+| 8.4 対局状態更新バッチ   | 完了       | 34-game-state-update-batch       |
 
 ### 🚀 デプロイ: バッチ処理を開発環境にデプロイ
 
