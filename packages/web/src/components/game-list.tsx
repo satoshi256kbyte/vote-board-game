@@ -1,17 +1,22 @@
 /**
  * Game List Component
  *
- * Client component that handles status filtering tabs and pagination.
+ * Client component that handles status filtering tabs, tag search, and pagination.
  * Displays games in grid layout (desktop) / single column (mobile).
  *
- * Requirements: 1.3-1.11
+ * Requirements: 1.1, 1.3-1.11, 3.3, 3.5, 4.1, 4.4, 4.5, 8.1, 8.2, 8.3
  */
 
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GameCard } from './game-card';
+import { TagSearchInput } from '@/components/tag-search-input';
+import { SelectedTagChips } from '@/components/selected-tag-chips';
+import { useTagFilter } from '@/lib/hooks/use-tag-filter';
+import { useTagUrlSync } from '@/lib/hooks/use-tag-url-sync';
+import { parseTagsFromUrl } from '@/lib/utils/tag-utils';
 import type { GameSummary, GameStatus } from '@/types/game';
 
 interface GameListProps {
@@ -28,7 +33,24 @@ interface GameListProps {
  */
 export function GameList({ initialGames, initialStatus, initialNextCursor }: GameListProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<GameStatus>(initialStatus);
+
+  // Parse initial tags from URL for useTagFilter
+  const initialTagsFromUrl = parseTagsFromUrl(searchParams);
+
+  // Tag filter hook
+  const { filteredGames, selectedTags, suggestions, addTag, removeTag, resultCount } = useTagFilter(
+    { games: initialGames, initialTags: initialTagsFromUrl }
+  );
+
+  // Sync tag state with URL
+  useTagUrlSync({
+    selectedTags: selectedTags.map((t) => t.label),
+    onTagsChange: () => {
+      // Initial URL restoration is handled by initialTagsFromUrl above
+    },
+  });
 
   const handleTabChange = (status: GameStatus) => {
     setActiveTab(status);
@@ -79,22 +101,37 @@ export function GameList({ initialGames, initialStatus, initialNextCursor }: Gam
         </nav>
       </div>
 
+      {/* タグ検索エリア */}
+      <div className="mb-6 space-y-3">
+        <TagSearchInput
+          suggestions={suggestions}
+          selectedTags={selectedTags.map((t) => t.value)}
+          onTagSelect={addTag}
+        />
+        <SelectedTagChips tags={selectedTags} onRemove={removeTag} resultCount={resultCount} />
+      </div>
+
       {/* ゲームリスト */}
       {initialGames.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">対局がありません</p>
         </div>
+      ) : filteredGames.length === 0 && selectedTags.length > 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">該当する対局がありません</p>
+        </div>
       ) : (
         <>
           {/* グリッドレイアウト: デスクトップ3列、タブレット2列、モバイル1列 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {initialGames.map((game) => (
+            {filteredGames.map((game) => (
               <GameCard
                 key={game.gameId}
                 game={game}
                 boardState={{ board: Array(8).fill(Array(8).fill(0)) }}
                 participantCount={0}
                 votingDeadline={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()}
+                onTagClick={addTag}
               />
             ))}
           </div>

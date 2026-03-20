@@ -35,9 +35,12 @@ vi.mock('@/lib/hooks/use-auth', () => ({
 const mockPush = vi.fn();
 const mockGet = vi.fn();
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => ({
-    get: mockGet,
-  }),
+  useSearchParams: () => {
+    const params = new URLSearchParams();
+    const originalGet = params.get.bind(params);
+    params.get = (key: string) => mockGet(key) ?? originalGet(key);
+    return params;
+  },
   useRouter: () => ({
     push: mockPush,
   }),
