@@ -4,8 +4,8 @@
  * Unit tests for the GameCard component using React Testing Library.
  */
 
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { GameCard } from './game-card';
 import type { GameSummary, BoardState } from '@/types/game';
 
@@ -256,5 +256,97 @@ describe('GameCard', () => {
 
     // Game mode should still show "AI vs 集合知"
     expect(screen.getByText('オセロ - AI vs 集合知')).toBeInTheDocument();
+  });
+
+  it('should display tag chips for game with tags', () => {
+    const gameWithTags: GameSummary = {
+      ...mockGame,
+      tags: ['初心者向け', 'トーナメント'],
+    };
+
+    render(
+      <GameCard
+        game={gameWithTags}
+        boardState={mockBoardState}
+        participantCount={42}
+        votingDeadline="2024-01-02T00:00:00Z"
+      />
+    );
+
+    expect(screen.getByTestId('game-tags')).toBeInTheDocument();
+    // gameType tag (オセロ) + custom tags
+    expect(screen.getByTestId('tag-chip-オセロ')).toBeInTheDocument();
+    expect(screen.getByTestId('tag-chip-初心者向け')).toBeInTheDocument();
+  });
+
+  it('should display gameType virtual tag even with empty tags array', () => {
+    render(
+      <GameCard
+        game={mockGame}
+        boardState={mockBoardState}
+        participantCount={42}
+        votingDeadline="2024-01-02T00:00:00Z"
+      />
+    );
+
+    // Should show gameType tag (オセロ)
+    expect(screen.getByTestId('tag-chip-オセロ')).toBeInTheDocument();
+  });
+
+  it('should exclude E2E tags from display', () => {
+    const gameWithE2E: GameSummary = {
+      ...mockGame,
+      tags: ['E2E', '初心者向け'],
+    };
+
+    render(
+      <GameCard
+        game={gameWithE2E}
+        boardState={mockBoardState}
+        participantCount={42}
+        votingDeadline="2024-01-02T00:00:00Z"
+      />
+    );
+
+    expect(screen.queryByTestId('tag-chip-E2E')).not.toBeInTheDocument();
+    expect(screen.getByTestId('tag-chip-初心者向け')).toBeInTheDocument();
+  });
+
+  it('should call onTagClick when a tag chip is clicked', () => {
+    const handleTagClick = vi.fn();
+    const gameWithTags: GameSummary = {
+      ...mockGame,
+      tags: ['初心者向け'],
+    };
+
+    render(
+      <GameCard
+        game={gameWithTags}
+        boardState={mockBoardState}
+        participantCount={42}
+        votingDeadline="2024-01-02T00:00:00Z"
+        onTagClick={handleTagClick}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('tag-chip-初心者向け'));
+    expect(handleTagClick).toHaveBeenCalledWith('初心者向け');
+  });
+
+  it('should call onTagClick with gameType value for gameType tags', () => {
+    const handleTagClick = vi.fn();
+
+    render(
+      <GameCard
+        game={mockGame}
+        boardState={mockBoardState}
+        participantCount={42}
+        votingDeadline="2024-01-02T00:00:00Z"
+        onTagClick={handleTagClick}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('tag-chip-オセロ'));
+    expect(handleTagClick).toHaveBeenCalledWith('OTHELLO');
   });
 });

@@ -10,6 +10,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { Board } from './board';
+import { TagChip } from './tag-chip';
+import { getGameTags } from '@/lib/utils/tag-utils';
 import type { GameSummary, BoardState } from '@/types/game';
 
 interface GameCardProps {
@@ -21,6 +23,8 @@ interface GameCardProps {
   participantCount: number;
   /** 投票締切日時（ISO 8601形式） */
   votingDeadline: string;
+  /** タグチップクリック時のコールバック */
+  onTagClick?: (tag: string) => void;
 }
 
 /**
@@ -63,10 +67,17 @@ const formatDeadline = (isoString: string): string => {
 /**
  * Game Card Component
  */
-export function GameCard({ game, boardState, participantCount, votingDeadline }: GameCardProps) {
+export function GameCard({
+  game,
+  boardState,
+  participantCount,
+  votingDeadline,
+  onTagClick,
+}: GameCardProps) {
   const gameTypeLabel = getGameTypeLabel(game.gameType);
   const gameModeLabel = getGameModeLabel();
   const deadlineLabel = formatDeadline(votingDeadline);
+  const gameTags = getGameTags(game);
 
   return (
     <div
@@ -84,6 +95,20 @@ export function GameCard({ game, boardState, participantCount, votingDeadline }:
         <h3 className="text-lg font-bold text-gray-900" data-testid="game-title">
           {gameTypeLabel} - {gameModeLabel}
         </h3>
+
+        {/* タグチップ */}
+        {gameTags.length > 0 && (
+          <div className="flex flex-wrap gap-1" data-testid="game-tags">
+            {gameTags.map((tag) => (
+              <TagChip
+                key={`${tag.type}:${tag.value}`}
+                label={tag.label}
+                type={tag.type}
+                onClick={onTagClick ? () => onTagClick(tag.value) : undefined}
+              />
+            ))}
+          </div>
+        )}
 
         {/* メタデータ */}
         <div className="space-y-1 text-sm text-gray-600">
