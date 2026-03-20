@@ -16,6 +16,7 @@ describe('GameService', () => {
       create: vi.fn(),
       updateBoardState: vi.fn(),
       getById: vi.fn(),
+      listByStatus: vi.fn(),
     } as unknown as GameRepository;
 
     service = new GameService(mockRepository);
@@ -122,6 +123,190 @@ describe('GameService', () => {
           boardState: expect.any(String),
         })
       );
+    });
+
+    it('should pass tags to repository when tags are provided', async () => {
+      const mockEntity: GameEntity = {
+        PK: 'GAME#test-id',
+        SK: 'GAME#test-id',
+        GSI1PK: 'GAME#STATUS#ACTIVE',
+        GSI1SK: '2024-01-01T00:00:00.000Z',
+        entityType: 'GAME',
+        gameId: 'test-id',
+        gameType: 'OTHELLO',
+        status: 'ACTIVE',
+        aiSide: 'BLACK',
+        currentTurn: 0,
+        boardState: JSON.stringify({ board: [] }),
+        tags: ['E2E'],
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      };
+
+      vi.mocked(mockRepository.create).mockResolvedValue(mockEntity);
+
+      await service.createGame({
+        gameType: 'OTHELLO',
+        aiSide: 'BLACK',
+        tags: ['E2E'],
+      });
+
+      expect(mockRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tags: ['E2E'],
+        })
+      );
+    });
+
+    it('should not pass tags to repository when tags are not provided', async () => {
+      const mockEntity: GameEntity = {
+        PK: 'GAME#test-id',
+        SK: 'GAME#test-id',
+        GSI1PK: 'GAME#STATUS#ACTIVE',
+        GSI1SK: '2024-01-01T00:00:00.000Z',
+        entityType: 'GAME',
+        gameId: 'test-id',
+        gameType: 'OTHELLO',
+        status: 'ACTIVE',
+        aiSide: 'BLACK',
+        currentTurn: 0,
+        boardState: JSON.stringify({ board: [] }),
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      };
+
+      vi.mocked(mockRepository.create).mockResolvedValue(mockEntity);
+
+      await service.createGame({
+        gameType: 'OTHELLO',
+        aiSide: 'BLACK',
+      });
+
+      const callArgs = vi.mocked(mockRepository.create).mock.calls[0][0];
+      expect(callArgs.tags).toBeUndefined();
+    });
+  });
+
+  describe('listGames', () => {
+    it('should filter out E2E-tagged games from response', async () => {
+      const mockItems: GameEntity[] = [
+        {
+          PK: 'GAME#game-1',
+          SK: 'GAME#game-1',
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: '2024-01-01T00:00:00.000Z',
+          entityType: 'GAME',
+          gameId: 'game-1',
+          gameType: 'OTHELLO',
+          status: 'ACTIVE',
+          aiSide: 'BLACK',
+          currentTurn: 0,
+          boardState: JSON.stringify({ board: [] }),
+          tags: [],
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          PK: 'GAME#game-2',
+          SK: 'GAME#game-2',
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: '2024-01-02T00:00:00.000Z',
+          entityType: 'GAME',
+          gameId: 'game-2',
+          gameType: 'OTHELLO',
+          status: 'ACTIVE',
+          aiSide: 'WHITE',
+          currentTurn: 5,
+          boardState: JSON.stringify({ board: [] }),
+          tags: ['E2E'],
+          createdAt: '2024-01-02T00:00:00.000Z',
+          updatedAt: '2024-01-02T00:00:00.000Z',
+        },
+        {
+          PK: 'GAME#game-3',
+          SK: 'GAME#game-3',
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: '2024-01-03T00:00:00.000Z',
+          entityType: 'GAME',
+          gameId: 'game-3',
+          gameType: 'OTHELLO',
+          status: 'ACTIVE',
+          aiSide: 'BLACK',
+          currentTurn: 3,
+          boardState: JSON.stringify({ board: [] }),
+          tags: [],
+          createdAt: '2024-01-03T00:00:00.000Z',
+          updatedAt: '2024-01-03T00:00:00.000Z',
+        },
+      ];
+
+      vi.mocked(mockRepository.listByStatus).mockResolvedValue({
+        items: mockItems,
+        lastEvaluatedKey: undefined,
+      });
+
+      const result = await service.listGames({
+        status: 'ACTIVE',
+        limit: 20,
+      });
+
+      expect(result.games).toHaveLength(2);
+      expect(result.games.map((g) => g.gameId)).toEqual(['game-1', 'game-3']);
+      expect(result.games.every((g) => !g.tags.includes('E2E'))).toBe(true);
+    });
+
+    it('should include tags attribute in each game of the response', async () => {
+      const mockItems: GameEntity[] = [
+        {
+          PK: 'GAME#game-1',
+          SK: 'GAME#game-1',
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: '2024-01-01T00:00:00.000Z',
+          entityType: 'GAME',
+          gameId: 'game-1',
+          gameType: 'OTHELLO',
+          status: 'ACTIVE',
+          aiSide: 'BLACK',
+          currentTurn: 0,
+          boardState: JSON.stringify({ board: [] }),
+          tags: ['custom-tag'],
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          PK: 'GAME#game-2',
+          SK: 'GAME#game-2',
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: '2024-01-02T00:00:00.000Z',
+          entityType: 'GAME',
+          gameId: 'game-2',
+          gameType: 'OTHELLO',
+          status: 'ACTIVE',
+          aiSide: 'WHITE',
+          currentTurn: 2,
+          boardState: JSON.stringify({ board: [] }),
+          createdAt: '2024-01-02T00:00:00.000Z',
+          updatedAt: '2024-01-02T00:00:00.000Z',
+        },
+      ];
+
+      vi.mocked(mockRepository.listByStatus).mockResolvedValue({
+        items: mockItems,
+        lastEvaluatedKey: undefined,
+      });
+
+      const result = await service.listGames({
+        status: 'ACTIVE',
+        limit: 20,
+      });
+
+      expect(result.games).toHaveLength(2);
+      result.games.forEach((game) => {
+        expect(game).toHaveProperty('tags');
+        expect(Array.isArray(game.tags)).toBe(true);
+      });
+      expect(result.games[0].tags).toEqual(['custom-tag']);
+      expect(result.games[1].tags).toEqual([]);
     });
   });
 
