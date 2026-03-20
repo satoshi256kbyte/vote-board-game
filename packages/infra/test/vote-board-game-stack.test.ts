@@ -144,8 +144,8 @@ describe('VoteBoardGameStack', () => {
       const template = Template.fromStack(stack);
 
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        GlobalSecondaryIndexes: [
-          {
+        GlobalSecondaryIndexes: Match.arrayWith([
+          Match.objectLike({
             IndexName: 'GSI1',
             KeySchema: [
               {
@@ -157,8 +157,8 @@ describe('VoteBoardGameStack', () => {
                 KeyType: 'RANGE',
               },
             ],
-          },
-          {
+          }),
+          Match.objectLike({
             IndexName: 'GSI2',
             KeySchema: [
               {
@@ -170,8 +170,31 @@ describe('VoteBoardGameStack', () => {
                 KeyType: 'RANGE',
               },
             ],
-          },
-        ],
+          }),
+        ]),
+      });
+    });
+
+    it('should create GSI3 for tag-based search', () => {
+      const app = new cdk.App();
+      const stack = new VoteBoardGameStack(app, 'TestStack', {
+        appName: 'vbg',
+        environment: 'dev',
+      });
+      const template = Template.fromStack(stack);
+
+      template.hasResourceProperties('AWS::DynamoDB::Table', {
+        GlobalSecondaryIndexes: Match.arrayWith([
+          Match.objectLike({
+            IndexName: 'GSI3',
+            KeySchema: [
+              {
+                AttributeName: 'GSI3PK',
+                KeyType: 'HASH',
+              },
+            ],
+          }),
+        ]),
       });
     });
   });

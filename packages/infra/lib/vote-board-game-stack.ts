@@ -138,6 +138,15 @@ export class VoteBoardGameStack extends cdk.Stack {
       },
     });
 
+    // GSI3: タグ検索用（E2Eテストデータのクリーンアップ等）
+    table.addGlobalSecondaryIndex({
+      indexName: 'GSI3',
+      partitionKey: {
+        name: 'GSI3PK',
+        type: dynamodb.AttributeType.STRING,
+      },
+    });
+
     // Cognito ユーザープール
     const userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: `${appName}-${environment}-cognito-main`,

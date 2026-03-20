@@ -2217,6 +2217,10 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             "AttributeName": "GSI2SK",
             "AttributeType": "S",
           },
+          {
+            "AttributeName": "GSI3PK",
+            "AttributeType": "S",
+          },
         ],
         "BillingMode": "PAY_PER_REQUEST",
         "GlobalSecondaryIndexes": [
@@ -2246,6 +2250,18 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
               {
                 "AttributeName": "GSI2SK",
                 "KeyType": "RANGE",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+          },
+          {
+            "IndexName": "GSI3",
+            "KeySchema": [
+              {
+                "AttributeName": "GSI3PK",
+                "KeyType": "HASH",
               },
             ],
             "Projection": {
@@ -4876,6 +4892,10 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
             "AttributeName": "GSI2SK",
             "AttributeType": "S",
           },
+          {
+            "AttributeName": "GSI3PK",
+            "AttributeType": "S",
+          },
         ],
         "BillingMode": "PAY_PER_REQUEST",
         "GlobalSecondaryIndexes": [
@@ -4905,6 +4925,18 @@ exports[`VoteBoardGameStack > Snapshot tests > should match CloudFormation templ
               {
                 "AttributeName": "GSI2SK",
                 "KeyType": "RANGE",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+          },
+          {
+            "IndexName": "GSI3",
+            "KeySchema": [
+              {
+                "AttributeName": "GSI3PK",
+                "KeyType": "HASH",
               },
             ],
             "Projection": {
