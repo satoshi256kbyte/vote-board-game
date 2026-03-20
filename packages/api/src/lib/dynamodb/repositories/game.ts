@@ -103,6 +103,32 @@ export class GameRepository extends BaseRepository {
     );
   }
 
+  async listByTag(tag: string): Promise<GameEntity[]> {
+    const items: GameEntity[] = [];
+    let exclusiveStartKey: Record<string, unknown> | undefined;
+
+    do {
+      const result = await this.docClient.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          IndexName: 'GSI3',
+          KeyConditionExpression: 'GSI3PK = :gsi3pk',
+          ExpressionAttributeValues: {
+            ':gsi3pk': `TAG#${tag}`,
+          },
+          ExclusiveStartKey: exclusiveStartKey,
+        })
+      );
+
+      if (result.Items) {
+        items.push(...(result.Items as GameEntity[]));
+      }
+      exclusiveStartKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+    } while (exclusiveStartKey);
+
+    return items;
+  }
+
   async finish(gameId: string, winner: 'AI' | 'COLLECTIVE' | 'DRAW'): Promise<void> {
     const keys = Keys.game(gameId);
     const now = this.now();
