@@ -12,10 +12,12 @@ export class GameRepository extends BaseRepository {
     gameType: 'OTHELLO' | 'CHESS' | 'GO' | 'SHOGI';
     aiSide: 'BLACK' | 'WHITE';
     boardState?: string;
+    tags?: string[];
   }): Promise<GameEntity> {
     const now = this.now();
     const keys = Keys.game(params.gameId);
     const gsiKeys = GSIKeys.gamesByStatus('ACTIVE', now);
+    const tags = params.tags ?? [];
 
     const entity: GameEntity = {
       ...keys,
@@ -27,6 +29,8 @@ export class GameRepository extends BaseRepository {
       aiSide: params.aiSide,
       currentTurn: 0,
       boardState: params.boardState || JSON.stringify({ board: [] }), // 初期盤面
+      tags,
+      ...(tags.includes('E2E') ? GSIKeys.gamesByTag('E2E') : {}),
       createdAt: now,
       updatedAt: now,
     };
