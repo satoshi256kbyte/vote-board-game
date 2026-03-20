@@ -620,6 +620,204 @@ describe('Game API Integration Tests', () => {
     });
   });
 
+  describe('tags関連のテスト', () => {
+    it('tags付きでゲームを作成し、サービスにtagsが渡される', async () => {
+      const gameId = '123e4567-e89b-12d3-a456-426614174000';
+      const createdAt = '2024-01-01T00:00:00.000Z';
+
+      const mockEntity: GameEntity = {
+        PK: `GAME#${gameId}`,
+        SK: `GAME#${gameId}`,
+        GSI1PK: 'GAME#STATUS#ACTIVE',
+        GSI1SK: createdAt,
+        GSI3PK: 'TAG#E2E',
+        entityType: 'GAME',
+        gameId,
+        gameType: 'OTHELLO',
+        status: 'ACTIVE',
+        aiSide: 'BLACK',
+        currentTurn: 0,
+        boardState: '{"board":[]}',
+        tags: ['E2E'],
+        createdAt,
+        updatedAt: createdAt,
+      };
+
+      mockCreate.mockResolvedValue(mockEntity);
+
+      const createRes = await app.request('/api/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameType: 'OTHELLO',
+          aiSide: 'BLACK',
+          tags: ['E2E'],
+        }),
+      });
+
+      expect(createRes.status).toBe(201);
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tags: ['E2E'],
+        })
+      );
+    });
+
+    it('tags未指定時はデフォルトの空配列でリポジトリが呼ばれる', async () => {
+      const gameId = '223e4567-e89b-12d3-a456-426614174000';
+      const createdAt = '2024-01-01T00:00:00.000Z';
+
+      const mockEntity: GameEntity = {
+        PK: `GAME#${gameId}`,
+        SK: `GAME#${gameId}`,
+        GSI1PK: 'GAME#STATUS#ACTIVE',
+        GSI1SK: createdAt,
+        entityType: 'GAME',
+        gameId,
+        gameType: 'OTHELLO',
+        status: 'ACTIVE',
+        aiSide: 'WHITE',
+        currentTurn: 0,
+        boardState: '{"board":[]}',
+        tags: [],
+        createdAt,
+        updatedAt: createdAt,
+      };
+
+      mockCreate.mockResolvedValue(mockEntity);
+
+      const createRes = await app.request('/api/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameType: 'OTHELLO',
+          aiSide: 'WHITE',
+        }),
+      });
+
+      expect(createRes.status).toBe(201);
+      // tags未指定時、スキーマのデフォルト値（空配列）がサービス経由でリポジトリに渡される
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tags: [],
+        })
+      );
+    });
+
+    it('ゲーム一覧のレスポンスにtags属性が含まれる', async () => {
+      const games = [
+        {
+          gameId: 'game-001',
+          gameType: 'OTHELLO' as const,
+          status: 'ACTIVE' as const,
+          aiSide: 'BLACK' as const,
+          currentTurn: 0,
+          tags: ['test'],
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          gameId: 'game-002',
+          gameType: 'OTHELLO' as const,
+          status: 'ACTIVE' as const,
+          aiSide: 'WHITE' as const,
+          currentTurn: 0,
+          tags: [],
+          createdAt: '2024-01-01T00:01:00.000Z',
+          updatedAt: '2024-01-01T00:01:00.000Z',
+        },
+      ];
+
+      mockListByStatus.mockResolvedValueOnce({
+        items: games.map((g) => ({
+          ...g,
+          PK: `GAME#${g.gameId}`,
+          SK: `GAME#${g.gameId}`,
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: g.createdAt,
+          entityType: 'GAME',
+          boardState: '{"board":[]}',
+        })),
+      });
+
+      const res = await app.request('/api/games?limit=10');
+      expect(res.status).toBe(200);
+      const data = await res.json();
+
+      expect(data.games).toHaveLength(2);
+      for (const game of data.games) {
+        expect(game).toHaveProperty('tags');
+        expect(Array.isArray(game.tags)).toBe(true);
+      }
+      expect(data.games[0].tags).toEqual(['test']);
+      expect(data.games[1].tags).toEqual([]);
+    });
+
+    it('E2Eタグ付きゲームがゲーム一覧から除外される', async () => {
+      const games = [
+        {
+          gameId: 'game-normal',
+          gameType: 'OTHELLO' as const,
+          status: 'ACTIVE' as const,
+          aiSide: 'BLACK' as const,
+          currentTurn: 0,
+          tags: [],
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          gameId: 'game-e2e',
+          gameType: 'OTHELLO' as const,
+          status: 'ACTIVE' as const,
+          aiSide: 'WHITE' as const,
+          currentTurn: 0,
+          tags: ['E2E'],
+          GSI3PK: 'TAG#E2E',
+          createdAt: '2024-01-01T00:01:00.000Z',
+          updatedAt: '2024-01-01T00:01:00.000Z',
+        },
+        {
+          gameId: 'game-normal-2',
+          gameType: 'OTHELLO' as const,
+          status: 'ACTIVE' as const,
+          aiSide: 'BLACK' as const,
+          currentTurn: 0,
+          tags: [],
+          createdAt: '2024-01-01T00:02:00.000Z',
+          updatedAt: '2024-01-01T00:02:00.000Z',
+        },
+      ];
+
+      mockListByStatus.mockResolvedValueOnce({
+        items: games.map((g) => ({
+          ...g,
+          PK: `GAME#${g.gameId}`,
+          SK: `GAME#${g.gameId}`,
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: g.createdAt,
+          entityType: 'GAME',
+          boardState: '{"board":[]}',
+        })),
+      });
+
+      const res = await app.request('/api/games?limit=10');
+      expect(res.status).toBe(200);
+      const data = await res.json();
+
+      // E2Eタグ付きゲームが除外されていることを確認
+      expect(data.games).toHaveLength(2);
+      const gameIds = data.games.map((g: { gameId: string }) => g.gameId);
+      expect(gameIds).toContain('game-normal');
+      expect(gameIds).toContain('game-normal-2');
+      expect(gameIds).not.toContain('game-e2e');
+
+      // 全てのゲームにE2Eタグが含まれないことを確認
+      for (const game of data.games) {
+        expect(game.tags).not.toContain('E2E');
+      }
+    });
+  });
+
   describe('複合フロー', () => {
     it('ゲーム作成→一覧取得→詳細取得の完全なフローが正常に動作する', async () => {
       // Step 1: 3つのゲームを作成
