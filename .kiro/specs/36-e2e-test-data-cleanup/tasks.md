@@ -63,20 +63,20 @@ E2Eテストで作成された対局データがDynamoDBに残留する問題を
     - **Property 5: E2Eタグ付きゲームの除外とlimit遵守** — E2Eタグ付きとタグなしの混在ゲーム集合に対して、レスポンスにE2Eタグ付きゲームが含まれず、件数がlimit以下である
     - **検証対象: 要件 5.1, 5.2**
 
-- [ ] 4. ゲームルートの拡張
+- [x] 4. ゲームルートの拡張
   - [x] 4.1 `packages/api/src/routes/games.ts` の POST /api/games で `tags` フィールドを受け取り、`GameService.createGame` に渡す
     - `c.req.valid('json')` から `tags` を取得
     - `service.createGame` に `tags` を渡す
     - _要件: 2.1, 2.2_
-  - [-] 4.2 `packages/api/src/routes/games.ts` の GET /api/games レスポンスに `tags` 属性を含める
+  - [x] 4.2 `packages/api/src/routes/games.ts` の GET /api/games レスポンスに `tags` 属性を含める
     - `GameSummary` に `tags` が含まれていることを確認（3.5で対応済みのはず）
     - _要件: 2.4_
-  - [~] 4.3 `packages/api/src/routes/games.test.ts` と `packages/api/src/routes/games.integration.test.ts` に `tags` 関連のテストを追加する
+  - [x] 4.3 `packages/api/src/routes/games.test.ts` と `packages/api/src/routes/games.integration.test.ts` に `tags` 関連のテストを追加する
     - POST /api/games: tags付きゲーム作成、tags未指定時のデフォルト
     - GET /api/games: レスポンスにtags属性が含まれること、E2Eタグ付きゲームが除外されること
     - _要件: 2.1, 2.2, 2.4, 5.1_
 
-- [~] 5. チェックポイント - テスト実行と確認
+- [x] 5. チェックポイント - テスト実行と確認
   - `pnpm test` で全テストがpassすることを確認し、ユーザーに質問があれば確認する
 
 - [ ] 6. CDKスタックにGSI3を追加
