@@ -35,6 +35,7 @@ describe('API Client', () => {
             currentTurn: 5,
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-01T00:05:00Z',
+            tags: [],
           },
         ],
       };

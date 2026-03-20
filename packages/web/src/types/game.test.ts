@@ -61,8 +61,10 @@ describe('Game Type Definitions', () => {
         currentTurn: 0,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z',
+        tags: [],
       };
       expect(summary.gameId).toBeDefined();
+      expect(summary.tags).toEqual([]);
     });
 
     it('should accept game summary with winner', () => {
@@ -75,8 +77,10 @@ describe('Game Type Definitions', () => {
         winner: 'AI',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z',
+        tags: ['test-tag'],
       };
       expect(summary.winner).toBe('AI');
+      expect(summary.tags).toEqual(['test-tag']);
     });
   });
 
@@ -195,6 +199,7 @@ describe('Game Type Definitions', () => {
             currentTurn: 0,
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-01T00:00:00Z',
+            tags: [],
           },
         ],
         nextCursor: 'cursor123',

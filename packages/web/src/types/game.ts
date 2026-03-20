@@ -59,6 +59,8 @@ export interface GameSummary {
   createdAt: string;
   /** 更新日時（ISO 8601形式） */
   updatedAt: string;
+  /** タグ配列 */
+  tags: string[];
 }
 
 /**

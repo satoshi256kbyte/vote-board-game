@@ -79,6 +79,7 @@ describe('Home (Game List Screen)', () => {
         currentTurn: 1,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z',
+        tags: [],
       },
       {
         gameId: 'game-2',
@@ -88,6 +89,7 @@ describe('Home (Game List Screen)', () => {
         currentTurn: 5,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z',
+        tags: [],
       },
     ];
 
@@ -167,6 +169,7 @@ describe('Home (Game List Screen)', () => {
         currentTurn: 1,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z',
+        tags: [],
       },
     ];
 

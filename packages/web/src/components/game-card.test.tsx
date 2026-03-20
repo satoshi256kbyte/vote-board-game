@@ -31,6 +31,7 @@ describe('GameCard', () => {
     currentTurn: 5,
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T12:00:00Z',
+    tags: [],
   };
 
   it('should render board thumbnail', () => {

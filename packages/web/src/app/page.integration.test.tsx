@@ -53,6 +53,7 @@ describe('Game List Screen Integration', () => {
       currentTurn: 1,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
+      tags: [],
     },
     {
       gameId: 'active-2',
@@ -62,6 +63,7 @@ describe('Game List Screen Integration', () => {
       currentTurn: 5,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
+      tags: [],
     },
   ];
 
@@ -75,6 +77,7 @@ describe('Game List Screen Integration', () => {
       winner: 'AI',
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
+      tags: [],
     },
   ];
 
