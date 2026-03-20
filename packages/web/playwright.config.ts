@@ -29,6 +29,9 @@ export function createPlaywrightConfig(
     // グローバルセットアップ（サービス可用性チェック）
     globalSetup: './e2e/global-setup.ts',
 
+    // グローバルティアダウン（E2Eテストデータクリーンアップ）
+    globalTeardown: './e2e/global-teardown.ts',
+
     // 各テストのタイムアウト（プロパティベーステストを考慮して延長）
     timeout: 60 * 1000,
 

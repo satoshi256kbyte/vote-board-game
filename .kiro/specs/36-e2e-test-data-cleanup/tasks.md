@@ -79,27 +79,27 @@ E2Eテストで作成された対局データがDynamoDBに残留する問題を
 - [x] 5. チェックポイント - テスト実行と確認
   - `pnpm test` で全テストがpassすることを確認し、ユーザーに質問があれば確認する
 
-- [ ] 6. CDKスタックにGSI3を追加
-  - [~] 6.1 `packages/infra/lib/vote-board-game-stack.ts` のDynamoDBテーブル定義にGSI3（パーティションキー: `GSI3PK`、ソートキーなし）を追加する
+- [x] 6. CDKスタックにGSI3を追加
+  - [x] 6.1 `packages/infra/lib/vote-board-game-stack.ts` のDynamoDBテーブル定義にGSI3（パーティションキー: `GSI3PK`、ソートキーなし）を追加する
     - `table.addGlobalSecondaryIndex({ indexName: 'GSI3', partitionKey: { name: 'GSI3PK', type: dynamodb.AttributeType.STRING } })`
     - _要件: 1.4_
-  - [~] 6.2 CDKスナップショットテストを更新し、GSI3が追加されていることを検証する
+  - [x] 6.2 CDKスナップショットテストを更新し、GSI3が追加されていることを検証する
     - スナップショットの更新（`pnpm test -- -u` でスナップショット再生成）
     - Fine-grained assertionでGSI3の存在を検証
     - _要件: 1.4_
 
-- [~] 7. チェックポイント - テスト実行と確認
+- [x] 7. チェックポイント - テスト実行と確認
   - `pnpm test` で全テストがpassすることを確認し、ユーザーに質問があれば確認する
 
-- [ ] 8. E2Eテストデータヘルパーとフィクスチャの拡張
-  - [~] 8.1 `packages/web/e2e/helpers/test-data.ts` の `createTestGame` 関数でGame_Entityに `tags: ["E2E"]` と `GSI3PK: "TAG#E2E"` を設定する
+- [x] 8. E2Eテストデータヘルパーとフィクスチャの拡張
+  - [x] 8.1 `packages/web/e2e/helpers/test-data.ts` の `createTestGame` 関数でGame_Entityに `tags: ["E2E"]` と `GSI3PK: "TAG#E2E"` を設定する
     - DynamoDB PutCommand の Item に `tags: ['E2E']` と `GSI3PK: 'TAG#E2E'` を追加
     - _要件: 3.1, 3.2_
-  - [~] 8.2 `packages/web/e2e/helpers/test-data.test.ts` のテストを更新し、tags と GSI3PK が正しく設定されることを検証する
+  - [x] 8.2 `packages/web/e2e/helpers/test-data.test.ts` のテストを更新し、tags と GSI3PK が正しく設定されることを検証する
     - _要件: 3.1, 3.2_
 
-- [ ] 9. Global Teardownの実装
-  - [~] 9.1 `packages/web/e2e/global-teardown.ts` を新規作成し、E2Eテスト終了時のクリーンアップ処理を実装する
+- [x] 9. Global Teardownの実装
+  - [x] 9.1 `packages/web/e2e/global-teardown.ts` を新規作成し、E2Eテスト終了時のクリーンアップ処理を実装する
     - GSI3で `TAG#E2E` のゲームを検索（`QueryCommand` で `IndexName: 'GSI3'`）
     - 各ゲームの関連データ（Candidate_Entity: `PK = GAME#<gameId>#TURN#*`）を検索・削除
     - ゲーム本体を削除
@@ -108,10 +108,10 @@ E2Eテストで作成された対局データがDynamoDBに残留する問題を
     - `DYNAMODB_TABLE_NAME` 未設定時は警告ログを出力してスキップ
     - `withCredentialRefresh` でAWS認証情報期限切れに対応
     - _要件: 4.1, 4.2, 4.3, 4.4, 4.5_
-  - [~] 9.2 `packages/web/playwright.config.ts` に `globalTeardown: './e2e/global-teardown.ts'` 設定を追加する
+  - [x] 9.2 `packages/web/playwright.config.ts` に `globalTeardown: './e2e/global-teardown.ts'` 設定を追加する
     - `createPlaywrightConfig` の返却オブジェクトに `globalTeardown` を追加
     - _要件: 4.4, 6.4_
-  - [~] 9.3 `packages/web/e2e/global-teardown.test.ts` を新規作成し、クリーンアップロジックのユニットテストを追加する
+  - [x] 9.3 `packages/web/e2e/global-teardown.test.ts` を新規作成し、クリーンアップロジックのユニットテストを追加する
     - DynamoDBクライアントをモックしてクリーンアップフローを検証
     - エラー発生時の継続動作を検証
     - 削除件数のログ出力を検証
@@ -119,7 +119,7 @@ E2Eテストで作成された対局データがDynamoDBに残留する問題を
     - **検証対象: 要件 4.2**
     - _要件: 4.1, 4.2, 4.3, 4.5_
 
-- [~] 10. チェックポイント - テスト実行と確認
+- [x] 10. チェックポイント - テスト実行と確認
   - `pnpm test` で全テストがpassすることを確認し、ユーザーに質問があれば確認する
 
 - [ ] 11. GitHub Actionsワークフローの確認
