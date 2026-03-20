@@ -147,6 +147,7 @@ inclusion: manual
 | 5.2.3 対局作成画面             | 完了       | 15-game-screens-components |
 | 5.2.4 オセロ盤面コンポーネント | 完了       | 15-game-screens-components |
 | 5.2.5 棋譜表示コンポーネント   | 完了       | 15-game-screens-components |
+| 5.2.6 対局一覧タグ検索機能     | 完了       | 37-game-list-tag-search    |
 
 ### 5.3 E2Eテスト
 
