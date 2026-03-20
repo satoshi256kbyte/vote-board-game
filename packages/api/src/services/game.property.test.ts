@@ -10,6 +10,7 @@ import * as fc from 'fast-check';
 import { GameService } from './game';
 import { GameRepository } from '../lib/dynamodb/repositories/game';
 import { CellState } from '../lib/othello';
+import type { GameEntity } from '../lib/dynamodb/types';
 
 // Mock DynamoDB client at module level
 vi.mock('../lib/dynamodb.js', () => ({
@@ -1307,6 +1308,158 @@ describe('GameService Property Tests - BoardState Serialization', () => {
             expect(Array.isArray(row)).toBe(true);
             expect(row).toHaveLength(8);
           });
+        }
+      ),
+      { numRuns: 20, endOnFailure: true }
+    );
+  });
+});
+
+describe('GameService Property Tests - E2E Tag Filtering (Feature: 36-e2e-test-data-cleanup)', () => {
+  let service: GameService;
+  let mockRepository: GameRepository;
+
+  beforeEach(() => {
+    mockRepository = {
+      create: vi.fn(),
+      updateBoardState: vi.fn(),
+      getById: vi.fn(),
+      listByStatus: vi.fn(),
+      finish: vi.fn(),
+      listByTag: vi.fn(),
+    } as unknown as GameRepository;
+
+    service = new GameService(mockRepository);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  /**
+   * Feature: 36-e2e-test-data-cleanup, Property 4: レスポンスにtags属性を含む
+   * **Validates: Requirements 2.4**
+   *
+   * 任意のタグ配列を持つゲームに対して、GET /api/games のレスポンスの各ゲームが
+   * `tags` 属性（配列）を持つ。
+   */
+  it('Feature: 36-e2e-test-data-cleanup, Property 4: レスポンスにtags属性を含む', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.array(
+          fc.record({
+            gameId: fc.uuid(),
+            gameType: fc.constant('OTHELLO' as const),
+            status: fc.constant('ACTIVE' as const),
+            aiSide: fc.constantFrom('BLACK' as const, 'WHITE' as const),
+            currentTurn: fc.nat({ max: 60 }),
+            tags: fc.array(fc.string({ minLength: 1, maxLength: 10 }), {
+              minLength: 0,
+              maxLength: 5,
+            }),
+            createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
+          }),
+          { minLength: 0, maxLength: 10 }
+        ),
+        async (games) => {
+          // Exclude E2E-tagged games from input (Property 4 focuses on tags presence)
+          const nonE2EGames = games.filter((g) => !g.tags.includes('E2E'));
+
+          const mockItems: GameEntity[] = nonE2EGames.map((g) => ({
+            PK: `GAME#${g.gameId}`,
+            SK: `GAME#${g.gameId}`,
+            GSI1PK: `GAME#STATUS#${g.status}`,
+            GSI1SK: g.createdAt,
+            entityType: 'GAME' as const,
+            gameId: g.gameId,
+            gameType: g.gameType,
+            status: g.status,
+            aiSide: g.aiSide,
+            currentTurn: g.currentTurn,
+            boardState: '{"board":[]}',
+            tags: g.tags,
+            createdAt: g.createdAt,
+            updatedAt: g.createdAt,
+          }));
+
+          vi.mocked(mockRepository.listByStatus).mockResolvedValue({
+            items: mockItems,
+            lastEvaluatedKey: undefined,
+          });
+
+          const result = await service.listGames({
+            status: 'ACTIVE',
+            limit: 20,
+          });
+
+          result.games.forEach((game) => {
+            expect(game).toHaveProperty('tags');
+            expect(Array.isArray(game.tags)).toBe(true);
+          });
+        }
+      ),
+      { numRuns: 20, endOnFailure: true }
+    );
+  });
+
+  /**
+   * Feature: 36-e2e-test-data-cleanup, Property 5: E2Eタグ付きゲームの除外とlimit遵守
+   * **Validates: Requirements 5.1, 5.2**
+   *
+   * E2Eタグ付きとタグなしの混在ゲーム集合に対して、レスポンスにE2Eタグ付きゲームが
+   * 含まれず、件数がlimit以下である。
+   */
+  it('Feature: 36-e2e-test-data-cleanup, Property 5: E2Eタグ付きゲームの除外とlimit遵守', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 1, max: 50 }),
+        fc.array(
+          fc.record({
+            gameId: fc.uuid(),
+            gameType: fc.constant('OTHELLO' as const),
+            status: fc.constant('ACTIVE' as const),
+            aiSide: fc.constantFrom('BLACK' as const, 'WHITE' as const),
+            currentTurn: fc.nat({ max: 60 }),
+            isE2E: fc.boolean(),
+            createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
+          }),
+          { minLength: 0, maxLength: 20 }
+        ),
+        async (limit, games) => {
+          const mockItems: GameEntity[] = games.map((g) => ({
+            PK: `GAME#${g.gameId}`,
+            SK: `GAME#${g.gameId}`,
+            GSI1PK: `GAME#STATUS#${g.status}`,
+            GSI1SK: g.createdAt,
+            entityType: 'GAME' as const,
+            gameId: g.gameId,
+            gameType: g.gameType,
+            status: g.status,
+            aiSide: g.aiSide,
+            currentTurn: g.currentTurn,
+            boardState: '{"board":[]}',
+            tags: g.isE2E ? ['E2E'] : [],
+            createdAt: g.createdAt,
+            updatedAt: g.createdAt,
+          }));
+
+          vi.mocked(mockRepository.listByStatus).mockResolvedValue({
+            items: mockItems,
+            lastEvaluatedKey: undefined,
+          });
+
+          const result = await service.listGames({
+            status: 'ACTIVE',
+            limit,
+          });
+
+          // No E2E-tagged game in response
+          result.games.forEach((game) => {
+            expect(game.tags).not.toContain('E2E');
+          });
+
+          // Response length <= limit
+          expect(result.games.length).toBeLessThanOrEqual(limit);
         }
       ),
       { numRuns: 20, endOnFailure: true }
