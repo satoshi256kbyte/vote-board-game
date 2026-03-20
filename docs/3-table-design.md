@@ -30,6 +30,12 @@ DynamoDB Single Table Design を採用
 - ソートキー: `GSI2SK` (String)
 - 用途: ユーザーの投票履歴取得
 
+#### GSI3: タグ検索用
+
+- パーティションキー: `GSI3PK` (String)
+- ソートキーなし
+- 用途: タグによるゲーム検索（E2Eテストデータのクリーンアップ等）
+
 ## エンティティ設計
 
 ### ユーザー (User)
@@ -48,22 +54,24 @@ DynamoDB Single Table Design を採用
 
 ### ゲーム (Game)
 
-| 属性        | 型     | 説明                                      |
-| :---------- | :----- | :---------------------------------------- |
-| PK          | String | `GAME#<gameId>`                           |
-| SK          | String | `GAME#<gameId>`                           |
-| GSI1PK      | String | `GAME#STATUS#<status>`                    |
-| GSI1SK      | String | `<createdAt>`                             |
-| gameId      | String | ゲームID (UUID)                           |
-| gameType    | String | ゲーム種類 (`OTHELLO`)                    |
-| status      | String | ステータス (`ACTIVE`, `FINISHED`)         |
-| aiSide      | String | AIの手番 (`BLACK`, `WHITE`)               |
-| currentTurn | Number | 現在のターン数                            |
-| boardState  | String | 盤面状態 (JSON文字列)                     |
-| winner      | String | 勝者 (`AI`, `COLLECTIVE`, `DRAW`, `null`) |
-| createdAt   | String | 作成日時 (ISO 8601)                       |
-| updatedAt   | String | 更新日時 (ISO 8601)                       |
-| entityType  | String | `GAME`                                    |
+| 属性        | 型     | 説明                                                   |
+| :---------- | :----- | :----------------------------------------------------- |
+| PK          | String | `GAME#<gameId>`                                        |
+| SK          | String | `GAME#<gameId>`                                        |
+| GSI1PK      | String | `GAME#STATUS#<status>`                                 |
+| GSI1SK      | String | `<createdAt>`                                          |
+| gameId      | String | ゲームID (UUID)                                        |
+| gameType    | String | ゲーム種類 (`OTHELLO`)                                 |
+| status      | String | ステータス (`ACTIVE`, `FINISHED`)                      |
+| aiSide      | String | AIの手番 (`BLACK`, `WHITE`)                            |
+| currentTurn | Number | 現在のターン数                                         |
+| boardState  | String | 盤面状態 (JSON文字列)                                  |
+| winner      | String | 勝者 (`AI`, `COLLECTIVE`, `DRAW`, `null`)              |
+| tags        | List   | タグ配列 (例: `["E2E"]`)。省略時は空配列               |
+| GSI3PK      | String | `TAG#<tagName>`（E2Eタグ付きの場合のみ設定。任意属性） |
+| createdAt   | String | 作成日時 (ISO 8601)                                    |
+| updatedAt   | String | 更新日時 (ISO 8601)                                    |
+| entityType  | String | `GAME`                                                 |
 
 ### 手 (Move)
 
@@ -195,6 +203,15 @@ Query:
   SK begins_with COMMENTARY#
 ```
 
+### 9. タグによるゲーム検索
+
+```txt
+Query (GSI3):
+  GSI3PK = TAG#<tagName>
+```
+
+用途: E2Eテストデータのクリーンアップ等
+
 ## データ例
 
 ### ユーザー
@@ -228,8 +245,32 @@ Query:
   "currentTurn": 5,
   "boardState": "{\"board\":[[0,0,0,...],[...],...]}",
   "winner": null,
+  "tags": [],
   "createdAt": "2025-02-19T10:00:00Z",
   "updatedAt": "2025-02-19T15:00:00Z",
+  "entityType": "GAME"
+}
+```
+
+### ゲーム（E2Eタグ付き）
+
+```json
+{
+  "PK": "GAME#789e0123-e89b-12d3-a456-426614174099",
+  "SK": "GAME#789e0123-e89b-12d3-a456-426614174099",
+  "GSI1PK": "GAME#STATUS#ACTIVE",
+  "GSI1SK": "2025-02-20T10:00:00Z",
+  "GSI3PK": "TAG#E2E",
+  "gameId": "789e0123-e89b-12d3-a456-426614174099",
+  "gameType": "OTHELLO",
+  "status": "ACTIVE",
+  "aiSide": "WHITE",
+  "currentTurn": 0,
+  "boardState": "{\"board\":[[0,0,0,...],[...],...]}",
+  "winner": null,
+  "tags": ["E2E"],
+  "createdAt": "2025-02-20T10:00:00Z",
+  "updatedAt": "2025-02-20T10:00:00Z",
   "entityType": "GAME"
 }
 ```
