@@ -157,6 +157,7 @@ export class GameService {
   async createGame(params: {
     gameType: 'OTHELLO';
     aiSide: 'BLACK' | 'WHITE';
+    tags?: string[];
   }): Promise<CreateGameResponse> {
     const gameId = randomUUID();
     const initialBoard = createInitialBoard();
@@ -170,6 +171,7 @@ export class GameService {
       gameType: params.gameType,
       aiSide: params.aiSide,
       boardState, // Pass initial board state to create method
+      tags: params.tags,
     });
 
     const parsedBoardState = JSON.parse(boardState) as { board: number[][] };
