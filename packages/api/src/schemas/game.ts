@@ -22,6 +22,7 @@ export const getGamesQuerySchema = z.object({
 export const createGameSchema = z.object({
   gameType: z.literal('OTHELLO'),
   aiSide: z.enum(['BLACK', 'WHITE']),
+  tags: z.array(z.string()).optional().default([]),
 });
 
 /**
