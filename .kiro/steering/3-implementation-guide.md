@@ -696,3 +696,70 @@ it('should call API', () => {
 
 - `afterEach` で `cleanup()`、`vi.clearAllTimers()`、`vi.clearAllMocks()` を実行
 - `vitest.setup.ts` でもグローバルに `vi.clearAllTimers()` と microtask flush を実施
+
+## MCP サーバー利用ルール
+
+Kiro が作業を行う際、以下のルールに従って MCP サーバーを活用すること。
+MCP サーバーは `.kiro/settings/mcp.json` で設定されている。
+
+### AWS 操作・AWS CDK 編集時
+
+AWS リソースの確認・操作、CDK コードの編集時には、以下の MCP サーバーを必ず使用すること:
+
+| MCP サーバー                       | 用途                                                                                                     |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `awslabs-core-mcp-server`          | AWS ドキュメント検索（`search_documentation`）、AWS CLI 実行（`call_aws`）、リージョン情報取得、料金確認 |
+| `awslabs.cloudtrail-mcp-server`    | CloudTrail イベントの検索・分析（トラブルシューティング時）                                              |
+| `iam-policy-autopilot`             | IAM ポリシーの自動生成（Lambda 等のソースコードから最小権限ポリシーを生成）                              |
+| `power-aws-infrastructure-as-code` | CDK サンプル・コンストラクトの検索（`search_cdk_samples_and_constructs`）、IaC ドキュメント参照          |
+
+#### 具体的な使用場面
+
+- **CDK スタック・コンストラクトの新規作成・修正時**: `power-aws-infrastructure-as-code` で CDK サンプルを検索し、ベストプラクティスに沿った実装を行う
+- **AWS サービスの設定・仕様確認時**: `awslabs-core-mcp-server` の `search_documentation` でドキュメントを検索する
+- **AWS CLI でリソース状態を確認する時**: `awslabs-core-mcp-server` の `call_aws` を使用する（トラブルシューティング目的の確認のみ。変更操作は IaC 経由）
+- **Lambda 関数の IAM ポリシー作成時**: `iam-policy-autopilot` の `generate_application_policies` でソースコードから最小権限ポリシーを生成する
+- **デプロイ後の問題調査時**: `awslabs.cloudtrail-mcp-server` で CloudTrail イベントを検索し、API コールの履歴を確認する
+
+### フロントエンド・バックエンドプログラム編集時
+
+フロントエンド（Next.js / React）やバックエンド（Hono / Lambda）のコード編集時には、以下の MCP サーバーを活用すること:
+
+| MCP サーバー | 用途                                         |
+| ------------ | -------------------------------------------- |
+| `context7`   | ライブラリの最新ドキュメント・コード例の検索 |
+
+#### 具体的な使用場面
+
+- **ライブラリの API や使い方が不明な時**: `context7` で `resolve_library_id` → `query_docs` の順にドキュメントを検索する
+- **対象ライブラリ例**: Next.js、React、Hono、Zod、Tailwind CSS、shadcn/ui、Vitest、Playwright、AWS SDK v3 など
+- **新しいライブラリを導入する時**: `context7` で最新のセットアップ手順やベストプラクティスを確認する
+
+### GitHub 操作時
+
+GitHub に関する操作を行う際は、必ず `github` MCP サーバーを使用すること:
+
+| MCP サーバー | 用途                                                                            |
+| ------------ | ------------------------------------------------------------------------------- |
+| `github`     | PR 作成・一覧・レビュー、Issue 管理、コミット履歴確認、ファイル操作、コード検索 |
+
+#### 具体的な使用場面
+
+- **PR の作成・確認・レビュー時**: `create_pull_request`、`list_pull_requests`、`pull_request_read` を使用
+- **Issue の作成・検索・更新時**: `issue_write`、`list_issues`、`search_issues` を使用
+- **コミット履歴の確認時**: `list_commits`、`get_commit` を使用
+- **CI/CD の状態確認時**: `pull_request_read`（`get_check_runs`）でチェック結果を確認
+- **リポジトリ内のコード検索時**: `search_code` を使用
+
+### ワイヤーフレーム・ダイアグラム編集時
+
+| MCP サーバー | 用途                                 |
+| ------------ | ------------------------------------ |
+| `drawio`     | draw.io 形式のダイアグラム表示・編集 |
+
+### MCP サーバー利用の原則
+
+1. **情報の正確性**: 自身の知識だけに頼らず、MCP サーバーで最新情報を確認してから実装する
+2. **ドキュメントファースト**: AWS サービスやライブラリの仕様は、まず MCP サーバー経由でドキュメントを検索する
+3. **最小権限の原則**: IAM ポリシーは `iam-policy-autopilot` で自動生成し、手動で過剰な権限を付与しない
+4. **GitHub 操作の一元化**: GitHub に関する操作（PR、Issue、コミット確認等）は必ず `github` MCP サーバー経由で行い、`gh` CLI の直接実行は避ける
