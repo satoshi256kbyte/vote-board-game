@@ -458,6 +458,7 @@ describe('Game API Routes', () => {
         expect(mockGameService.createGame).toHaveBeenCalledWith({
           gameType: 'OTHELLO',
           aiSide: 'BLACK',
+          tags: [],
         });
       });
 
@@ -504,6 +505,7 @@ describe('Game API Routes', () => {
         expect(mockGameService.createGame).toHaveBeenCalledWith({
           gameType: 'OTHELLO',
           aiSide: 'WHITE',
+          tags: [],
         });
       });
     });

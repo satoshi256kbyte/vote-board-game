@@ -169,11 +169,12 @@ export function createGamesRouter(gameService?: GameService): Hono {
   // POST /api/games - ゲーム作成
   gamesRouter.post('/', zValidator('json', createGameSchema, validationErrorHandler), async (c) => {
     try {
-      const { gameType, aiSide } = c.req.valid('json');
+      const { gameType, aiSide, tags } = c.req.valid('json');
 
       const game = await service.createGame({
         gameType,
         aiSide,
+        tags,
       });
 
       console.log('Game created successfully', {
