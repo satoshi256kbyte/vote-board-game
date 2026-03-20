@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as fc from 'fast-check';
 import { GameRepository } from './game.js';
 import type { GameEntity } from '../types.js';
 import { PutCommand, GetCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
@@ -712,6 +713,92 @@ describe('GameRepository', () => {
         await expect(repository.finish(gameId, winner)).rejects.toThrow('DynamoDB service error');
         expect(mockSend).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  /**
+   * Feature: 36-e2e-test-data-cleanup, Property 1: タグのラウンドトリップ
+   *
+   * **Validates: Requirements 1.1, 1.3**
+   *
+   * 任意の文字列配列 tags で create → getById した結果の tags が元の配列と一致する
+   */
+  describe('Property 1: タグのラウンドトリップ', () => {
+    it('任意のタグ配列で create → getById した結果の tags が元の配列と一致する', async () => {
+      const samples = fc.sample(
+        fc.array(fc.string({ minLength: 0, maxLength: 20 }), { minLength: 0, maxLength: 5 }),
+        { numRuns: 15 }
+      );
+
+      for (const tags of samples) {
+        vi.clearAllMocks();
+        // create のモック
+        mockSend.mockResolvedValueOnce({});
+
+        const created = await repository.create({
+          gameId: `game-prop1-${Math.random()}`,
+          gameType: 'OTHELLO',
+          aiSide: 'BLACK',
+          tags,
+        });
+
+        // getById のモック: create が返したエンティティをそのまま返す
+        mockSend.mockResolvedValueOnce({ Item: created });
+
+        const fetched = await repository.getById(created.gameId);
+
+        // 同期的な検証
+        fc.assert(
+          fc.property(fc.constant(null), () => {
+            expect(fetched).not.toBeNull();
+            expect(fetched!.tags).toEqual(tags);
+          }),
+          { numRuns: 1, endOnFailure: true }
+        );
+      }
+    });
+  });
+
+  /**
+   * Feature: 36-e2e-test-data-cleanup, Property 2: E2EタグとGSI3PKの連動
+   *
+   * **Validates: Requirements 1.5**
+   *
+   * 任意の文字列配列 tags に対して、E2E を含む場合のみ GSI3PK が TAG#E2E に設定される
+   */
+  describe('Property 2: E2EタグとGSI3PKの連動', () => {
+    it('tags に E2E を含む場合のみ GSI3PK が TAG#E2E に設定される', async () => {
+      const samples = fc.sample(
+        fc.array(fc.oneof(fc.constant('E2E'), fc.string({ minLength: 1, maxLength: 10 })), {
+          minLength: 0,
+          maxLength: 5,
+        }),
+        { numRuns: 20 }
+      );
+
+      for (const tags of samples) {
+        vi.clearAllMocks();
+        mockSend.mockResolvedValueOnce({});
+
+        const created = await repository.create({
+          gameId: `game-prop2-${Math.random()}`,
+          gameType: 'OTHELLO',
+          aiSide: 'BLACK',
+          tags,
+        });
+
+        // 同期的な検証
+        fc.assert(
+          fc.property(fc.constant(null), () => {
+            if (tags.includes('E2E')) {
+              expect(created.GSI3PK).toBe('TAG#E2E');
+            } else {
+              expect(created.GSI3PK).toBeUndefined();
+            }
+          }),
+          { numRuns: 1, endOnFailure: true }
+        );
+      }
     });
   });
 
