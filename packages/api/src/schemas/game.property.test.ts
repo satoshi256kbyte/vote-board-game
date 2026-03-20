@@ -362,6 +362,58 @@ describe('Property 18: Error Responses Have Required Structure', () => {
     });
   });
 
+  /**
+   * Feature: 36-e2e-test-data-cleanup, Property 3: tagsフィールドのバリデーション
+   *
+   * **Validates: Requirements 2.3**
+   *
+   * 任意の文字列配列でない値を `tags` に指定した場合、バリデーションエラーとなる
+   */
+  describe('Property 3: tagsフィールドのバリデーション', () => {
+    it('should reject non-string-array values for tags', () => {
+      fc.assert(
+        fc.property(
+          fc.oneof(
+            fc.integer(), // 数値
+            fc.boolean(), // 真偽値
+            fc.constant('not-an-array'), // 文字列
+            fc.dictionary(fc.string({ minLength: 1, maxLength: 5 }), fc.string()), // オブジェクト
+            fc.array(fc.integer(), { minLength: 1, maxLength: 3 }), // 数値の配列
+            fc.array(fc.boolean(), { minLength: 1, maxLength: 3 }), // 真偽値の配列
+            fc.array(fc.array(fc.string(), { minLength: 1, maxLength: 2 }), {
+              minLength: 1,
+              maxLength: 2,
+            }) // ネストされた配列
+          ),
+          (invalidTags) => {
+            const result = createGameSchema.safeParse({
+              gameType: 'OTHELLO',
+              aiSide: 'BLACK',
+              tags: invalidTags,
+            });
+
+            expect(result.success).toBe(false);
+
+            if (!result.success) {
+              expect(result.error).toBeDefined();
+              expect(result.error.issues).toBeDefined();
+              expect(result.error.issues.length).toBeGreaterThan(0);
+
+              // tags フィールドに関連するエラーが存在することを確認
+              const tagsError = result.error.issues.find(
+                (issue) => issue.path[0] === 'tags' || issue.path.includes('tags')
+              );
+              expect(tagsError).toBeDefined();
+            }
+
+            return true;
+          }
+        ),
+        { numRuns: 20, endOnFailure: true }
+      );
+    });
+  });
+
   describe('Valid inputs should pass validation', () => {
     it('should accept valid getGamesQuery parameters', () => {
       fc.assert(
