@@ -29,7 +29,7 @@ export class GameService {
 
   /**
    * ゲーム一覧を取得
-   * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9
+   * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 5.1, 5.2
    */
   async listGames(params: {
     status: 'ACTIVE' | 'FINISHED';
@@ -39,24 +39,47 @@ export class GameService {
     // limitを1-100の範囲に制限
     const effectiveLimit = Math.min(Math.max(params.limit, 1), 100);
 
-    // リポジトリからゲーム一覧を取得
-    const result = await this.repository.listByStatus(params.status, effectiveLimit, params.cursor);
+    const games: GameSummary[] = [];
+    let currentCursor = params.cursor;
+    let lastEvaluatedKey: Record<string, unknown> | undefined;
 
-    // GameEntityをGameSummaryに変換
-    const games: GameSummary[] = result.items.map((entity) => ({
-      gameId: entity.gameId,
-      gameType: entity.gameType,
-      status: entity.status,
-      aiSide: entity.aiSide,
-      currentTurn: entity.currentTurn,
-      winner: entity.winner,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt || entity.createdAt,
-    }));
+    // E2Eタグ付きゲームを除外しつつ、limit件数を満たすまでページネーション
+    while (games.length < effectiveLimit) {
+      // 不足分 + バッファを考慮して多めに取得
+      const fetchLimit = Math.min((effectiveLimit - games.length) * 2, 100);
 
-    // nextCursorを生成（LastEvaluatedKeyが存在する場合）
-    const nextCursor = result.lastEvaluatedKey
-      ? Buffer.from(JSON.stringify(result.lastEvaluatedKey)).toString('base64')
+      const result = await this.repository.listByStatus(params.status, fetchLimit, currentCursor);
+
+      // E2Eタグ付きゲームを除外してGameSummaryに変換
+      for (const entity of result.items) {
+        if (games.length >= effectiveLimit) break;
+        if (entity.tags?.includes('E2E')) continue;
+
+        games.push({
+          gameId: entity.gameId,
+          gameType: entity.gameType,
+          status: entity.status,
+          aiSide: entity.aiSide,
+          currentTurn: entity.currentTurn,
+          winner: entity.winner,
+          tags: entity.tags || [],
+          createdAt: entity.createdAt,
+          updatedAt: entity.updatedAt || entity.createdAt,
+        });
+      }
+
+      lastEvaluatedKey = result.lastEvaluatedKey;
+
+      // これ以上データがない場合はループを抜ける
+      if (!result.lastEvaluatedKey) break;
+
+      // 次のページのカーソルを更新
+      currentCursor = Buffer.from(JSON.stringify(result.lastEvaluatedKey)).toString('base64');
+    }
+
+    // nextCursorを生成（LastEvaluatedKeyが存在し、まだデータがある可能性がある場合）
+    const nextCursor = lastEvaluatedKey
+      ? Buffer.from(JSON.stringify(lastEvaluatedKey)).toString('base64')
       : undefined;
 
     return {

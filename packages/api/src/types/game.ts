@@ -45,6 +45,8 @@ export interface GameSummary {
   currentTurn: number;
   /** 勝者（ゲーム終了時のみ） */
   winner?: 'AI' | 'COLLECTIVE' | 'DRAW';
+  /** タグ配列 */
+  tags: string[];
   /** 作成日時（ISO 8601形式） */
   createdAt: string;
   /** 更新日時（ISO 8601形式） */
