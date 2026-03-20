@@ -30,6 +30,8 @@ export interface GameEntity extends BaseEntity {
   currentTurn: number;
   boardState: string; // JSON string
   winner?: 'AI' | 'COLLECTIVE' | 'DRAW';
+  tags?: string[];
+  GSI3PK?: string; // TAG#<tagName>（E2Eタグ付きの場合のみ）
 }
 
 // 手エンティティ
@@ -120,5 +122,8 @@ export const GSIKeys = {
   userVotes: (userId: string, createdAt: string) => ({
     GSI2PK: `USER#${userId}`,
     GSI2SK: `VOTE#${createdAt}`,
+  }),
+  gamesByTag: (tag: string) => ({
+    GSI3PK: `TAG#${tag}`,
   }),
 } as const;
