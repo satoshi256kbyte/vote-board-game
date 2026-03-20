@@ -122,14 +122,15 @@ E2Eテストで作成された対局データがDynamoDBに残留する問題を
 - [x] 10. チェックポイント - テスト実行と確認
   - `pnpm test` で全テストがpassすることを確認し、ユーザーに質問があれば確認する
 
-- [ ] 11. GitHub Actionsワークフローの確認
-  - [~] 11.1 `.github/workflows/cd-development.yml` と `.github/workflows/e2e-game.yml` でPlaywrightの `globalTeardown` 設定により自動的にクリーンアップが実行されることを確認する
+- [x] 11. GitHub Actionsワークフローの確認
+  - [x] 11.1 `.github/workflows/cd-development.yml` と `.github/workflows/e2e-game.yml` でPlaywrightの `globalTeardown` 設定により自動的にクリーンアップが実行されることを確認する
     - Playwright設定に `globalTeardown` が追加されているため、ワークフロー側の追加ステップは不要
     - テスト失敗時もteardownが実行されることを確認
+    - 両ワークフローとも `DYNAMODB_TABLE_NAME` 環境変数を設定済み
     - 必要に応じてワークフローファイルにコメントを追加
     - _要件: 6.1, 6.2, 6.3, 6.4_
 
-- [~] 12. 最終チェックポイント - 全テスト実行と確認
+- [x] 12. 最終チェックポイント - 全テスト実行と確認
   - `pnpm test` で全テストがpassすることを確認し、ユーザーに質問があれば確認する
 
 ## 備考
