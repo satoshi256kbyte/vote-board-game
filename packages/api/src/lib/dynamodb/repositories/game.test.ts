@@ -136,6 +136,79 @@ describe('GameRepository', () => {
         expect(result.currentTurn).toBe(0);
         expect(result.boardState).toBe(JSON.stringify({ board: [] }));
       });
+
+      it('tags指定時に指定されたタグが保存される', async () => {
+        // Arrange
+        const params = {
+          gameId: 'game-tags',
+          gameType: 'OTHELLO' as const,
+          aiSide: 'BLACK' as const,
+          tags: ['TEST', 'DEMO'],
+        };
+
+        mockSend.mockResolvedValueOnce({});
+
+        // Act
+        const result = await repository.create(params);
+
+        // Assert
+        expect(result.tags).toEqual(['TEST', 'DEMO']);
+      });
+
+      it('tags未指定時にデフォルトで空配列が設定される', async () => {
+        // Arrange
+        const params = {
+          gameId: 'game-no-tags',
+          gameType: 'OTHELLO' as const,
+          aiSide: 'WHITE' as const,
+        };
+
+        mockSend.mockResolvedValueOnce({});
+
+        // Act
+        const result = await repository.create(params);
+
+        // Assert
+        expect(result.tags).toEqual([]);
+      });
+
+      it('E2Eタグ指定時にGSI3PKがTAG#E2Eに設定される', async () => {
+        // Arrange
+        const params = {
+          gameId: 'game-e2e',
+          gameType: 'OTHELLO' as const,
+          aiSide: 'BLACK' as const,
+          tags: ['E2E'],
+        };
+
+        mockSend.mockResolvedValueOnce({});
+
+        // Act
+        const result = await repository.create(params);
+
+        // Assert
+        expect(result.GSI3PK).toBe('TAG#E2E');
+        expect(result.tags).toEqual(['E2E']);
+      });
+
+      it('E2Eタグを含まない場合はGSI3PKが設定されない', async () => {
+        // Arrange
+        const params = {
+          gameId: 'game-no-e2e',
+          gameType: 'OTHELLO' as const,
+          aiSide: 'WHITE' as const,
+          tags: ['TEST', 'DEMO'],
+        };
+
+        mockSend.mockResolvedValueOnce({});
+
+        // Act
+        const result = await repository.create(params);
+
+        // Assert
+        expect(result.GSI3PK).toBeUndefined();
+        expect(result.tags).toEqual(['TEST', 'DEMO']);
+      });
     });
   });
 
@@ -637,6 +710,143 @@ describe('GameRepository', () => {
 
         // Act & Assert
         await expect(repository.finish(gameId, winner)).rejects.toThrow('DynamoDB service error');
+        expect(mockSend).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('listByTag', () => {
+    describe('成功ケース', () => {
+      it('GSI3を使用してタグでゲームを検索する', async () => {
+        // Arrange
+        const mockGames: GameEntity[] = [
+          {
+            PK: 'GAME#e2e-1',
+            SK: 'GAME#e2e-1',
+            GSI1PK: 'GAME#STATUS#ACTIVE',
+            GSI1SK: '2024-01-01T00:00:00.000Z',
+            GSI3PK: 'TAG#E2E',
+            gameId: 'e2e-1',
+            gameType: 'OTHELLO',
+            status: 'ACTIVE',
+            aiSide: 'BLACK',
+            currentTurn: 0,
+            boardState: JSON.stringify({ board: [] }),
+            tags: ['E2E'],
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+            entityType: 'GAME',
+          },
+        ];
+
+        mockSend.mockResolvedValueOnce({
+          Items: mockGames,
+          LastEvaluatedKey: undefined,
+        });
+
+        // Act
+        const result = await repository.listByTag('E2E');
+
+        // Assert
+        expect(result).toEqual(mockGames);
+        expect(result).toHaveLength(1);
+        expect(mockSend).toHaveBeenCalledTimes(1);
+
+        const queryCommand = mockSend.mock.calls[0][0];
+        expect(queryCommand).toBeInstanceOf(QueryCommand);
+        expect(queryCommand.input.TableName).toBe('test-table');
+        expect(queryCommand.input.IndexName).toBe('GSI3');
+        expect(queryCommand.input.KeyConditionExpression).toBe('GSI3PK = :gsi3pk');
+        expect(queryCommand.input.ExpressionAttributeValues).toEqual({
+          ':gsi3pk': 'TAG#E2E',
+        });
+      });
+
+      it('空の結果を返す', async () => {
+        // Arrange
+        mockSend.mockResolvedValueOnce({
+          Items: [],
+          LastEvaluatedKey: undefined,
+        });
+
+        // Act
+        const result = await repository.listByTag('E2E');
+
+        // Assert
+        expect(result).toEqual([]);
+        expect(result).toHaveLength(0);
+        expect(mockSend).toHaveBeenCalledTimes(1);
+      });
+
+      it('ページネーションで全件取得する', async () => {
+        // Arrange
+        const mockGame1: GameEntity = {
+          PK: 'GAME#e2e-1',
+          SK: 'GAME#e2e-1',
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: '2024-01-01T00:00:00.000Z',
+          GSI3PK: 'TAG#E2E',
+          gameId: 'e2e-1',
+          gameType: 'OTHELLO',
+          status: 'ACTIVE',
+          aiSide: 'BLACK',
+          currentTurn: 0,
+          boardState: JSON.stringify({ board: [] }),
+          tags: ['E2E'],
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          entityType: 'GAME',
+        };
+        const mockGame2: GameEntity = {
+          PK: 'GAME#e2e-2',
+          SK: 'GAME#e2e-2',
+          GSI1PK: 'GAME#STATUS#ACTIVE',
+          GSI1SK: '2024-01-02T00:00:00.000Z',
+          GSI3PK: 'TAG#E2E',
+          gameId: 'e2e-2',
+          gameType: 'OTHELLO',
+          status: 'ACTIVE',
+          aiSide: 'WHITE',
+          currentTurn: 0,
+          boardState: JSON.stringify({ board: [] }),
+          tags: ['E2E'],
+          createdAt: '2024-01-02T00:00:00.000Z',
+          updatedAt: '2024-01-02T00:00:00.000Z',
+          entityType: 'GAME',
+        };
+
+        // 1回目: LastEvaluatedKeyあり
+        mockSend.mockResolvedValueOnce({
+          Items: [mockGame1],
+          LastEvaluatedKey: { PK: 'GAME#e2e-1', SK: 'GAME#e2e-1' },
+        });
+        // 2回目: LastEvaluatedKeyなし（最終ページ）
+        mockSend.mockResolvedValueOnce({
+          Items: [mockGame2],
+          LastEvaluatedKey: undefined,
+        });
+
+        // Act
+        const result = await repository.listByTag('E2E');
+
+        // Assert
+        expect(result).toHaveLength(2);
+        expect(result[0].gameId).toBe('e2e-1');
+        expect(result[1].gameId).toBe('e2e-2');
+        expect(mockSend).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('エラーケース', () => {
+      it('DynamoDBエラーの場合はエラーをスローする', async () => {
+        // Arrange
+        const dynamoError = new Error('DynamoDB service error');
+        dynamoError.name = 'ServiceUnavailable';
+
+        mockSend.mockRejectedValueOnce(dynamoError);
+
+        // Act & Assert
+        await expect(repository.listByTag('E2E')).rejects.toThrow('DynamoDB service error');
         expect(mockSend).toHaveBeenCalledTimes(1);
       });
     });
